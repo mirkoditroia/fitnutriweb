@@ -1,0 +1,20 @@
+[
+  {
+    "id": "demo-basic",
+    "title": "Start",
+    "description": "• Piano nutrizionale base\n• 2 check-in al mese\n• Allenamenti essenziali",
+    "price": 99,
+    "isActive": true,
+    "featured": false
+  },
+  {
+    "id": "demo-pro",
+    "title": "Pro",
+    "description": "• Piano personalizzato\n• Check-in settimanali\n• Progressioni intelligenti",
+    "price": 149,
+    "isActive": true,
+    "featured": true,
+    "badge": "Più scelto"
+  }
+]
+

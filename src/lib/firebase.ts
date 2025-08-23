@@ -1,7 +1,8 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { env } from "@/lib/env";
+import { env, hasFirebaseConfig } from "@/lib/env";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,9 +13,27 @@ const firebaseConfig = {
   appId: env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const app: FirebaseApp | null = hasFirebaseConfig()
+  ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
+  : null;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const auth: ReturnType<typeof getAuth> | undefined = app ? getAuth(app) : undefined;
+export const db: ReturnType<typeof getFirestore> | undefined = app ? getFirestore(app) : undefined;
+
+// Analytics only on client and when measurement id is provided
+export async function setupAnalytics() {
+  if (typeof window === "undefined") return;
+  if (!app) return;
+  if (!env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) return;
+  if (!(await isSupported())) return;
+  try {
+    getAnalytics(app);
+  } catch {}
+}
+
+// Expose client app for other SDKs (e.g., Storage)
+export function getClientApp(): FirebaseApp | null {
+  return app;
+}
 
 

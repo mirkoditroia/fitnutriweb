@@ -7,6 +7,16 @@ const config: Config = {
     "./src/**/*.{ts,tsx}",
   ],
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: "1rem",
+        sm: "1rem",
+        md: "2rem",
+        lg: "2rem",
+        xl: "2rem",
+      },
+    },
     extend: {
       colors: {
         background: "var(--background)",
@@ -15,6 +25,7 @@ const config: Config = {
         accent: "var(--accent)",
         dark: "var(--dark)",
         light: "var(--light)",
+        border: "var(--border)",
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],

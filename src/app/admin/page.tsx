@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function AdminPage() {
@@ -21,7 +20,7 @@ export default function AdminPage() {
               Modifica hero (titolo, sottotitolo, CTA), immagini di sezione e microcopy FAQ.
             </p>
             <div className="mt-4 flex gap-3">
-              <Button>Modifica contenuti</Button>
+              <Link href="/admin/content" className="btn-outline">Apri editor</Link>
             </div>
           </CardContent>
         </Card>
@@ -35,7 +34,7 @@ export default function AdminPage() {
               Gestisci titolo, descrizione, prezzo, immagine, featured e badge.
             </p>
             <div className="mt-4 flex gap-3">
-              <Button>Gestisci pacchetti</Button>
+              <Link href="/admin/packages" className="btn-outline">Gestisci pacchetti</Link>
             </div>
           </CardContent>
         </Card>
@@ -47,7 +46,7 @@ export default function AdminPage() {
           <CardContent>
             <p className="text-sm text-foreground/70">Configura gli slot agenda.</p>
             <div className="mt-4 flex gap-3">
-              <Button>Configura slot</Button>
+              <Link href="/admin/availability" className="btn-outline">Configura slot</Link>
             </div>
           </CardContent>
         </Card>
@@ -61,7 +60,8 @@ export default function AdminPage() {
               Visualizza prenotazioni con stato, schede cliente e statistiche rapide.
             </p>
             <div className="mt-4 flex gap-3">
-              <Button>Apri dashboard</Button>
+              <Link href="/admin/bookings" className="btn-outline">Prenotazioni</Link>
+              <Link href="/admin/clients" className="btn-outline">Clienti</Link>
             </div>
           </CardContent>
         </Card>
@@ -75,7 +75,7 @@ export default function AdminPage() {
               Monitora esito fetch e ultimi log.
             </p>
             <div className="mt-4 flex gap-3">
-              <Button>Vedi log</Button>
+              <Link href="/admin/trustpilot" className="btn-outline">Trustpilot</Link>
             </div>
           </CardContent>
         </Card>
