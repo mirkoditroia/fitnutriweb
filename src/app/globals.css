@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Base palette */
+  --background: #F7F9FB; /* Light */
+  --foreground: #0E0F12; /* Dark */
+
+  /* Brand tokens */
+  --primary: #00D084; /* Neon wellness */
+  --accent: #FF6B6B;
+  --dark: #0E0F12;
+  --light: #F7F9FB;
+
+  /* Derived tokens for Tailwind v3 arbitrary colors */
+  --border: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --muted-bg: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --muted-fg: color-mix(in oklab, var(--foreground) 70%, var(--background));
+  --chip-bg: color-mix(in oklab, var(--primary) 15%, transparent);
+}
+
+/* Font CSS variables removed; handled by next/font */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0E0F12;
+    --foreground: #F7F9FB;
+  }
+}
+
+/* Base styles */
+html { scroll-behavior: smooth; }
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Accessible focus ring */
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Utilities */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) { .container { max-width: 640px; } }
+@media (min-width: 768px) { .container { max-width: 768px; } }
+@media (min-width: 1024px) { .container { max-width: 1024px; } }
+@media (min-width: 1280px) { .container { max-width: 1280px; } }
+
+/* Components utilities */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)];
+  }
+  .btn-primary {
+    @apply btn bg-[color:var(--primary)] text-[color:var(--dark)] hover:opacity-90;
+  }
+  .btn-outline {
+    @apply btn border border-[color:var(--border)] bg-[color:var(--background)] hover:bg-[color:var(--muted-bg)];
+  }
+  .card {
+    @apply rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] shadow-sm;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)] bg-[color:var(--chip-bg)];
+  }
+}
