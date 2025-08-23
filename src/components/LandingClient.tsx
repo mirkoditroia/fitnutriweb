@@ -40,7 +40,6 @@ export default function LandingClient() {
         <LandingImages images={content.images} />
       )}
       <PackagesCarousel items={featuredFirst} />
-      <TrustpilotWall />
       <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
         <h2 className="text-3xl font-bold text-center">Prenota la tua consulenza</h2>
         <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
@@ -50,6 +49,7 @@ export default function LandingClient() {
           <BookingForm />
         </div>
       </section>
+      <TrustpilotWall />
     </main>
   );
 }

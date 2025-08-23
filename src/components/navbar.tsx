@@ -6,8 +6,8 @@ import { Menu, X } from "lucide-react";
 const navigationItems = [
   { name: "Chi sono", href: "#chi-sono" },
   { name: "Pacchetti", href: "#pacchetti" },
-  { name: "Recensioni", href: "#recensioni" },
   { name: "Prenota", href: "#booking" },
+  { name: "Recensioni", href: "#recensioni" },
 ];
 
 export function Navbar() {
