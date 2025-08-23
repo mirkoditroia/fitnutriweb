@@ -184,13 +184,13 @@ export async function getClientByEmail(email: string): Promise<ClientCard | null
 export async function getSiteContent(): Promise<SiteContent | null> {
   const mode = getDataMode();
   if (mode === "firebase") return fb_getSiteContent();
-  if (mode === "demo") return fetchDemo<SiteContent>("/demo/siteContent.json", { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", images: [], faq: [] });
+  if (mode === "demo") return fetchDemo<SiteContent>("/demo/siteContent.json", { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", images: [] });
   if (typeof window === "undefined") return null;
   try {
     const res = await fetch("/api/localdb/siteContent", { cache: "no-store" });
     if (res.ok) return (await res.json()) as SiteContent;
   } catch {}
-  return { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", aboutTitle: "", aboutBody: "", aboutImageUrl: "", images: [], faq: [] };
+  return { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", aboutTitle: "", aboutBody: "", aboutImageUrl: "", images: [] };
 }
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {

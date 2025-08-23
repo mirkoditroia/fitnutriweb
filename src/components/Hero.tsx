@@ -19,7 +19,7 @@ export function Hero({ title, subtitle, ctaLabel }: Props) {
           <a href="#booking" className="btn-primary">
             {ctaLabel}
           </a>
-          <a href="#faq" className="btn-outline">Domande frequenti</a>
+          <a href="#pacchetti" className="btn-outline">Scopri i pacchetti</a>
         </div>
       </div>
     </section>

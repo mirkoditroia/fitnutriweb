@@ -60,7 +60,6 @@ export type SiteContent = {
   aboutBody?: string;
   aboutImageUrl?: string;
   images?: { key: string; url: string }[];
-  faq?: { q: string; a: string }[];
 };
 
 export type Availability = {
@@ -210,11 +209,11 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     aboutBody: data.aboutBody ?? "",
     aboutImageUrl: data.aboutImageUrl ?? "",
     images: Array.isArray(data.images) ? data.images : [],
-    faq: Array.isArray(data.faq) ? data.faq : [],
   };
 }
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
+  if (!db) throw new Error("Firestore not configured");
   await setDoc(col.content(db as Firestore), content, { merge: true });
 }
 
@@ -275,13 +274,14 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
     return Array.isArray(values) ? values.map(mapFn) : [];
   };
   const images = arr(f.images as FirestoreArrayValue, (v) => ({ key: v.mapValue.fields.key.stringValue!, url: v.mapValue.fields.url.stringValue! }));
-  const faq = arr(f.faq as FirestoreArrayValue, (v) => ({ q: v.mapValue.fields.q.stringValue!, a: v.mapValue.fields.a.stringValue! }));
   return {
     heroTitle: fromFs("heroTitle"),
     heroSubtitle: fromFs("heroSubtitle"),
     heroCta: fromFs("heroCta"),
+    aboutTitle: fromFs("aboutTitle"),
+    aboutBody: fromFs("aboutBody"),
+    aboutImageUrl: fromFs("aboutImageUrl"),
     images,
-    faq,
   };
 }
 

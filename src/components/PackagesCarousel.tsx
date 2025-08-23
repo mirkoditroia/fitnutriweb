@@ -17,7 +17,7 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
   const ordered = [...items].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.price - b.price);
 
   return (
-    <section className="container py-12 border-t border-[color:var(--border)]">
+    <section id="pacchetti" className="container py-12 border-t border-[color:var(--border)]">
       <h2 className="text-2xl font-bold">Pacchetti</h2>
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         {ordered.map((p) => {

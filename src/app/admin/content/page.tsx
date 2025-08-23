@@ -13,7 +13,7 @@ export default function AdminContentPage() {
   useEffect(() => {
     getSiteContent().then((c) => {
       setContent(
-        c ?? { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", images: [], faq: [] }
+        c ?? { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", images: [] }
       );
       setLoading(false);
     });
@@ -24,14 +24,6 @@ export default function AdminContentPage() {
   const save = async () => {
     await upsertSiteContent(content);
     toast.success("Contenuti salvati");
-  };
-
-  const addFaq = () => setContent({ ...content, faq: [...(content.faq ?? []), { q: "", a: "" }] });
-  const removeFaq = (i: number) => setContent({ ...content, faq: (content.faq ?? []).filter((_, idx) => idx !== i) });
-  const updateFaq = (i: number, key: "q" | "a", value: string) => {
-    const next = [...(content.faq ?? [])];
-    next[i] = { ...next[i], [key]: value };
-    setContent({ ...content, faq: next });
   };
 
   const addImg = () => setContent({ ...content, images: [...(content.images ?? []), { key: "", url: "" }] });
@@ -72,21 +64,6 @@ export default function AdminContentPage() {
           <div>
             <label className="block text-sm font-medium mb-1">About body</label>
             <textarea className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" rows={5} value={content.aboutBody ?? ""} onChange={(e) => setContent({ ...content, aboutBody: e.target.value })} />
-          </div>
-        </section>
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">FAQ</h2>
-            <Button type="button" onClick={addFaq}>Aggiungi domanda</Button>
-          </div>
-          <div className="space-y-3">
-            {(content.faq ?? []).map((f, i) => (
-              <div key={i} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <Input label="Domanda" value={f.q} onChange={(e) => updateFaq(i, "q", e.target.value)} />
-                <Input label="Risposta" value={f.a} onChange={(e) => updateFaq(i, "a", e.target.value)} />
-                <button className="btn-outline" onClick={() => removeFaq(i)}>Rimuovi</button>
-              </div>
-            ))}
           </div>
         </section>
 

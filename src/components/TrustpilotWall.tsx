@@ -6,7 +6,7 @@ export function TrustpilotWall() {
     { name: "Marco", text: "Allenamenti intelligenti, performance migliorata." },
   ];
   return (
-    <section className="container py-12 border-t border-[color:var(--border)]">
+    <section id="recensioni" className="container py-12 border-t border-[color:var(--border)]">
       <h2 className="text-2xl font-bold">Recensioni</h2>
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         {items.map((it, i) => (

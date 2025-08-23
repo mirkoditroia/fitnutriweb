@@ -5,7 +5,7 @@ export function Values() {
     { title: "Follow-up costante", desc: "Check-in e aggiustamenti settimanali per risultati reali." },
   ];
   return (
-    <section className="container py-12 border-t border-[color:var(--border)]">
+    <section id="valori" className="container py-12 border-t border-[color:var(--border)]">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {items.map((it) => (
           <div className="card p-6" key={it.title}>

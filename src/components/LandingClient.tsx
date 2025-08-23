@@ -4,10 +4,10 @@ import { Hero } from "@/components/Hero";
 import { AboutSection } from "@/components/AboutSection";
 import { PackagesCarousel } from "@/components/PackagesCarousel";
 import { TrustpilotWall } from "@/components/TrustpilotWall";
-import { FAQ } from "@/components/FAQ";
-import { FinalCTA } from "@/components/FinalCTA";
+import { Values } from "@/components/Values";
 import { BookingForm } from "@/components/BookingForm";
-import { defaultFaq, type SiteContent } from "@/lib/data";
+import { LandingImages } from "@/components/LandingImages";
+import { type SiteContent } from "@/lib/data";
 import { getPackages, getSiteContent } from "@/lib/datasource";
 
 export default function LandingClient() {
@@ -24,7 +24,6 @@ export default function LandingClient() {
             "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
           heroCta: "Prenota ora",
           images: [],
-          faq: defaultFaq,
         }
       );
       setPackages(Array.isArray(p) ? p : []);
@@ -32,24 +31,27 @@ export default function LandingClient() {
   }, []);
 
   if (!content || !packages) return null;
-  const faqItems = content.faq?.length ? content.faq : defaultFaq;
   const featuredFirst = [...packages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
   return (
-    <main className="min-h-dvh bg-background text-foreground">
+    <main className="min-h-dvh bg-background text-foreground pt-16">
       <Hero title={content.heroTitle} subtitle={content.heroSubtitle} ctaLabel={content.heroCta} />
       <AboutSection title={content.aboutTitle} body={content.aboutBody} imageUrl={content.aboutImageUrl} />
+      {content.images && content.images.length > 0 && (
+        <LandingImages images={content.images} />
+      )}
+      <Values />
       <PackagesCarousel items={featuredFirst} />
       <TrustpilotWall />
-      <FAQ items={faqItems} />
-      <section id="booking" className="container py-12 border-t border-[color:var(--border)]">
-        <h2 className="text-2xl font-bold">Prenotazione</h2>
-        <p className="text-foreground/70 mt-2">Compila i dati e ti ricontattiamo.</p>
-        <div className="mt-6">
+      <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
+        <h2 className="text-3xl font-bold text-center">Prenota la tua consulenza</h2>
+        <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
+          Inizia il tuo percorso di trasformazione. Compila il modulo e ti contatteremo per definire i dettagli.
+        </p>
+        <div className="mt-8 max-w-lg mx-auto">
           <BookingForm />
         </div>
       </section>
-      <FinalCTA />
     </main>
   );
 }
