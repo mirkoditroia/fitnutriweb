@@ -1,11 +1,10 @@
 {
   "heroTitle": "Trasforma il tuo fisico. Potenzia la tua performance.",
-  "heroSubtitle": "Demo content: coaching nutrizionale e training su misura.",
+  "heroSubtitle": "Demo content: coaching nutrizionale e training su misura per giovani adulti 20–35.",
   "heroCta": "Prenota ora",
-  "images": [],
-  "faq": [
-    { "q": "Quanto tempo serve?", "a": "4–6 settimane per cambi visibili." },
-    { "q": "Serve palestra?", "a": "Consigliata ma non obbligatoria." }
-  ]
+  "aboutTitle": "Chi sono",
+  "aboutBody": "Mi chiamo Gabriele Zambonin e da anni aiuto persone come te a raggiungere i propri obiettivi di benessere e performance.\n\nUnisco la mia esperienza come nutrizionista e personal trainer per offrirti piani su misura, che rispettano il tuo stile di vita e i tuoi obiettivi.\n\nIl mio approccio è scientifico ma pratico: niente diete estreme, solo strategie sostenibili per risultati duraturi.",
+  "aboutImageUrl": "",
+  "images": []
 }
 
