@@ -195,8 +195,19 @@ export async function getSiteContent(): Promise<SiteContent | null> {
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
   const mode = getDataMode();
-  if (mode === "firebase") return fb_upsertSiteContent(content);
-  if (mode === "demo") throw new Error("Preprod demo read-only");
+  console.log("[upsertSiteContent] Current mode:", mode);
+  
+  if (mode === "firebase") {
+    console.log("[upsertSiteContent] Using Firebase");
+    return fb_upsertSiteContent(content);
+  }
+  
+  if (mode === "demo") {
+    console.log("[upsertSiteContent] Demo mode - throwing read-only error");
+    throw new Error("Preprod demo read-only");
+  }
+  
+  console.log("[upsertSiteContent] Using local API");
   await fetch("/api/localdb/siteContent", { method: "POST", body: JSON.stringify(content) });
 }
 
