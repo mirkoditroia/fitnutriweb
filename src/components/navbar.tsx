@@ -5,7 +5,6 @@ import { Menu, X } from "lucide-react";
 
 const navigationItems = [
   { name: "Chi sono", href: "#chi-sono" },
-  { name: "Valori", href: "#valori" },
   { name: "Pacchetti", href: "#pacchetti" },
   { name: "Recensioni", href: "#recensioni" },
   { name: "Prenota", href: "#booking" },

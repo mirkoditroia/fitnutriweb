@@ -4,7 +4,6 @@ import { Hero } from "@/components/Hero";
 import { AboutSection } from "@/components/AboutSection";
 import { PackagesCarousel } from "@/components/PackagesCarousel";
 import { TrustpilotWall } from "@/components/TrustpilotWall";
-import { Values } from "@/components/Values";
 import { BookingForm } from "@/components/BookingForm";
 import { LandingImages } from "@/components/LandingImages";
 import { type SiteContent } from "@/lib/data";
@@ -40,7 +39,6 @@ export default function LandingClient() {
       {content.images && content.images.length > 0 && (
         <LandingImages images={content.images} />
       )}
-      <Values />
       <PackagesCarousel items={featuredFirst} />
       <TrustpilotWall />
       <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">

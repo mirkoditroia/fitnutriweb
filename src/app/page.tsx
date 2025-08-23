@@ -7,7 +7,6 @@ import { AboutSection } from "@/components/AboutSection";
 import { LandingImages } from "@/components/LandingImages";
 import { PackagesCarousel } from "@/components/PackagesCarousel";
 import { TrustpilotWall } from "@/components/TrustpilotWall";
-import { Values } from "@/components/Values";
 import { BookingForm } from "@/components/BookingForm";
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +35,6 @@ export default async function Home() {
       <Hero title={c.heroTitle} subtitle={c.heroSubtitle} ctaLabel={c.heroCta} />
       <AboutSection title={c.aboutTitle} body={c.aboutBody} imageUrl={c.aboutImageUrl} />
       <LandingImages images={c.images} />
-      <Values />
       <PackagesCarousel items={featuredFirst} />
       <TrustpilotWall />
       <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
