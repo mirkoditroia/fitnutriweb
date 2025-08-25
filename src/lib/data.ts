@@ -208,7 +208,20 @@ export async function updateBooking(booking: Booking): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
   if (!booking.id) throw new Error("Booking ID is required for update");
   
-  const { id, ...updateData } = booking;
+  // Firestore does not accept undefined values. Normalize optional fields to null.
+  const id = booking.id;
+  const updateData = {
+    clientId: booking.clientId ?? null,
+    name: booking.name,
+    email: booking.email,
+    phone: booking.phone ?? null,
+    packageId: booking.packageId ?? null,
+    date: booking.date,
+    slot: booking.slot ?? null,
+    status: booking.status,
+    priority: !!booking.priority,
+    channelPreference: booking.channelPreference ?? null,
+  };
   await setDoc(doc(db as Firestore, "bookings", id), updateData, { merge: true });
   
   // If booking is confirmed, create or update client automatically
