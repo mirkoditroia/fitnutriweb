@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { writeJson, readJson } from "@/lib/localdb";
-import { promises as fs } from "fs";
-import path from "path";
 import { getDataMode } from "@/lib/datamode";
 import { getClientApp } from "@/lib/firebase";
 

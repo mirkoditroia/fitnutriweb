@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { listClients, getClientById, upsertClient, deleteClient, getPackages, createClientFromPendingBooking, listBookings, type ClientCard, type Package, type Booking } from "@/lib/datasource";
+import { listClients, upsertClient, deleteClient, getPackages, createClientFromPendingBooking, listBookings, type ClientCard, type Package, type Booking } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
@@ -103,7 +103,7 @@ export default function AdminClientsPage() {
     const pendingBookings = bookings.filter(b => b.status === "pending");
     
     if (pendingBookings.length === 0) {
-      toast.info("Nessuna prenotazione in attesa trovata");
+      toast("Nessuna prenotazione in attesa trovata");
       return;
     }
 
@@ -124,7 +124,7 @@ export default function AdminClientsPage() {
       id: crypto.randomUUID(),
       name: `${documentType}_${format(new Date(), 'yyyy-MM-dd')}`,
       url,
-      type: documentType as any,
+      type: documentType as "medical_certificate" | "id_document" | "consent_form" | "other",
       uploadedAt: new Date().toISOString()
     };
 
@@ -246,7 +246,7 @@ export default function AdminClientsPage() {
                 </div>
                 {client.notes && (
                   <div className="text-sm text-foreground/60 mt-2 italic">
-                    "{client.notes.substring(0, 100)}{client.notes.length > 100 ? '...' : ''}"
+                    &ldquo;{client.notes.substring(0, 100)}{client.notes.length > 100 ? '...' : ''}&rdquo;
                   </div>
                 )}
               </div>
@@ -351,7 +351,7 @@ export default function AdminClientsPage() {
                 <label className="block text-sm font-medium mb-1">Genere</label>
                 <select
                   value={client.gender || ""}
-                  onChange={(e) => setSelectedClient({ ...client, gender: e.target.value as any })}
+                  onChange={(e) => setSelectedClient({ ...client, gender: e.target.value as "male" | "female" | "other" | "prefer_not_to_say" })}
                   className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background"
                 >
                   <option value="">Seleziona...</option>
@@ -365,7 +365,7 @@ export default function AdminClientsPage() {
                 <label className="block text-sm font-medium mb-1">Stato</label>
                 <select
                   value={client.status || "prospect"}
-                  onChange={(e) => setSelectedClient({ ...client, status: e.target.value as any })}
+                  onChange={(e) => setSelectedClient({ ...client, status: e.target.value as "active" | "inactive" | "prospect" })}
                   className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background"
                 >
                   <option value="prospect">Prospetto</option>
@@ -428,7 +428,7 @@ export default function AdminClientsPage() {
                 <label className="block text-sm font-medium mb-1">Livello fitness</label>
                 <select
                   value={client.fitnessLevel || ""}
-                  onChange={(e) => setSelectedClient({ ...client, fitnessLevel: e.target.value as any })}
+                  onChange={(e) => setSelectedClient({ ...client, fitnessLevel: e.target.value as "beginner" | "intermediate" | "advanced" })}
                   className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background"
                 >
                   <option value="">Seleziona...</option>
@@ -517,7 +517,7 @@ export default function AdminClientsPage() {
                     emergencyContact: { 
                       ...client.emergencyContact, 
                       name: e.target.value 
-                    } as any 
+                    } as { name: string; phone: string; relationship: string }
                   })}
                 />
               </div>
@@ -531,7 +531,7 @@ export default function AdminClientsPage() {
                     emergencyContact: { 
                       ...client.emergencyContact, 
                       phone: e.target.value 
-                    } as any 
+                    } as { name: string; phone: string; relationship: string }
                   })}
                 />
               </div>
@@ -544,7 +544,7 @@ export default function AdminClientsPage() {
                     emergencyContact: { 
                       ...client.emergencyContact, 
                       relationship: e.target.value 
-                    } as any 
+                    } as { name: string; phone: string; relationship: string }
                   })}
                   placeholder="es. Coniuge, Genitore"
                 />
@@ -566,7 +566,7 @@ export default function AdminClientsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Carica Documento d'Identità</label>
+                  <label className="block text-sm font-medium mb-1">Carica Documento d&apos;Identità</label>
                   <UploadButton
                     folder="clients/id"
                     onUploaded={(url) => handleDocumentUpload(client.id!, "id_document", url)}

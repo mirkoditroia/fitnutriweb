@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { listBookings, updateBooking, deleteBooking, getPackages, createBooking, getAvailabilityByDate, createClientFromPendingBooking, type Booking, type Package } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
-import { format, addDays } from "date-fns";
+import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -20,7 +20,7 @@ const generateICalContent = (bookings: Booking[], startDate: Date, endDate: Date
     return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   };
 
-  let ical = [
+  const ical = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//GZNutrition//Admin Calendar//IT',
@@ -301,7 +301,7 @@ export default function AdminBookingsPage() {
     if (viewMode === "calendar" && items.length > 0) {
       loadDayBookings(calendarDate);
     }
-  }, [calendarDate, items, viewMode]);
+  }, [calendarDate, items, viewMode, loadDayBookings]);
 
   // Filter bookings by status for requests view
   const pendingBookings = items.filter(b => b.status === "pending");

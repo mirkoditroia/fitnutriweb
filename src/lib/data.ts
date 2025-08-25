@@ -505,8 +505,7 @@ export const defaultFaq: { q: string; a: string }[] = [
 // Additional client functions
 export async function listClients(): Promise<ClientCard[]> {
   if (!db) return [];
-  const database = db as Firestore;
-  const snap = await getDocs(query(col.clients(database), orderBy("createdAt", "desc")));
+  const snap = await getDocs(query(col.clients(db as Firestore), orderBy("createdAt", "desc")));
   return snap.docs.map((d) => toClientCard(d.id, d.data()));
 }
 
