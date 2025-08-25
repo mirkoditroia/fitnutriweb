@@ -25,6 +25,7 @@ export default async function Home() {
       heroSubtitle:
         "Coaching nutrizionale e training su misura per giovani adulti 20–35. Risultati misurabili, approccio scientifico, estetica e performance al centro.",
       heroCta: "Prenota ora",
+      heroBackgroundImage: "",
       images: [],
     };
 
@@ -32,7 +33,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
-      <Hero title={c.heroTitle} subtitle={c.heroSubtitle} ctaLabel={c.heroCta} />
+      <Hero title={c.heroTitle} subtitle={c.heroSubtitle} ctaLabel={c.heroCta} backgroundImage={c.heroBackgroundImage} />
       <AboutSection title={c.aboutTitle} body={c.aboutBody} imageUrl={c.aboutImageUrl} />
       <LandingImages images={c.images} />
       <PackagesCarousel items={featuredFirst} />

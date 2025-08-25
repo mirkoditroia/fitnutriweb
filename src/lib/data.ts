@@ -35,6 +35,37 @@ export type ClientCard = {
   phone?: string;
   notes?: string;
   createdAt?: string;
+  // Additional client information
+  birthDate?: string;
+  gender?: "male" | "female" | "other" | "prefer_not_to_say";
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  // Health and fitness information
+  height?: number; // in cm
+  weight?: number; // in kg
+  fitnessLevel?: "beginner" | "intermediate" | "advanced";
+  goals?: string[];
+  medicalConditions?: string[];
+  allergies?: string[];
+  medications?: string[];
+  // Business information
+  source?: "website" | "social_media" | "referral" | "other";
+  status?: "active" | "inactive" | "prospect";
+  assignedPackage?: string;
+  // Documents
+  documents?: {
+    id: string;
+    name: string;
+    url: string;
+    type: "medical_certificate" | "id_document" | "consent_form" | "other";
+    uploadedAt: string;
+  }[];
 };
 
 export type Booking = {
@@ -56,6 +87,7 @@ export type SiteContent = {
   heroTitle: string;
   heroSubtitle: string;
   heroCta: string;
+  heroBackgroundImage?: string;
   aboutTitle?: string;
   aboutBody?: string;
   aboutImageUrl?: string;
@@ -126,6 +158,49 @@ export async function createBooking(b: Booking): Promise<string> {
     channelPreference: b.channelPreference ?? null,
     createdAt: serverTimestamp(),
   });
+  
+  // If booking is confirmed, create or update client automatically
+  if (b.status === "confirmed") {
+    try {
+      // Check if client already exists
+      const existingClient = await getClientByEmail(b.email);
+      
+      if (existingClient) {
+        // Update existing client with booking information
+        await upsertClient({
+          ...existingClient,
+          name: b.name,
+          phone: b.phone || existingClient.phone,
+          assignedPackage: b.packageId || existingClient.assignedPackage,
+          status: "active",
+          source: existingClient.source || "website"
+        });
+      } else {
+        // Create new client from booking
+        const newClient: ClientCard = {
+          name: b.name,
+          email: b.email,
+          phone: b.phone,
+          notes: `Cliente creato automaticamente dalla prenotazione confermata del ${new Date(b.date).toLocaleDateString("it-IT")}`,
+          status: "active",
+          source: "website",
+          assignedPackage: b.packageId,
+          goals: [],
+          medicalConditions: [],
+          allergies: [],
+          medications: [],
+          documents: [],
+          createdAt: new Date().toISOString()
+        };
+        
+        await upsertClient(newClient);
+      }
+    } catch (error) {
+      console.error("Error creating/updating client from booking:", error);
+      // Don't throw here as the main booking creation was successful
+    }
+  }
+  
   return added.id;
 }
 
@@ -135,6 +210,48 @@ export async function updateBooking(booking: Booking): Promise<void> {
   
   const { id, ...updateData } = booking;
   await setDoc(doc(db as Firestore, "bookings", id), updateData, { merge: true });
+  
+  // If booking is confirmed, create or update client automatically
+  if (booking.status === "confirmed") {
+    try {
+      // Check if client already exists
+      const existingClient = await getClientByEmail(booking.email);
+      
+      if (existingClient) {
+        // Update existing client with booking information
+        await upsertClient({
+          ...existingClient,
+          name: booking.name,
+          phone: booking.phone || existingClient.phone,
+          assignedPackage: booking.packageId || existingClient.assignedPackage,
+          status: "active",
+          source: existingClient.source || "website"
+        });
+      } else {
+        // Create new client from booking
+        const newClient: ClientCard = {
+          name: booking.name,
+          email: booking.email,
+          phone: booking.phone,
+          notes: `Cliente creato automaticamente dalla prenotazione confermata del ${new Date(booking.date).toLocaleDateString("it-IT")}`,
+          status: "active",
+          source: "website",
+          assignedPackage: booking.packageId,
+          goals: [],
+          medicalConditions: [],
+          allergies: [],
+          medications: [],
+          documents: [],
+          createdAt: new Date().toISOString()
+        };
+        
+        await upsertClient(newClient);
+      }
+    } catch (error) {
+      console.error("Error creating/updating client from booking:", error);
+      // Don't throw here as the main booking update was successful
+    }
+  }
   
   // If booking is confirmed and has a slot, remove that slot from availability
   if (booking.status === "confirmed" && booking.slot && booking.date) {
@@ -157,6 +274,51 @@ export async function updateBooking(booking: Booking): Promise<void> {
 
 export async function deleteBooking(bookingId: string): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
+  
+  // Get booking data before deletion to create client if needed
+  try {
+    const bookingDoc = await getDoc(doc(db as Firestore, "bookings", bookingId));
+    if (bookingDoc.exists()) {
+      const bookingData = bookingDoc.data() as Booking;
+      
+      // Create inactive client from rejected booking
+      const existingClient = await getClientByEmail(bookingData.email);
+      
+      if (existingClient) {
+        // Update existing client status to inactive
+        await upsertClient({
+          ...existingClient,
+          status: "inactive",
+          notes: existingClient.notes ? 
+            `${existingClient.notes}\n\nPrenotazione rifiutata il ${new Date().toLocaleDateString("it-IT")}` :
+            `Prenotazione rifiutata il ${new Date().toLocaleDateString("it-IT")}`
+        });
+      } else {
+        // Create new inactive client from rejected booking
+        const newClient: ClientCard = {
+          name: bookingData.name,
+          email: bookingData.email,
+          phone: bookingData.phone,
+          notes: `Cliente creato automaticamente dalla prenotazione rifiutata del ${new Date(bookingData.date).toLocaleDateString("it-IT")}`,
+          status: "inactive",
+          source: "website",
+          assignedPackage: bookingData.packageId,
+          goals: [],
+          medicalConditions: [],
+          allergies: [],
+          medications: [],
+          documents: [],
+          createdAt: new Date().toISOString()
+        };
+        
+        await upsertClient(newClient);
+      }
+    }
+  } catch (error) {
+    console.error("Error creating client from rejected booking:", error);
+    // Don't throw here as the main booking deletion should continue
+  }
+  
   await deleteDoc(doc(db as Firestore, "bookings", bookingId));
 }
 
@@ -173,6 +335,23 @@ export async function upsertClient(c: ClientCard): Promise<string> {
     email: c.email,
     phone: c.phone ?? null,
     notes: c.notes ?? null,
+    birthDate: c.birthDate ?? null,
+    gender: c.gender ?? null,
+    address: c.address ?? null,
+    city: c.city ?? null,
+    postalCode: c.postalCode ?? null,
+    emergencyContact: c.emergencyContact ?? null,
+    height: c.height ?? null,
+    weight: c.weight ?? null,
+    fitnessLevel: c.fitnessLevel ?? null,
+    goals: c.goals ?? [],
+    medicalConditions: c.medicalConditions ?? [],
+    allergies: c.allergies ?? [],
+    medications: c.medications ?? [],
+    source: c.source ?? null,
+    status: c.status ?? "prospect",
+    assignedPackage: c.assignedPackage ?? null,
+    documents: c.documents ?? [],
     createdAt: serverTimestamp(),
   });
   return added.id;
@@ -205,6 +384,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     heroTitle: data.heroTitle ?? "",
     heroSubtitle: data.heroSubtitle ?? "",
     heroCta: data.heroCta ?? "",
+    heroBackgroundImage: data.heroBackgroundImage ?? "",
     aboutTitle: data.aboutTitle ?? "",
     aboutBody: data.aboutBody ?? "",
     aboutImageUrl: data.aboutImageUrl ?? "",
@@ -258,6 +438,34 @@ function toBooking(id: string, data: DocumentData): Booking {
   };
 }
 
+function toClientCard(id: string, data: DocumentData): ClientCard {
+  return {
+    id,
+    name: data.name,
+    email: data.email,
+    phone: data.phone ?? undefined,
+    notes: data.notes ?? undefined,
+    birthDate: data.birthDate ?? undefined,
+    gender: data.gender ?? undefined,
+    address: data.address ?? undefined,
+    city: data.city ?? undefined,
+    postalCode: data.postalCode ?? undefined,
+    emergencyContact: data.emergencyContact ?? undefined,
+    height: data.height ?? undefined,
+    weight: data.weight ?? undefined,
+    fitnessLevel: data.fitnessLevel ?? undefined,
+    goals: Array.isArray(data.goals) ? data.goals : [],
+    medicalConditions: Array.isArray(data.medicalConditions) ? data.medicalConditions : [],
+    allergies: Array.isArray(data.allergies) ? data.allergies : [],
+    medications: Array.isArray(data.medications) ? data.medications : [],
+    source: data.source ?? undefined,
+    status: data.status ?? "prospect",
+    assignedPackage: data.assignedPackage ?? undefined,
+    documents: Array.isArray(data.documents) ? data.documents : [],
+    createdAt: tsToIso(data.createdAt),
+  };
+}
+
 // SSR helpers via Firestore REST (for ISR-friendly fetch without Admin SDK)
 export async function getSiteContentSSR(projectId: string): Promise<SiteContent | null> {
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/content/landing`;
@@ -278,6 +486,7 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
     heroTitle: fromFs("heroTitle"),
     heroSubtitle: fromFs("heroSubtitle"),
     heroCta: fromFs("heroCta"),
+    heroBackgroundImage: fromFs("heroBackgroundImage"),
     aboutTitle: fromFs("aboutTitle"),
     aboutBody: fromFs("aboutBody"),
     aboutImageUrl: fromFs("aboutImageUrl"),
@@ -286,11 +495,71 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
 }
 
 export const defaultFaq: { q: string; a: string }[] = [
-  { q: "Quanto tempo serve per vedere risultati?", a: "Generalmente 4–6 settimane per cambi visibili, dipende dall’aderenza." },
+  { q: "Quanto tempo serve per vedere risultati?", a: "Generalmente 4–6 settimane per cambi visibili, dipende dall'aderenza." },
   { q: "Serve palestra?", a: "Consigliata ma non obbligatoria. Programmi adattabili anche a casa." },
   { q: "I piani sono personalizzati?", a: "Sì: obiettivi, preferenze alimentari e disponibilità oraria." },
   { q: "Come avviene il follow-up?", a: "Check-in settimanali e chat per aggiustamenti in tempo reale." },
   { q: "Posso sospendere?", a: "Puoi mettere in pausa e riprendere senza costi aggiuntivi." },
 ];
+
+// Additional client functions
+export async function listClients(): Promise<ClientCard[]> {
+  if (!db) return [];
+  const database = db as Firestore;
+  const snap = await getDocs(query(col.clients(database), orderBy("createdAt", "desc")));
+  return snap.docs.map((d) => toClientCard(d.id, d.data()));
+}
+
+export async function getClientById(id: string): Promise<ClientCard | null> {
+  if (!db) return null;
+  const database = db as Firestore;
+  const snap = await getDoc(doc(db as Firestore, "clients", id));
+  if (!snap.exists()) return null;
+  return toClientCard(snap.id, snap.data());
+}
+
+export async function deleteClient(id: string): Promise<void> {
+  if (!db) throw new Error("Firestore not configured");
+  await deleteDoc(doc(db as Firestore, "clients", id));
+}
+
+export async function createClientFromPendingBooking(booking: Booking): Promise<string> {
+  if (!db) throw new Error("Firestore not configured");
+  
+  // Check if client already exists
+  const existingClient = await getClientByEmail(booking.email);
+  
+  if (existingClient) {
+    // Update existing client with pending booking information
+    await upsertClient({
+      ...existingClient,
+      name: booking.name,
+      phone: booking.phone || existingClient.phone,
+      assignedPackage: booking.packageId || existingClient.assignedPackage,
+      status: "prospect",
+      source: existingClient.source || "website"
+    });
+    return existingClient.id!;
+  } else {
+    // Create new prospect client from pending booking
+    const newClient: ClientCard = {
+      name: booking.name,
+      email: booking.email,
+      phone: booking.phone,
+      notes: `Cliente creato automaticamente dalla prenotazione in attesa del ${new Date(booking.date).toLocaleDateString("it-IT")}`,
+      status: "prospect",
+      source: "website",
+      assignedPackage: booking.packageId,
+      goals: [],
+      medicalConditions: [],
+      allergies: [],
+      medications: [],
+      documents: [],
+      createdAt: new Date().toISOString()
+    };
+    
+    return await upsertClient(newClient);
+  }
+}
 
 

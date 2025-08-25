@@ -22,6 +22,7 @@ export default function LandingClient() {
           heroSubtitle:
             "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
           heroCta: "Prenota ora",
+          heroBackgroundImage: "",
           images: [],
         }
       );
@@ -34,12 +35,13 @@ export default function LandingClient() {
 
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
-      <Hero title={content.heroTitle} subtitle={content.heroSubtitle} ctaLabel={content.heroCta} />
+      <Hero title={content.heroTitle} subtitle={content.heroSubtitle} ctaLabel={content.heroCta} backgroundImage={content.heroBackgroundImage} />
       <AboutSection title={content.aboutTitle} body={content.aboutBody} imageUrl={content.aboutImageUrl} />
       {content.images && content.images.length > 0 && (
         <LandingImages images={content.images} />
       )}
       <PackagesCarousel items={featuredFirst} />
+      <TrustpilotWall />
       <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
         <h2 className="text-3xl font-bold text-center">Prenota la tua consulenza</h2>
         <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
@@ -49,7 +51,6 @@ export default function LandingClient() {
           <BookingForm />
         </div>
       </section>
-      <TrustpilotWall />
     </main>
   );
 }

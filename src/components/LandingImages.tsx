@@ -23,7 +23,9 @@ export function LandingImages({ images }: { images?: Img[] }) {
           />
         </div>
         <div className="mt-4 flex items-center justify-between">
-          <button className="btn-outline" onClick={prev} aria-label="Immagine precedente">Indietro</button>
+          <button className="btn-outline" onClick={prev} aria-label="Immagine precedente">
+          <span className="text-center">Indietro</span>
+        </button>
           <div className="flex gap-2" aria-label="Selettore immagini landing">
             {images.map((img, i) => (
               <button
@@ -34,7 +36,9 @@ export function LandingImages({ images }: { images?: Img[] }) {
               />
             ))}
           </div>
-          <button className="btn-primary" onClick={next} aria-label="Immagine successiva">Avanti</button>
+          <button className="btn-primary" onClick={next} aria-label="Immagine successiva">
+          <span className="text-center">Avanti</span>
+        </button>
         </div>
       </div>
     </section>

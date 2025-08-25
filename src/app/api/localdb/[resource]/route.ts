@@ -20,7 +20,7 @@ export async function POST(req: Request, ctx: Ctx) {
 function getFallback(resource: string): unknown {
   if (resource === "packages" || resource === "bookings" || resource === "clients") return [];
   if (resource === "availability") return {};
-  if (resource === "siteContent") return { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", images: [], faq: [] };
+  if (resource === "siteContent") return { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", images: [], faq: [] };
   return {};
 }
 

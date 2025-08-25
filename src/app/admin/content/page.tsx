@@ -11,12 +11,12 @@ export default function AdminContentPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getSiteContent().then((c) => {
-      setContent(
-        c ?? { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", images: [] }
-      );
-      setLoading(false);
-    });
+          getSiteContent().then((c) => {
+        setContent(
+          c ?? { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", images: [] }
+        );
+        setLoading(false);
+      });
   }, []);
 
   if (loading || !content) return <main className="container py-8">Caricamento...</main>;
@@ -47,6 +47,13 @@ export default function AdminContentPage() {
           <Input label="Hero title" value={content.heroTitle} onChange={(e) => setContent({ ...content, heroTitle: e.target.value })} />
           <Input label="Hero subtitle" value={content.heroSubtitle} onChange={(e) => setContent({ ...content, heroSubtitle: e.target.value })} />
           <Input label="Hero CTA" value={content.heroCta} onChange={(e) => setContent({ ...content, heroCta: e.target.value })} />
+          <div>
+            <label className="block text-sm font-medium mb-1">Hero background image URL</label>
+            <div className="flex gap-2">
+              <input className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" value={content.heroBackgroundImage ?? ""} onChange={(e) => setContent({ ...content, heroBackgroundImage: e.target.value })} />
+              <UploadButton folder="content" onUploaded={(url) => setContent({ ...content, heroBackgroundImage: url })} />
+            </div>
+          </div>
         </section>
 
         <section className="space-y-3">

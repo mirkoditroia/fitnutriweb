@@ -97,8 +97,12 @@ html {
 
 /* Components utilities */
 @layer components {
+  .chip {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
   .btn {
-    @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)];
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] text-center;
   }
   .btn-primary {
     @apply btn bg-[color:var(--primary)] text-[color:var(--dark)] hover:opacity-90;
@@ -111,5 +115,17 @@ html {
   }
   .chip {
     @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)] bg-[color:var(--chip-bg)];
+  }
+  
+  .button-responsive {
+    @apply text-center min-h-[40px] px-3 py-1.5 flex items-center justify-center;
+  }
+  
+  .button-responsive-sm {
+    @apply text-center min-h-[28px] px-2.5 py-0.5 flex items-center justify-center;
+  }
+  
+  .button-responsive-xs {
+    @apply text-center min-h-[24px] px-2 py-0.5 flex items-center justify-center;
   }
 }

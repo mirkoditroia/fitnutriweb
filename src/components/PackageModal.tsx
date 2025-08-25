@@ -37,7 +37,9 @@ export function PackageModal({ pkg, onClose }: Props) {
       <div className="p-6">
         <div className="flex items-start justify-between gap-4">
           <h2 id={titleId} className="text-xl font-bold">{pkg.title}</h2>
-          <button className="btn-outline" onClick={() => ref.current?.close()} aria-label="Chiudi dialog">Chiudi</button>
+          <button className="btn-outline" onClick={() => ref.current?.close()} aria-label="Chiudi dialog">
+          <span className="text-center">Chiudi</span>
+        </button>
         </div>
         {pkg.imageUrl && (
           <img src={pkg.imageUrl} alt={pkg.title} className="mt-4 w-full h-48 object-cover rounded-md" />
@@ -48,7 +50,9 @@ export function PackageModal({ pkg, onClose }: Props) {
             <div className="text-xl font-bold">€ {pkg.price}</div>
             <div className="text-xs text-foreground/60">pagabile mensilmente</div>
           </div>
-          <a href={`?packageId=${pkg.id ?? ""}#booking`} className="btn-primary">Prenota</a>
+          <a href={`?packageId=${pkg.id ?? ""}#booking`} className="btn-primary">
+          <span className="text-center">Prenota</span>
+        </a>
         </div>
       </div>
     </dialog>

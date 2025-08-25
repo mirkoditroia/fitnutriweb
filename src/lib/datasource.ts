@@ -12,6 +12,10 @@ import {
   deleteBooking as fb_deleteBooking,
   upsertClient as fb_upsertClient,
   getClientByEmail as fb_getClientByEmail,
+  listClients as fb_listClients,
+  getClientById as fb_getClientById,
+  deleteClient as fb_deleteClient,
+  createClientFromPendingBooking as fb_createClientFromPendingBooking,
   getSiteContent as fb_getSiteContent,
   upsertSiteContent as fb_upsertSiteContent,
   getAvailabilityByDate as fb_getAvailabilityByDate,
@@ -181,16 +185,112 @@ export async function getClientByEmail(email: string): Promise<ClientCard | null
   } catch { return null; }
 }
 
+export async function listClients(): Promise<ClientCard[]> {
+  const mode = getDataMode();
+  if (mode === "firebase") return fb_listClients();
+  if (mode === "demo") return fetchDemo<ClientCard[]>("/demo/clients.json", []);
+  try {
+    const res = await fetch("/api/localdb/clients", { cache: "no-store" });
+    if (res.ok) return (await res.json()) as ClientCard[];
+  } catch {}
+  return [];
+}
+
+export async function getClientById(id: string): Promise<ClientCard | null> {
+  const mode = getDataMode();
+  if (mode === "firebase") return fb_getClientById(id);
+  if (mode === "demo") {
+    const clients = await fetchDemo<ClientCard[]>("/demo/clients.json", []);
+    return clients.find((c) => c.id === id) ?? null;
+  }
+  try {
+    const res = await fetch("/api/localdb/clients", { cache: "no-store" });
+    const items = res.ok ? ((await res.json()) as ClientCard[]) : [];
+    return items.find((x) => x.id === id) ?? null;
+  } catch { return null; }
+}
+
+export async function deleteClient(id: string): Promise<void> {
+  const mode = getDataMode();
+  if (mode === "firebase") return fb_deleteClient(id);
+  if (mode === "demo") throw new Error("Preprod demo read-only");
+  
+  try {
+    const res = await fetch("/api/localdb/clients", { cache: "no-store" });
+    const current = res.ok ? ((await res.json()) as ClientCard[]) : [];
+    const filteredItems = current.filter(item => item.id !== id);
+    await fetch("/api/localdb/clients", { method: "POST", body: JSON.stringify(filteredItems) });
+  } catch (error) {
+    console.error("Error deleting client:", error);
+    throw error;
+  }
+}
+
+export async function createClientFromPendingBooking(booking: Booking): Promise<string> {
+  const mode = getDataMode();
+  if (mode === "firebase") return fb_createClientFromPendingBooking(booking);
+  if (mode === "demo") throw new Error("Preprod demo read-only");
+  
+  try {
+    const res = await fetch("/api/localdb/clients", { cache: "no-store" });
+    const current = res.ok ? ((await res.json()) as ClientCard[]) : [];
+    
+    // Check if client already exists
+    const existingClient = current.find(c => c.email === booking.email);
+    
+    if (existingClient) {
+      // Update existing client
+      const updatedClient = {
+        ...existingClient,
+        name: booking.name,
+        phone: booking.phone || existingClient.phone,
+        assignedPackage: booking.packageId || existingClient.assignedPackage,
+        status: "prospect",
+        source: existingClient.source || "website"
+      };
+      
+      const updatedList = current.map(c => c.id === existingClient.id ? updatedClient : c);
+      await fetch("/api/localdb/clients", { method: "POST", body: JSON.stringify(updatedList) });
+      return existingClient.id!;
+    } else {
+      // Create new client
+      const newClient: ClientCard = {
+        id: crypto.randomUUID(),
+        name: booking.name,
+        email: booking.email,
+        phone: booking.phone,
+        notes: `Cliente creato automaticamente dalla prenotazione in attesa del ${new Date(booking.date).toLocaleDateString("it-IT")}`,
+        status: "prospect",
+        source: "website",
+        assignedPackage: booking.packageId,
+        goals: [],
+        medicalConditions: [],
+        allergies: [],
+        medications: [],
+        documents: [],
+        createdAt: new Date().toISOString()
+      };
+      
+      const updatedList = [newClient, ...current];
+      await fetch("/api/localdb/clients", { method: "POST", body: JSON.stringify(updatedList) });
+      return newClient.id!;
+    }
+  } catch (error) {
+    console.error("Error creating client from pending booking:", error);
+    throw error;
+  }
+}
+
 export async function getSiteContent(): Promise<SiteContent | null> {
   const mode = getDataMode();
   if (mode === "firebase") return fb_getSiteContent();
-  if (mode === "demo") return fetchDemo<SiteContent>("/demo/siteContent.json", { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", images: [] });
+  if (mode === "demo") return fetchDemo<SiteContent>("/demo/siteContent.json", { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", images: [] });
   if (typeof window === "undefined") return null;
   try {
     const res = await fetch("/api/localdb/siteContent", { cache: "no-store" });
     if (res.ok) return (await res.json()) as SiteContent;
   } catch {}
-  return { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", aboutTitle: "", aboutBody: "", aboutImageUrl: "", images: [] };
+  return { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", aboutTitle: "", aboutBody: "", aboutImageUrl: "", images: [] };
 }
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {

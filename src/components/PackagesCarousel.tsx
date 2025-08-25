@@ -44,8 +44,12 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
                     <div className="text-xs text-foreground/60">pagabile mensilmente</div>
                   </div>
                   <div className="flex gap-2">
-                    <button className="btn-outline" onClick={() => setActive(p)}>Dettagli</button>
-                    <a href={`?packageId=${encodeURIComponent(p.id ?? p.title)}#booking`} className="btn-primary">Prenota</a>
+                    <button className="btn-outline" onClick={() => setActive(p)}>
+                      <span className="text-center">Dettagli</span>
+                    </button>
+                    <a href={`?packageId=${encodeURIComponent(p.id ?? p.title)}#booking`} className="btn-primary">
+          <span className="text-center">Prenota</span>
+        </a>
                   </div>
                 </div>
                 {!p.isActive && (
