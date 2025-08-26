@@ -96,7 +96,7 @@ export async function PUT(request: NextRequest) {
       ? JSON.parse(readFileSync(filePath, "utf8"))
       : [];
     
-    const updatedBookings = existingBookings.map((booking: any) => 
+    const updatedBookings = existingBookings.map((booking: { id: string; [key: string]: unknown }) => 
       booking.id === data.id ? { ...booking, ...data } : booking
     );
     
@@ -121,7 +121,7 @@ export async function DELETE(request: NextRequest) {
       ? JSON.parse(readFileSync(filePath, "utf8"))
       : [];
     
-    const updatedBookings = existingBookings.filter((booking: any) => booking.id !== id);
+    const updatedBookings = existingBookings.filter((booking: { id: string; [key: string]: unknown }) => booking.id !== id);
     writeFileSync(filePath, JSON.stringify(updatedBookings, null, 2));
     
     return NextResponse.json({ success: true });

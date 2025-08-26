@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { getAvailabilityByDate, upsertAvailabilityForDate } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -133,7 +132,6 @@ export default function AdminAvailabilityPage() {
   const [consultationDuration, setConsultationDuration] = useState(10); // Durata in minuti
   const [gapBetweenConsultations, setGapBetweenConsultations] = useState(10); // Gap in minuti
   const [availability, setAvailability] = useState<Availability | null>(null);
-  const [showFreeConsultationSlots, setShowFreeConsultationSlots] = useState(false);
   const [newTime, setNewTime] = useState("");
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [viewMode, setViewMode] = useState("normal"); // "normal" or "promotional"
@@ -279,7 +277,7 @@ export default function AdminAvailabilityPage() {
   // Carica disponibilità quando cambia la data
   useEffect(() => {
     load();
-  }, [date]);
+  }, [date, load]);
 
   return (
     <>
