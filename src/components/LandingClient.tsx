@@ -37,6 +37,8 @@ export default function LandingClient() {
 
     // Listener per eventi personalizzati di selezione pacchetti
     const handlePackageSelected = (event: CustomEvent) => {
+      console.log("LandingClient: Evento packageSelected ricevuto:", event);
+      console.log("LandingClient: Event detail:", event.detail);
       const { packageId } = event.detail;
       console.log("LandingClient: Pacchetto selezionato:", packageId);
       setSelectedPackageId(packageId);

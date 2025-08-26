@@ -174,8 +174,17 @@ export async function getPackages(): Promise<Package[]> {
     console.log("getPackages: Caricamento pacchetti da Firebase...");
     const database = db as Firestore;
     const snap = await getDocs(query(col.packages(database), orderBy("createdAt", "desc")));
-    const packages = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Package) }));
-    console.log("getPackages: Pacchetti caricati da Firebase:", packages);
+    
+    console.log("getPackages: Snap ricevuto:", snap);
+    console.log("getPackages: Numero documenti:", snap.docs.length);
+    
+    const packages = snap.docs.map((d) => {
+      const data = d.data();
+      console.log(`getPackages: Documento ${d.id}:`, data);
+      return { id: d.id, ...(data as Package) };
+    });
+    
+    console.log("getPackages: Pacchetti processati:", packages);
     return packages;
   } catch (error) {
     console.error("getPackages: Errore nel caricamento da Firebase:", error);
@@ -606,6 +615,9 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     console.log("getSiteContent: Contatti - email:", data.contactEmail);
     console.log("getSiteContent: Contatti - addresses:", data.contactAddresses);
     console.log("getSiteContent: Contatti - social:", data.socialChannels);
+    console.log("getSiteContent: Popup - freeConsultationPopup:", data.freeConsultationPopup);
+    console.log("getSiteContent: Popup - isEnabled:", data.freeConsultationPopup?.isEnabled);
+    console.log("getSiteContent: Popup - title:", data.freeConsultationPopup?.title);
     
     return {
       heroTitle: data.heroTitle ?? "",

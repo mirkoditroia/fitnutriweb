@@ -39,6 +39,8 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
       detail: { packageId } 
     });
     console.log("PackagesCarousel: Dispatching evento packageSelected:", customEvent);
+    console.log("PackagesCarousel: Event detail:", customEvent.detail);
+    console.log("PackagesCarousel: PackageId nell'evento:", customEvent.detail.packageId);
     window.dispatchEvent(customEvent);
     
     // Fallback: trigger anche popstate per compatibilità
