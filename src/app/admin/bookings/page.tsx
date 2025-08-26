@@ -86,7 +86,8 @@ export default function AdminBookingsPage() {
     packageId: "",
     date: "",
     slot: "",
-    channelPreference: "whatsapp" as "whatsapp" | "email"
+    channelPreference: "whatsapp" as "whatsapp" | "email",
+    notes: ""
   });
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -104,7 +105,8 @@ export default function AdminBookingsPage() {
     packageId: "",
     date: "",
     slot: "",
-    status: "pending" as "pending" | "confirmed" | "cancelled"
+    status: "pending" as "pending" | "confirmed" | "cancelled",
+    notes: ""
   });
   const [editAvailableSlots, setEditAvailableSlots] = useState<string[]>([]);
   const [editSelectedDate, setEditSelectedDate] = useState<Date | null>(null);
@@ -115,11 +117,15 @@ export default function AdminBookingsPage() {
         listBookings(),
         getPackages()
       ]);
-      setItems(bookings);
-      setPackages(packagesList);
+      // Assicurati che bookings sia sempre un array
+      setItems(Array.isArray(bookings) ? bookings : []);
+      setPackages(Array.isArray(packagesList) ? packagesList : []);
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("Errore nel caricamento dei dati");
+      // In caso di errore, imposta array vuoti
+      setItems([]);
+      setPackages([]);
     } finally {
       setLoading(false);
     }
@@ -197,7 +203,8 @@ export default function AdminBookingsPage() {
       packageId: booking.packageId || "",
       date: booking.date,
       slot: booking.slot || "",
-      status: booking.status
+      status: booking.status,
+      notes: booking.notes || ""
     });
     setEditSelectedDate(new Date(booking.date));
     
@@ -237,8 +244,9 @@ export default function AdminBookingsPage() {
         phone: editForm.phone || undefined,
         packageId: editForm.packageId || undefined,
         date: editForm.date,
-        slot: editForm.slot || undefined,
-        status: editForm.status
+        slot: editForm.slot || "",
+        status: editForm.status,
+        notes: editForm.notes || undefined
       };
       
       await updateBooking(updatedBooking);
@@ -253,7 +261,8 @@ export default function AdminBookingsPage() {
         packageId: "",
         date: "",
         slot: "",
-        status: "pending"
+        status: "pending",
+        notes: ""
       });
       setEditSelectedDate(null);
       setEditAvailableSlots([]);
@@ -274,7 +283,8 @@ export default function AdminBookingsPage() {
       packageId: "",
       date: "",
       slot: "",
-      status: "pending"
+      status: "pending",
+      notes: ""
     });
     setEditSelectedDate(null);
     setEditAvailableSlots([]);
@@ -316,19 +326,19 @@ export default function AdminBookingsPage() {
     }
 
     try {
-      const booking: Booking = {
+      const newBooking = {
         name: manualForm.name,
         email: manualForm.email,
         phone: manualForm.phone,
         packageId: manualForm.packageId || undefined,
         date: manualForm.date,
-        slot: manualForm.slot || undefined,
-        status: "confirmed", // Manual bookings are confirmed by default
+        slot: manualForm.slot || "",
+        status: "pending" as const,
         channelPreference: manualForm.channelPreference,
-        createdAt: new Date().toISOString()
+        notes: manualForm.notes || undefined
       };
 
-      await createBooking(booking);
+      await createBooking(newBooking);
       toast.success("Prenotazione manuale creata con successo e cliente creato/aggiornato automaticamente!");
       
       // Reset form
@@ -339,7 +349,8 @@ export default function AdminBookingsPage() {
         packageId: "",
         date: "",
         slot: "",
-        channelPreference: "whatsapp"
+        channelPreference: "whatsapp",
+        notes: ""
       });
       setSelectedDate(null);
       setAvailableSlots([]);
@@ -435,9 +446,9 @@ export default function AdminBookingsPage() {
   };
 
   // Filter bookings by status for requests view
-  const pendingBookings = items.filter(b => b.status === "pending");
-  const confirmedBookings = items.filter(b => b.status === "confirmed");
-  const cancelledBookings = items.filter(b => b.status === "cancelled");
+  const pendingBookings = Array.isArray(items) ? items.filter(b => b.status === "pending") : [];
+  const confirmedBookings = Array.isArray(items) ? items.filter(b => b.status === "confirmed") : [];
+  const cancelledBookings = Array.isArray(items) ? items.filter(b => b.status === "cancelled") : [];
 
   if (loading) {
     return (
@@ -469,11 +480,19 @@ export default function AdminBookingsPage() {
           </div>
           <div className="text-sm text-muted-foreground">
             📅 {new Date(b.date).toLocaleDateString("it-IT")} 
-            {b.slot && ` • ⏰ ${new Date(b.slot).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`}
+            {b.slot && ` • ⏰ ${b.slot}`}
           </div>
           <div className="text-sm text-muted-foreground">
             📦 {getPackageName(b.packageId)}
           </div>
+          {b.notes && (
+            <div className="text-sm text-muted-foreground mt-2">
+              <div className="font-medium text-foreground mb-1">📝 Note del cliente:</div>
+              <div className="bg-muted/50 p-2 rounded border-l-2 border-primary/30 text-xs">
+                {b.notes}
+              </div>
+            </div>
+          )}
           <div className="text-xs text-muted-foreground/70 mt-1">
             Richiesta il: {new Date(b.createdAt ?? b.date).toLocaleString("it-IT")}
           </div>
@@ -840,6 +859,15 @@ export default function AdminBookingsPage() {
                     <option value="cancelled">Rifiutata</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Note</label>
+                  <textarea
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    rows={3}
+                  />
+                </div>
               </div>
               <div className="flex gap-2 pt-4">
                 <Button type="submit">
@@ -959,6 +987,15 @@ export default function AdminBookingsPage() {
                     <option value="email">Email</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Note</label>
+                  <textarea
+                    value={manualForm.notes}
+                    onChange={(e) => setManualForm(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    rows={3}
+                  />
+                </div>
               </div>
               <div className="flex gap-2 pt-4">
                 <Button type="submit" disabled={!manualForm.slot || availableSlots.length === 0}>
@@ -975,7 +1012,8 @@ export default function AdminBookingsPage() {
                       packageId: "",
                       date: "",
                       slot: "",
-                      channelPreference: "whatsapp"
+                      channelPreference: "whatsapp",
+                      notes: ""
                     });
                     setSelectedDate(null);
                     setAvailableSlots([]);

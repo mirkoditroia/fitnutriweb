@@ -9,6 +9,22 @@ export type Package = {
   featured?: boolean;
   badge?: string;
   active: boolean;
+  // Nuovi campi per sconti e personalizzazione
+  hasDiscount?: boolean;
+  basePrice?: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  paymentText?: string;
+  // Sezione dettagli completa
+  details?: {
+    duration?: string;
+    sessions?: number;
+    features?: string[];
+    includes?: string[];
+    requirements?: string[];
+    notes?: string;
+  };
+  createdAt?: string;
 };
 
 export type AvailabilitySlot = {
@@ -26,6 +42,7 @@ export type Booking = {
   slotId: string;
   packageId: string;
   clientId: string;
+  notes?: string; // Note del cliente (sezione "Parlami di te")
 };
 
 export type Client = {

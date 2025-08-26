@@ -4,7 +4,7 @@
   "heroCta": "Prenota ora",
   "aboutTitle": "Chi sono",
   "aboutBody": "Mi chiamo Gabriele Zambonin e da anni aiuto persone come te a raggiungere i propri obiettivi di benessere e performance.\n\nUnisco la mia esperienza come nutrizionista e personal trainer per offrirti piani su misura, che rispettano il tuo stile di vita e i tuoi obiettivi.\n\nIl mio approccio è scientifico ma pratico: niente diete estreme, solo strategie sostenibili per risultati duraturi.",
-  "aboutImageUrl": "",
+  "aboutImageUrl": "/api/upload/content%2F1756217704584-511537651_1442767240057213_4096546278514624931_n.jpg",
   "images": [],
   "contactPhone": "+39 123 456 7890",
   "contactEmail": "info@gznutrition.it",
@@ -35,7 +35,7 @@
       "postalCode": "20100",
       "coordinates": {
         "lat": 45.4642,
-        "lng": 9.1900
+        "lng": 9.19
       }
     },
     {
@@ -45,12 +45,11 @@
       "postalCode": "20122"
     }
   ],
+  "heroBackgroundImage": "/api/upload/content%2F1756217688176-WhatsApp_Image_2025-08-25_at_14.01.29__1_.jpeg",
   "freeConsultationPopup": {
-    "title": "🎯 10 Minuti Consultivi Gratuiti",
-    "subtitle": "Valuta i tuoi obiettivi gratuitamente",
-    "description": "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance. Ti aiuteremo a definire un piano personalizzato.",
-    "ctaText": "Prenota Ora - È Gratis!",
     "isEnabled": true
-  }
+  },
+  "heroBadgeText": "Performance • Benessere• Energia",
+  "studiosSectionTitle": "🏢In sede",
+  "studiosSectionSubtitle": "Dove mi trovi"
 }
-

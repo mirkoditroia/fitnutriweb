@@ -13,7 +13,7 @@ export function LandingImages({ images }: { images?: Img[] }) {
   const current = images[idx];
 
   return (
-    <section className="container py-12 border-t border-[color:var(--border)]">
+    <section className="container py-12 border-t border-foreground/10">
       <div className="relative">
         <div className="rounded-xl bg-[color:var(--background)] border border-[color:var(--border)] p-2 flex items-center justify-center">
           <img

@@ -79,6 +79,20 @@ export async function upsertPackage(pkg: Package): Promise<string> {
   return id;
 }
 
+export async function deletePackage(packageId: string): Promise<void> {
+  const mode = getDataMode();
+  if (mode === "firebase") {
+    // Per Firebase, dovremmo implementare la funzione delete in data.ts
+    throw new Error("Eliminazione pacchetti non ancora supportata in Firebase");
+  }
+  if (mode === "demo") throw new Error("Preprod demo read-only");
+  
+  // Per local mode, rimuovi il pacchetto dalla lista
+  const current = await getPackages();
+  const next = current.filter((p) => p.id !== packageId);
+  await fetch("/api/localdb/packages", { method: "POST", body: JSON.stringify(next) });
+}
+
 export async function listBookings(): Promise<Booking[]> {
   const mode = getDataMode();
   if (mode === "firebase") return fb_listBookings();
@@ -378,13 +392,52 @@ export async function createClientFromPendingBooking(booking: Booking): Promise<
 export async function getSiteContent(): Promise<SiteContent | null> {
   const mode = getDataMode();
   if (mode === "firebase") return fb_getSiteContent();
-  if (mode === "demo") return fetchDemo<SiteContent>("/demo/siteContent.json", { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", images: [] });
+  if (mode === "demo") return fetchDemo<SiteContent>("/demo/siteContent.json", { 
+    heroTitle: "", 
+    heroSubtitle: "", 
+    heroCta: "Prenota ora", 
+    heroBackgroundImage: "", 
+    heroBadgeText: "Performance • Estetica • Energia",
+    heroBadgeColor: "bg-primary text-primary-foreground",
+    images: [],
+    contactTitle: "",
+    contactSubtitle: "",
+    contactPhone: "",
+    contactEmail: "",
+    contactAddresses: [],
+    socialChannels: [],
+    contactSectionTitle: "💬 Contatti Diretti",
+    contactSectionSubtitle: "",
+    studiosSectionTitle: "🏢 I Nostri Studi",
+    studiosSectionSubtitle: "",
+  });
   if (typeof window === "undefined") return null;
   try {
     const res = await fetch("/api/localdb/siteContent", { cache: "no-store" });
     if (res.ok) return (await res.json()) as SiteContent;
   } catch {}
-  return { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", aboutTitle: "", aboutBody: "", aboutImageUrl: "", images: [] };
+  return { 
+    heroTitle: "", 
+    heroSubtitle: "", 
+    heroCta: "Prenota ora", 
+    heroBackgroundImage: "", 
+    heroBadgeText: "Performance • Estetica • Energia",
+    heroBadgeColor: "bg-primary text-primary-foreground",
+    aboutTitle: "", 
+    aboutBody: "", 
+    aboutImageUrl: "", 
+    images: [],
+    contactTitle: "",
+    contactSubtitle: "",
+    contactPhone: "",
+    contactEmail: "",
+    contactAddresses: [],
+    socialChannels: [],
+    contactSectionTitle: "💬 Contatti Diretti",
+    contactSectionSubtitle: "",
+    studiosSectionTitle: "🏢 I Nostri Studi",
+    studiosSectionSubtitle: "",
+  };
 }
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
@@ -411,19 +464,27 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
   if (mode === "demo") return fetchDemo<Availability>(`/demo/availability/${date}.json`, { date, slots: [] });
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
-    const all = res.ok ? ((await res.json()) as Record<string, string[]>) : {};
-    return { date, slots: all[date] ?? [] };
-  } catch { return { date, slots: [] }; }
+    const all = res.ok ? ((await res.json()) as Record<string, { slots: string[]; freeConsultationSlots?: string[] }>) : {};
+    const dateData = all[date];
+    if (dateData) {
+      return { 
+        date, 
+        slots: dateData.slots || [], 
+        freeConsultationSlots: dateData.freeConsultationSlots || [] 
+      };
+    }
+    return { date, slots: [], freeConsultationSlots: [] };
+  } catch { return { date, slots: [], freeConsultationSlots: [] }; }
 }
 
-export async function upsertAvailabilityForDate(date: string, slots: string[]): Promise<void> {
+export async function upsertAvailabilityForDate(date: string, slots: string[], freeConsultationSlots?: string[]): Promise<void> {
   const mode = getDataMode();
   if (mode === "firebase") return fb_upsertAvailabilityForDate(date, slots);
   if (mode === "demo") throw new Error("Preprod demo read-only");
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
-    const all = res.ok ? ((await res.json()) as Record<string, string[]>) : {};
-    all[date] = slots;
+    const all = res.ok ? ((await res.json()) as Record<string, { slots: string[]; freeConsultationSlots?: string[] }>) : {};
+    all[date] = { slots, freeConsultationSlots: freeConsultationSlots || [] };
     await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(all) });
   } catch {}
 }
@@ -432,5 +493,7 @@ function cryptoRandomId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return (crypto as { randomUUID: () => string }).randomUUID();
   return Math.random().toString(36).slice(2);
 }
+
+
 
 

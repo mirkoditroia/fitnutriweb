@@ -13,7 +13,7 @@ export function AboutSection({ title, body, imageUrl }: Props) {
   if (!title && !body) return null;
 
   return (
-    <section id="chi-sono" className="container py-12 border-t border-[color:var(--border)]">
+    <section id="chi-sono" className="container py-12 border-t border-foreground/10">
       {title && <h2 className="text-2xl font-bold mb-6">{title}</h2>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
         <div className="md:col-span-2">

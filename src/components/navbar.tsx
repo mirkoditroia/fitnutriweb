@@ -7,6 +7,7 @@ const navigationItems = [
   { name: "Chi sono", href: "#chi-sono" },
   { name: "Pacchetti", href: "#pacchetti" },
   { name: "Prenota", href: "#booking" },
+  { name: "Contatti", href: "#contatti" },
   { name: "Recensioni", href: "#recensioni" },
 ];
 

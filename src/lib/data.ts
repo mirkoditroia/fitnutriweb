@@ -26,6 +26,23 @@ export type Package = {
   isActive: boolean;
   featured?: boolean;
   badge?: string;
+  isPromotional?: boolean; // Flag per pacchetti promozionali (es. 10 minuti gratuiti)
+  // Nuovi campi per sconti e personalizzazione
+  hasDiscount?: boolean; // Flag per attivare sconti
+  basePrice?: number; // Prezzo base (mostrato sbarrato)
+  discountedPrice?: number; // Prezzo scontato
+  discountPercentage?: number; // Percentuale di sconto
+  paymentText?: string; // Testo personalizzabile sotto il prezzo (default: "pagabile mensilmente")
+  // Sezione dettagli completa
+  details?: {
+    duration?: string; // Durata del pacchetto (es. "3 mesi", "6 mesi")
+    sessions?: number; // Numero di sessioni incluse
+    features?: string[]; // Lista delle caratteristiche/benefici
+    includes?: string[]; // Cosa è incluso nel pacchetto
+    requirements?: string[]; // Requisiti per il pacchetto
+    notes?: string; // Note aggiuntive
+  };
+  createdAt?: string; // Data di creazione per ordinamento
 };
 
 export type ClientCard = {
@@ -74,29 +91,66 @@ export type Booking = {
   name: string;
   email: string;
   phone?: string;
+  channelPreference: "whatsapp" | "email";
+  date: string;
+  slot: string;
   packageId?: string;
-  date: string; // ISO
-  slot?: string;
-  status: "pending" | "confirmed" | "cancelled";
   priority?: boolean;
-  channelPreference?: "whatsapp" | "email";
+  status: "pending" | "confirmed" | "cancelled";
   createdAt?: string;
+  isFreeConsultation?: boolean; // Flag per i 10 minuti consultivi
+  notes?: string; // Note del cliente (sezione "Parlami di te")
 };
 
-export type SiteContent = {
+export interface SiteContent {
   heroTitle: string;
   heroSubtitle: string;
   heroCta: string;
-  heroBackgroundImage?: string;
+  heroBackgroundImage: string;
+  heroBadgeText?: string; // Testo del badge (default: "Performance • Estetica • Energia")
+  heroBadgeColor?: string; // Colore del badge (default: "bg-primary text-primary-foreground")
   aboutTitle?: string;
   aboutBody?: string;
   aboutImageUrl?: string;
-  images?: { key: string; url: string }[];
-};
+  images?: Array<{ key: string; url: string }>;
+  contactTitle?: string;
+  contactSubtitle?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  contactAddresses?: Array<{
+    name: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  }>;
+  socialChannels?: Array<{
+    platform: string;
+    url: string;
+    icon: string;
+  }>;
+  // Nuovi campi per personalizzare le sezioni contatti e studi
+  contactSectionTitle?: string; // Titolo sezione contatti (default: "💬 Contatti Diretti")
+  contactSectionSubtitle?: string; // Sottotitolo sezione contatti
+  studiosSectionTitle?: string; // Titolo sezione studi (default: "🏢 I Nostri Studi")
+  studiosSectionSubtitle?: string; // Sottotitolo sezione studi
+  // Popup 10 minuti consultivi gratuiti
+  freeConsultationPopup?: {
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    ctaText?: string;
+    isEnabled?: boolean;
+  };
+}
 
 export type Availability = {
-  date: string; // YYYY-MM-DD
+  date: string;
   slots: string[];
+  freeConsultationSlots?: string[]; // Slot dedicati ai 10 minuti consultivi
 };
 
 // Helpers (lazy & typed)
@@ -112,7 +166,7 @@ const col = {
 export async function getPackages(): Promise<Package[]> {
   if (!db) return [];
   const database = db as Firestore;
-  const snap = await getDocs(query(col.packages(database), orderBy("title")));
+  const snap = await getDocs(query(col.packages(database), orderBy("createdAt", "desc")));
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Package) }));
 }
 
@@ -130,6 +184,15 @@ export async function upsertPackage(pkg: Package): Promise<string> {
     isActive: pkg.isActive,
     featured: pkg.featured ?? false,
     badge: pkg.badge ?? null,
+    isPromotional: pkg.isPromotional ?? false,
+    // Nuovi campi per sconti e personalizzazione
+    hasDiscount: pkg.hasDiscount ?? false,
+    basePrice: pkg.basePrice ?? null,
+    discountedPrice: pkg.discountedPrice ?? null,
+    discountPercentage: pkg.discountPercentage ?? null,
+    paymentText: pkg.paymentText ?? "pagabile mensilmente",
+    // Sezione dettagli completa
+    details: pkg.details ?? null,
     createdAt: serverTimestamp(),
   });
   return added.id;
@@ -494,10 +557,23 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     heroSubtitle: data.heroSubtitle ?? "",
     heroCta: data.heroCta ?? "",
     heroBackgroundImage: data.heroBackgroundImage ?? "",
+    heroBadgeText: data.heroBadgeText ?? "Performance • Estetica • Energia",
+    heroBadgeColor: data.heroBadgeColor ?? "bg-primary text-primary-foreground",
     aboutTitle: data.aboutTitle ?? "",
     aboutBody: data.aboutBody ?? "",
     aboutImageUrl: data.aboutImageUrl ?? "",
     images: Array.isArray(data.images) ? data.images : [],
+    contactTitle: data.contactTitle ?? "",
+    contactSubtitle: data.contactSubtitle ?? "",
+    contactPhone: data.contactPhone ?? "",
+    contactEmail: data.contactEmail ?? "",
+    contactAddresses: Array.isArray(data.contactAddresses) ? data.contactAddresses : [],
+    socialChannels: Array.isArray(data.socialChannels) ? data.socialChannels : [],
+    contactSectionTitle: data.contactSectionTitle ?? "💬 Contatti Diretti",
+    contactSectionSubtitle: data.contactSectionSubtitle ?? "",
+    studiosSectionTitle: data.studiosSectionTitle ?? "🏢 I Nostri Studi",
+    studiosSectionSubtitle: data.studiosSectionSubtitle ?? "",
+    freeConsultationPopup: data.freeConsultationPopup,
   };
 }
 
@@ -512,12 +588,16 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
   const snap = await getDoc(col.availability(db as Firestore, date));
   if (!snap.exists()) return null;
   const data = snap.data() as DocumentData;
-  return { date, slots: Array.isArray(data.slots) ? data.slots : [] };
+  return { 
+    date, 
+    slots: Array.isArray(data.slots) ? data.slots : [],
+    freeConsultationSlots: Array.isArray(data.freeConsultationSlots) ? data.freeConsultationSlots : []
+  };
 }
 
-export async function upsertAvailabilityForDate(date: string, slots: string[]): Promise<void> {
+export async function upsertAvailabilityForDate(date: string, slots: string[], freeConsultationSlots?: string[]): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
-  await setDoc(col.availability(db as Firestore, date), { date, slots }, { merge: true });
+  await setDoc(col.availability(db as Firestore, date), { date, slots, freeConsultationSlots }, { merge: true });
 }
 
 // Serialization helpers
@@ -596,10 +676,22 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
     heroSubtitle: fromFs("heroSubtitle"),
     heroCta: fromFs("heroCta"),
     heroBackgroundImage: fromFs("heroBackgroundImage"),
+    heroBadgeText: fromFs("heroBadgeText") || "Performance • Estetica • Energia",
+    heroBadgeColor: fromFs("heroBadgeColor") || "bg-primary text-primary-foreground",
     aboutTitle: fromFs("aboutTitle"),
     aboutBody: fromFs("aboutBody"),
     aboutImageUrl: fromFs("aboutImageUrl"),
     images,
+    contactTitle: fromFs("contactTitle"),
+    contactSubtitle: fromFs("contactSubtitle"),
+    contactPhone: fromFs("contactPhone"),
+    contactEmail: fromFs("contactEmail"),
+    contactAddresses: [],
+    socialChannels: [],
+    contactSectionTitle: fromFs("contactSectionTitle") || "💬 Contatti Diretti",
+    contactSectionSubtitle: fromFs("contactSectionSubtitle"),
+    studiosSectionTitle: fromFs("studiosSectionTitle") || "🏢 I Nostri Studi",
+    studiosSectionSubtitle: fromFs("studiosSectionSubtitle"),
   };
 }
 

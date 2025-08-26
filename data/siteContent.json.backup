@@ -1,0 +1,33 @@
+{
+  "heroTitle": "ciaoooo",
+  "heroSubtitle": "Obiettivo: rafforzare <PackagesCarousel/>.  Fai: - Ordina: featured prima, poi per price asc. - Badge “Più scelto” se badge o featured. - Card: immagine, titolo, bullet 3 benefici (estrai da description → prime 3 righe o split per “•”). - CTA “Dettagli” → <PackageModal/> (dialog nativo, chiudibile con ESC e aria-*), “Prenota” → #booking con ?packageId=... - Prezzo in evidenza; testo “pagabile mensilmente” (solo copy).  QA: tastiera/esc per modal; aria-labelledby/aria-describedby presenti.",
+  "heroCta": "Prenota ora la tua           consulenza",
+  "images": [],
+  "faq": [],
+  "aboutTitle": "CHI SONO",
+  "aboutBody": "Obiettivo: implementare la landing componendo sezioni e leggendo contenuti gestiti da admin.\n\nSezioni:\n1) Hero (da SiteContent): heroTitle, heroSubtitle, CTA “Prenota ora”\n2) Values (3 chip fissi: Piani personalizzati / Allenamenti intelligenti / Follow-up costante)\n3) Pacchetti: <PackagesCarousel/> (usa featured/badge)\n4) Recensioni: <TrustpilotWall/>\n5) FAQ (da SiteContent; se vuote → fallback default 5 Q/A)\n6) Booking form (#booking)\n7) CTA finale + footer (P.IVA, link privacy)\n\nOutput: components/Hero.tsx, Values.tsx, FAQ.tsx, FinalCTA.tsx e app/page.tsx aggiornato.\nQA: modifica SiteContent da admin e verifica aggiornamento in landing (SSR/ISR).\n",
+  "aboutImageUrl": "/uploads/content%2F1755975389491-511537651_1442767240057213_4096546278514624931_n.jpg",
+  "heroBackgroundImage": "/api/upload/content%2F1756125203438-WhatsApp_Image_2025-08-25_at_14.01.29.jpeg",
+  "contactPhone": "3314856621",
+  "contactEmail": "mirkoditroia@gmail.com",
+  "contactAddresses": [
+    {
+      "name": "zambo house",
+      "address": "corso magenta, 83",
+      "city": "Milano",
+      "postalCode": "20123"
+    }
+  ],
+  "socialChannels": [
+    {
+      "platform": "igg",
+      "url": "fgasgasdfarg",
+      "icon": ""
+    },
+    {
+      "platform": "sf",
+      "url": "gfdgdsfh",
+      "icon": "dfs"
+    }
+  ]
+}

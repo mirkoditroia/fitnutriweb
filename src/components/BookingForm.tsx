@@ -1,189 +1,782 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/input";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { toast } from "react-hot-toast";
-import { createBooking, getAvailabilityByDate, getPackages, type Booking, type Package } from "@/lib/datasource";
-import { format, addDays } from "date-fns";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import { Input } from "@/components/ui/input";
+import { getAvailabilityByDate, getPackages } from "@/lib/datasource";
+import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday } from "date-fns";
+import { it } from "date-fns/locale";
+import { type Package } from "@/lib/data";
 
-export function BookingForm({ preselectedPackageId }: { preselectedPackageId?: string }) {
-  const params = useSearchParams();
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [packages, setPackages] = useState<Package[]>([]);
-  
-  // Ref per accedere agli slot disponibili nella validazione
-  const availableSlotsRef = useRef<string[]>([]);
-  
-  // Aggiorna il ref quando cambiano gli slot disponibili
-  useEffect(() => {
-    availableSlotsRef.current = availableSlots;
-  }, [availableSlots]);
+// Schema di validazione
+const schema = z.object({
+  name: z.string().min(2, "Nome troppo corto"),
+  email: z.string().email("Email non valida"),
+  phone: z.string().optional(),
+  channelPreference: z.enum(["whatsapp", "email"]),
+  date: z.string().min(1, "Seleziona una data"),
+  slot: z.string().min(1, "Seleziona un orario disponibile"),
+  packageId: z.string().optional(),
+  priority: z.boolean().optional(),
+  notes: z.string().optional(), // Note del cliente (sezione "Parlami di te")
+});
 
-  // Schema di validazione dinamico che usa il ref per controllare la disponibilità
-  const schema = z.object({
-    name: z.string().min(2, "Nome troppo corto"),
-    email: z.string().email("Email non valida"),
-    phone: z.string().optional(),
-    channelPreference: z.enum(["whatsapp", "email"]).default("whatsapp"),
-    date: z.string().min(1, "Seleziona una data"),
-    slot: z.string().min(1, "Seleziona un orario disponibile"),
-    packageId: z.string().optional(),
-    priority: z.boolean().optional(),
-  }).refine((data) => {
-    // Validazione aggiuntiva: lo slot deve essere effettivamente disponibile
-    if (!data.date || !data.slot) return true; // Skip se mancano date o slot
+type FormValues = z.infer<typeof schema>;
+
+interface BookingFormProps {
+  packageId?: string;
+  isFreeConsultation?: boolean;
+}
+
+// Componente Calendario
+function DateCalendar({ 
+  availableDates, 
+  selectedDate, 
+  onDateSelect, 
+  showPromotionalBanner 
+}: { 
+  availableDates: string[]; 
+  selectedDate: string; 
+  onDateSelect: (date: string) => void; 
+  showPromotionalBanner: boolean;
+}) {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isOpen, setIsOpen] = useState(false);
+
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+
+  const isDateAvailable = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return availableDates.includes(dateStr);
+  };
+
+  const isDateSelected = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return selectedDate === dateStr;
+  };
+
+  const handleDateClick = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    if (isDateAvailable(date)) {
+      onDateSelect(dateStr);
+      setIsOpen(false);
+    }
+  };
+
+  const getDayClasses = (date: Date) => {
+    let classes = "w-10 h-10 flex items-center justify-center text-sm rounded-full cursor-pointer transition-all duration-200";
     
-    // Controlla che lo slot sia negli slot disponibili
+    if (isToday(date)) {
+      classes += " ring-2 ring-primary/50";
+    }
+    
+    if (isDateSelected(date)) {
+      classes += " bg-primary text-primary-foreground font-semibold";
+    } else if (isDateAvailable(date)) {
+      classes += " bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-medium border border-emerald-200";
+    } else {
+      classes += " bg-gray-100 text-gray-400 cursor-not-allowed";
+    }
+    
+    return classes;
+  };
+
+  return (
+    <div className="relative">
+      {/* Input trigger */}
+      <div 
+        className="w-full p-3 border border-border rounded-lg bg-background text-foreground cursor-pointer hover:border-primary/50 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center justify-between">
+          <span className={selectedDate ? "text-foreground" : "text-muted-foreground"}>
+            {selectedDate 
+              ? format(new Date(selectedDate), "EEEE d MMMM yyyy", { locale: it })
+              : "Seleziona una data"
+            }
+          </span>
+          <span className="text-muted-foreground">📅</span>
+        </div>
+      </div>
+
+      {/* Calendario dropdown */}
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-50 p-4">
+          {/* Header calendario */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={prevMonth}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+            >
+              ←
+            </button>
+            <h3 className="font-semibold text-foreground">
+              {format(currentMonth, "MMMM yyyy", { locale: it })}
+            </h3>
+            <button
+              onClick={nextMonth}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+            >
+              →
+            </button>
+          </div>
+
+          {/* Giorni della settimana */}
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map(day => (
+              <div key={day} className="w-10 h-10 flex items-center justify-center text-xs font-medium text-muted-foreground">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Griglia giorni */}
+          <div className="grid grid-cols-7 gap-1">
+            {monthDays.map((day, index) => (
+              <div
+                key={index}
+                className={getDayClasses(day)}
+                onClick={() => handleDateClick(day)}
+              >
+                {format(day, "d")}
+              </div>
+            ))}
+          </div>
+
+          {/* Legenda */}
+          <div className="mt-4 pt-3 border-t border-border">
+            <div className="flex items-center justify-center gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-emerald-100 rounded-full border border-emerald-200"></div>
+                <span className="text-muted-foreground">Disponibile</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-100 rounded-full"></div>
+                <span className="text-muted-foreground">Non disponibile</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
+                <span className="text-muted-foreground">Selezionato</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Informazioni aggiuntive */}
+          {showPromotionalBanner && (
+            <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-center">
+              <p className="text-xs text-green-700">
+                🎯 Solo date con slot promozionali disponibili
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Overlay per chiudere il calendario */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+export function BookingForm({ packageId, isFreeConsultation = false }: BookingFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const availableSlotsRef = useRef<string[]>([]);
+
+  // Schema di validazione con validazione personalizzata
+  const validationSchema = schema.refine((data) => {
+    if (!data.date || !data.slot) return true;
     return availableSlotsRef.current.includes(data.slot);
   }, {
     message: "L'orario selezionato non è più disponibile",
     path: ["slot"]
   });
 
-  type FormValues = z.input<typeof schema>;
-
   const {
     register,
     handleSubmit,
+    formState: { errors },
     setValue,
-    formState: { errors, isSubmitting },
+    watch,
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(validationSchema),
     defaultValues: {
-      packageId: preselectedPackageId,
+      packageId,
       channelPreference: "whatsapp",
-      priority: false,
     },
   });
 
-  // Load packages
+  // Carica i pacchetti disponibili e seleziona quello corretto
   useEffect(() => {
-    getPackages().then(setPackages);
-  }, []);
-
-  // Handle package preselection from URL or prop
-  useEffect(() => {
-    const packageId = params.get("packageId") || preselectedPackageId;
-    if (packageId && packages.length > 0) {
-      const pkg = packages.find(p => p.id === packageId || p.title === packageId);
-      if (pkg) {
-        setValue("packageId", pkg.id || "");
-        setSelectedPackage(pkg);
+    const loadPackages = async () => {
+      try {
+        const allPackages = await getPackages();
+        setPackages(allPackages);
+        
+        // Se è una consultazione gratuita, cerca il pacchetto promozionale
+        if (isFreeConsultation) {
+          const promotionalPackage = allPackages.find(p => p.isPromotional);
+          if (promotionalPackage) {
+            setSelectedPackage(promotionalPackage);
+            setValue("packageId", promotionalPackage.id || "");
+          }
+        } else if (packageId) {
+          // Se è specificato un pacchetto, lo seleziona
+          const pkg = allPackages.find(p => p.id === packageId);
+          if (pkg) {
+            setSelectedPackage(pkg);
+            setValue("packageId", pkg.id || "");
+          }
+        }
+      } catch (error) {
+        console.error("Errore nel caricamento pacchetti:", error);
       }
-    }
-  }, [params, preselectedPackageId, setValue, packages]);
+    };
+    
+    loadPackages();
+  }, [packageId, isFreeConsultation, setValue]);
 
-  // Load available slots when date changes
+  // Gestisce il cambio di pacchetto
+  const handlePackageChange = (newPackage: Package | null) => {
+    setSelectedPackage(newPackage);
+    setValue("packageId", newPackage?.id || "");
+    setValue("date", "");
+    setValue("slot", "");
+    setSelectedDate("");
+    setAvailableSlots([]);
+    setAvailableDates([]);
+  };
+
+  // Aggiorna il ref quando cambiano gli slot disponibili
+  useEffect(() => {
+    availableSlotsRef.current = availableSlots;
+  }, [availableSlots]);
+
+  // Genera le date disponibili e controlla la disponibilità
+  useEffect(() => {
+    // Se non c'è un pacchetto selezionato, non generare date
+    if (!selectedPackage) {
+      setAvailableDates([]);
+      return;
+    }
+
+    const generateAvailableDates = async () => {
+      // Genera solo le prossime 14 date invece di 30 per migliorare le performance
+      const allDates = Array.from({ length: 14 }, (_, i) => {
+        const date = addDays(startOfDay(new Date()), i);
+        return format(date, "yyyy-MM-dd");
+      });
+
+      // Filtra solo le date con slot disponibili
+      const datesWithAvailability: string[] = [];
+      
+      // Controlla la disponibilità in parallelo per migliorare le performance
+      const availabilityPromises = allDates.map(async (date) => {
+        try {
+          const availability = await getAvailabilityByDate(date);
+          if (availability) {
+            // Se è una consultazione gratuita, controlla solo gli slot promozionali
+            if (isFreeConsultation && selectedPackage?.isPromotional) {
+              if (availability.freeConsultationSlots && availability.freeConsultationSlots.length > 0) {
+                return date;
+              }
+            } else {
+              // Per consulenze normali, controlla gli slot standard
+              if (availability.slots && availability.slots.length > 0) {
+                return date;
+              }
+            }
+          }
+          return null;
+        } catch (error) {
+          console.error(`Errore nel controllo disponibilità per ${date}:`, error);
+          return null;
+        }
+      });
+
+      // Attendi tutte le chiamate in parallelo
+      const results = await Promise.all(availabilityPromises);
+      const validDates = results.filter((date): date is string => date !== null);
+      
+      setAvailableDates(validDates);
+    };
+
+    generateAvailableDates();
+  }, [selectedPackage, isFreeConsultation]);
+
+  // Carica la disponibilità per la data selezionata
   useEffect(() => {
     if (!selectedDate) return;
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    setValue("date", dateStr);
-    getAvailabilityByDate(dateStr).then(availability => {
-      setAvailableSlots(availability?.slots || []);
-    });
-  }, [selectedDate, setValue]);
 
-  const minDate = addDays(new Date(), 1); // Tomorrow
+    const loadAvailability = async () => {
+      try {
+        const availability = await getAvailabilityByDate(selectedDate);
+        if (availability) {
+          if (isFreeConsultation && selectedPackage?.isPromotional) {
+            // Per consultazioni gratuite, mostra solo slot promozionali
+            setAvailableSlots(availability.freeConsultationSlots || []);
+          } else {
+            // Per consulenze normali, mostra slot standard
+            setAvailableSlots(availability.slots || []);
+          }
+        }
+      } catch (error) {
+        console.error("Errore nel caricamento disponibilità:", error);
+        setAvailableSlots([]);
+      }
+    };
 
-  const onSubmit = async (values: FormValues) => {
+    loadAvailability();
+  }, [selectedDate, selectedPackage, isFreeConsultation]);
+
+  const onSubmit = async (data: FormValues) => {
+    // Se non c'è un pacchetto selezionato, non permettere l'invio
+    if (!selectedPackage) {
+      alert("Seleziona un pacchetto per continuare");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      const booking: Booking = {
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        packageId: values.packageId,
-        date: values.date, // Already in YYYY-MM-DD format
-        slot: values.slot,
-        status: "pending",
-        priority: !!values.priority,
-        channelPreference: values.channelPreference ?? "whatsapp",
+      // Aggiungi il flag per la consultazione gratuita
+      const bookingData = {
+        ...data,
+        isFreeConsultation: isFreeConsultation,
+        status: "pending" as const,
       };
-      await createBooking(booking);
-      toast.success("✅ Prenotazione inviata con successo! Ti contatteremo a breve.");
-      // Reset form completely
-      setSelectedDate(null);
-      setSelectedPackage(null);
-      setAvailableSlots([]);
-      // Clear all form fields
+
+      const response = await fetch("/api/localdb/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingData),
+      });
+
+      if (response.ok) {
+        alert(isFreeConsultation 
+          ? "Prenotazione per i 10 minuti consultivi gratuiti inviata con successo!" 
+          : "Prenotazione inviata con successo!"
+        );
+        // Reset del form
       setValue("name", "");
       setValue("email", "");
       setValue("phone", "");
       setValue("date", "");
       setValue("slot", "");
+        setValue("notes", "");
+        setSelectedDate("");
+        setAvailableSlots([]);
+        // Reset del pacchetto selezionato per tornare al selettore
+        setSelectedPackage(null);
       setValue("packageId", "");
-      setValue("priority", false);
-    } catch (e) {
-      console.error(e);
-      toast.error("Impossibile inviare la prenotazione. Riprova.");
+      } else {
+        alert("Errore nell'invio della prenotazione");
+      }
+    } catch (error) {
+      console.error("Errore:", error);
+      alert("Errore nell'invio della prenotazione");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // Mostra banner informativo per pacchetti promozionali
+  const showPromotionalBanner = selectedPackage?.isPromotional;
+
+  // Se non c'è un pacchetto selezionato, mostra solo il form base
+  if (!selectedPackage) {
+    return (
+      <div className="space-y-6">
+        {/* Messaggio informativo */}
+        <div className="bg-muted/20 border border-border rounded-lg p-4">
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Seleziona un pacchetto dalla sezione "Pacchetti" per vedere le date e orari disponibili
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Il form sarà completato automaticamente con le opzioni di prenotazione
+            </p>
+          </div>
+        </div>
+
+        {/* Form di prenotazione base (senza data e slot) */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Nome */}
+          <div>
+            <Input
+              label="Nome completo *"
+              {...register("name")}
+              placeholder="Il tuo nome"
+            />
+            {errors.name && (
+              <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div>
+            <Input
+              label="Email *"
+              type="email"
+              {...register("email")}
+              placeholder="la-tua-email@esempio.com"
+            />
+            {errors.email && (
+              <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
+            )}
+          </div>
+
+          {/* Telefono */}
+          <div>
+            <Input
+              label="Telefono (opzionale)"
+              {...register("phone")}
+              placeholder="+39 123 456 7890"
+            />
+          </div>
+
+          {/* Preferenza canale */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Preferisco essere contattato via:
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  value="whatsapp"
+                  {...register("channelPreference")}
+                  className="text-primary"
+                />
+                <span>WhatsApp</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  value="email"
+                  {...register("channelPreference")}
+                  className="text-primary"
+                />
+                <span>Email</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Priorità */}
+          <div>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                {...register("priority")}
+                className="text-primary"
+              />
+              <span className="text-sm">Richiesta prioritaria</span>
+            </label>
+          </div>
+
+          {/* Sezione "Parlami di te" */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Parlami di te
+            </label>
+            <textarea
+              {...register("notes")}
+              placeholder="Raccontaci i tuoi obiettivi, esperienze precedenti, preferenze alimentari, eventuali limitazioni o qualsiasi altra informazione che ritieni importante per la tua consulenza..."
+              className="w-full p-3 border border-border rounded-lg bg-background text-foreground min-h-[120px] resize-y"
+              rows={5}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Queste informazioni ci aiuteranno a preparare una consulenza più personalizzata per te
+            </p>
+          </div>
+
+          {/* Submit disabilitato */}
+          <Button
+            type="submit"
+            disabled={true}
+            className="w-full opacity-50 cursor-not-allowed"
+          >
+            Seleziona un pacchetto per continuare
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
   return (
-    <form className="grid grid-cols-1 sm:grid-cols-2 gap-4" onSubmit={handleSubmit(onSubmit)}>
+    <div className="space-y-6">
+      {/* Banner per pacchetto selezionato */}
       {selectedPackage && (
-        <div className="sm:col-span-2">
-          <span className="chip bg-primary/15 text-primary">
-            📦 Pacchetto selezionato: {selectedPackage.title}
+        <div className={`border border-border rounded-lg p-4 ${showPromotionalBanner ? 'bg-green-50 border-green-200' : 'bg-card'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${showPromotionalBanner ? 'bg-green-100' : 'bg-primary/10'}`}>
+              <span className="text-lg">{showPromotionalBanner ? '🎯' : '📦'}</span>
+            </div>
+            <div className="flex-1">
+              <h3 className={`font-semibold ${showPromotionalBanner ? 'text-green-800' : 'text-foreground'}`}>
+                {selectedPackage.title}
+              </h3>
+              <p className={`text-sm ${showPromotionalBanner ? 'text-green-700' : 'text-muted-foreground'}`}>
+                {selectedPackage.description}
+              </p>
+              {!showPromotionalBanner && (
+                <div className="mt-2">
+                  {selectedPackage.hasDiscount && selectedPackage.basePrice && selectedPackage.discountedPrice ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-primary">
+                        € {selectedPackage.discountedPrice}
+                      </span>
+                      <span className="text-sm text-foreground/60 line-through">
+                        € {selectedPackage.basePrice}
+                      </span>
+                      {selectedPackage.discountPercentage && (
+                        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+                          -{selectedPackage.discountPercentage}%
           </span>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm font-medium text-primary">
+                      € {selectedPackage.price}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedPackage.paymentText || "pagabile mensilmente"}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
-      <Input label="Nome e cognome" {...register("name")} error={errors.name?.message} />
-      <Input label="Email" type="email" {...register("email")} error={errors.email?.message} />
-      <Input label="Telefono" {...register("phone")} />
+
+      {/* Form di prenotazione */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Selettore Pacchetto */}
       <div>
-        <label className="block text-sm font-medium mb-1">Contatto preferito</label>
-        <select className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" {...register("channelPreference")}>
-          <option value="whatsapp">WhatsApp</option>
-          <option value="email">Email</option>
+          <label className="block text-sm font-medium mb-2">
+            Pacchetto selezionato
+          </label>
+          <select
+            value={selectedPackage?.id || ""}
+            onChange={(e) => {
+              const newPackage = packages.find(p => p.id === e.target.value);
+              handlePackageChange(newPackage || null);
+            }}
+            className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
+          >
+            <option value="">Seleziona un pacchetto</option>
+            {packages.map((pkg) => {
+              // Determina il prezzo da mostrare
+              let displayPrice = "";
+              if (pkg.isPromotional) {
+                displayPrice = "(Gratuito)";
+              } else if (pkg.hasDiscount && pkg.basePrice && pkg.discountedPrice) {
+                displayPrice = `- €${pkg.discountedPrice} (scontato da €${pkg.basePrice})`;
+              } else {
+                displayPrice = `- €${pkg.price}`;
+              }
+              
+              return (
+                <option key={pkg.id} value={pkg.id || ""}>
+                  {pkg.title} {displayPrice}
+                </option>
+              );
+            })}
         </select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Puoi cambiare pacchetto in qualsiasi momento
+          </p>
+        </div>
+
+        {/* Nome */}
+        <div>
+          <Input
+            label="Nome completo *"
+            {...register("name")}
+            placeholder="Il tuo nome"
+          />
+          {errors.name && (
+            <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
+          )}
+        </div>
+
+        {/* Email */}
+        <div>
+          <Input
+            label="Email *"
+            type="email"
+            {...register("email")}
+            placeholder="la-tua-email@esempio.com"
+          />
+          {errors.email && (
+            <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
+          )}
+        </div>
+
+        {/* Telefono */}
+        <div>
+          <Input
+            label="Telefono (opzionale)"
+            {...register("phone")}
+            placeholder="+39 123 456 7890"
+          />
+        </div>
+
+        {/* Preferenza canale */}
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Preferisco essere contattato via:
+          </label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                value="whatsapp"
+                {...register("channelPreference")}
+                className="text-primary"
+              />
+              <span>WhatsApp</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                value="email"
+                {...register("channelPreference")}
+                className="text-primary"
+              />
+              <span>Email</span>
+            </label>
+          </div>
       </div>
+
+        {/* Data con calendario interattivo */}
+        {selectedPackage && (
       <div>
-        <label className="block text-sm font-medium mb-1">Data</label>
-        <DatePicker
-          selected={selectedDate}
-          onChange={setSelectedDate}
-          dateFormat="dd/MM/yyyy"
-          className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
-          minDate={minDate}
-          placeholderText="Seleziona una data"
-        />
-        {errors.date?.message && <p className="mt-1 text-xs text-destructive">{errors.date.message}</p>}
+            <label className="block text-sm font-medium mb-2">
+              Data * {showPromotionalBanner && <span className="text-green-600">(Solo date con disponibilità)</span>}
+            </label>
+            <DateCalendar
+              availableDates={availableDates}
+              selectedDate={selectedDate}
+              onDateSelect={(date) => {
+                setSelectedDate(date);
+                setValue("date", date);
+                setValue("slot", ""); // Reset slot quando cambia data
+              }}
+              showPromotionalBanner={showPromotionalBanner || false}
+            />
+            {errors.date && (
+              <p className="text-destructive text-sm mt-1">{errors.date.message}</p>
+            )}
+            {availableDates.length === 0 && (
+              <p className="text-muted-foreground text-sm mt-1">
+                {showPromotionalBanner 
+                  ? "Nessuna data disponibile per consultazioni gratuite" 
+                  : "Nessuna data disponibile per consulenze"
+                }
+              </p>
+            )}
       </div>
+        )}
+
+        {/* Slot orari */}
+        {selectedPackage && selectedDate && availableSlots.length > 0 && (
       <div>
-        <label className="block text-sm font-medium mb-1">Orario</label>
-        <select className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" {...register("slot")}>
-          <option value="">Seleziona orario</option>
+            <label className="block text-sm font-medium mb-2">
+              Orario disponibile * {showPromotionalBanner && <span className="text-green-600">(Slot promozionali)</span>}
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {availableSlots.map((slot) => (
-            <option key={slot} value={slot}>
-              {new Date(slot).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
-            </option>
-          ))}
-        </select>
-        {errors.slot?.message && <p className="mt-1 text-xs text-destructive">{errors.slot.message}</p>}
-        {selectedDate && availableSlots.length === 0 && (
-          <p className="mt-1 text-xs text-destructive">Nessun orario disponibile per questa data</p>
+                <button
+                  key={slot}
+                  type="button"
+                  onClick={() => setValue("slot", slot)}
+                  className={`p-3 border rounded-lg text-sm transition-colors ${
+                    watch("slot") === slot
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  {slot}
+                </button>
+              ))}
+            </div>
+            {errors.slot && (
+              <p className="text-destructive text-sm mt-1">{errors.slot.message}</p>
         )}
       </div>
-      <input type="hidden" {...register("packageId")} />
-      <label className="flex items-center gap-2 text-sm mt-2">
-        <input type="checkbox" {...register("priority")} />
-        Voglio iniziare da subito
+        )}
+
+        {/* Priorità */}
+        <div>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              {...register("priority")}
+              className="text-primary"
+            />
+            <span className="text-sm">Richiesta prioritaria</span>
+          </label>
+        </div>
+
+        {/* Sezione "Parlami di te" */}
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Parlami di te
       </label>
-      <div className="sm:col-span-2 mt-2">
-        <Button type="submit" disabled={isSubmitting || !selectedDate || availableSlots.length === 0}>
-          {isSubmitting ? "Invio..." : "Prenota"}
+          <textarea
+            {...register("notes")}
+            placeholder="Raccontaci i tuoi obiettivi, esperienze precedenti, preferenze alimentari, eventuali limitazioni o qualsiasi altra informazione che ritieni importante per la tua consulenza..."
+            className="w-full p-3 border border-border rounded-lg bg-background text-foreground min-h-[120px] resize-y"
+            rows={5}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Queste informazioni ci aiuteranno a preparare una consulenza più personalizzata per te
+          </p>
+        </div>
+
+        {/* Submit */}
+        <Button
+          type="submit"
+          disabled={isSubmitting || availableDates.length === 0 || !selectedPackage}
+          className="w-full"
+        >
+          {isSubmitting 
+            ? "Invio in corso..." 
+            : !selectedPackage
+              ? "Seleziona un pacchetto per continuare"
+              : showPromotionalBanner 
+                ? "Prenota Consultazione Gratuita" 
+                : "Prenota Consulenza"
+          }
         </Button>
+
+        {/* Informazioni aggiuntive per consultazione gratuita */}
+        {selectedPackage && showPromotionalBanner && (
+          <div className="text-center text-sm text-muted-foreground">
+            <p>* La consultazione gratuita dura 10 minuti</p>
+            <p>* Solo per nuovi clienti</p>
+            <p>* Valutazione obiettivi e piano personalizzato</p>
       </div>
+        )}
     </form>
+    </div>
   );
 }
-
-

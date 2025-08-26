@@ -1,0 +1,57 @@
+[
+  {
+    "title": "Nutrizione",
+    "description": "",
+    "price": 60,
+    "imageUrl": "",
+    "isActive": true,
+    "featured": false,
+    "badge": "",
+    "isPromotional": false,
+    "hasDiscount": false,
+    "basePrice": 0,
+    "discountedPrice": 0,
+    "discountPercentage": 0,
+    "paymentText": "",
+    "details": {
+      "duration": "3 mesi",
+      "sessions": 0,
+      "features": [],
+      "includes": [],
+      "requirements": [],
+      "notes": ""
+    },
+    "id": "d846fa91-cb16-466a-9c99-f611e413f2d1"
+  },
+  {
+    "id": "basic-package",
+    "title": "Pacchetto Base",
+    "description": "Programma nutrizionale personalizzato con follow-up settimanale",
+    "price": 150,
+    "imageUrl": "",
+    "isActive": true,
+    "featured": false,
+    "badge": null,
+    "isPromotional": false,
+    "hasDiscount": true,
+    "basePrice": 200,
+    "discountedPrice": 160,
+    "discountPercentage": 20,
+    "paymentText": "",
+    "details": {
+      "duration": "2 mesi",
+      "notes": "👉 Questo pacchetto è pensato per chi vuole fare sul serio e trasformare il proprio corpo con un approccio completo.\nAvrai un piano nutrizionale basato sulle tue esigenze (calorie, macro, preferenze alimentari) e un programma di allenamento progressivo, che potrai seguire in palestra o a casa.\nIl percorso include check-in settimanali, aggiustamenti costanti e il mio supporto per mantenere alta la motivazione."
+    }
+  },
+  {
+    "id": "free-consultation",
+    "title": "🎯 10 Minuti Consultivi Gratuiti",
+    "description": "Primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance",
+    "price": 0,
+    "imageUrl": "",
+    "isActive": true,
+    "featured": true,
+    "badge": "GRATIS",
+    "isPromotional": true
+  }
+]
