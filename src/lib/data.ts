@@ -12,6 +12,7 @@ import {
   Timestamp,
   where,
   type DocumentData,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Firestore } from "firebase/firestore";
@@ -171,31 +172,60 @@ export async function getPackages(): Promise<Package[]> {
 }
 
 export async function upsertPackage(pkg: Package): Promise<string> {
+  if (!db) throw new Error("Firestore not configured");
+  
   if (pkg.id) {
-    const { id, ...data } = pkg;
-    await setDoc(doc(db as Firestore, "packages", id), data, { merge: true });
-    return id;
+    // Update existing package
+    await updateDoc(doc(db as Firestore, "packages", pkg.id), {
+      title: pkg.title,
+      description: pkg.description,
+      price: pkg.price,
+      imageUrl: pkg.imageUrl ?? null,
+      active: pkg.isActive,
+      featured: pkg.featured ?? false,
+      badge: pkg.badge ?? null,
+      isPromotional: pkg.isPromotional ?? false,
+      // Nuovi campi per sconti e personalizzazione
+      hasDiscount: pkg.hasDiscount ?? false,
+      basePrice: pkg.basePrice ?? null,
+      discountedPrice: pkg.discountedPrice ?? null,
+      discountPercentage: pkg.discountPercentage ?? null,
+      paymentText: pkg.paymentText ?? "pagabile mensilmente",
+      // Sezione dettagli completa
+      details: pkg.details ?? null,
+      createdAt: serverTimestamp(),
+    });
+    return pkg.id;
+  } else {
+    // Create new package
+    const added = await addDoc(col.packages(db as Firestore), {
+      title: pkg.title,
+      description: pkg.description,
+      price: pkg.price,
+      imageUrl: pkg.imageUrl ?? null,
+      active: pkg.isActive,
+      featured: pkg.featured ?? false,
+      badge: pkg.badge ?? null,
+      isPromotional: pkg.isPromotional ?? false,
+      // Nuovi campi per sconti e personalizzazione
+      hasDiscount: pkg.hasDiscount ?? false,
+      basePrice: pkg.basePrice ?? null,
+      discountedPrice: pkg.discountedPrice ?? null,
+      discountPercentage: pkg.discountPercentage ?? null,
+      paymentText: pkg.paymentText ?? "pagabile mensilmente",
+      // Sezione dettagli completa
+      details: pkg.details ?? null,
+      createdAt: serverTimestamp(),
+    });
+    return added.id;
   }
-  const added = await addDoc(col.packages(db as Firestore), {
-    title: pkg.title,
-    description: pkg.description,
-    price: pkg.price,
-    imageUrl: pkg.imageUrl ?? null,
-    isActive: pkg.isActive,
-    featured: pkg.featured ?? false,
-    badge: pkg.badge ?? null,
-    isPromotional: pkg.isPromotional ?? false,
-    // Nuovi campi per sconti e personalizzazione
-    hasDiscount: pkg.hasDiscount ?? false,
-    basePrice: pkg.basePrice ?? null,
-    discountedPrice: pkg.discountedPrice ?? null,
-    discountPercentage: pkg.discountPercentage ?? null,
-    paymentText: pkg.paymentText ?? "pagabile mensilmente",
-    // Sezione dettagli completa
-    details: pkg.details ?? null,
-    createdAt: serverTimestamp(),
-  });
-  return added.id;
+}
+
+export async function deletePackage(packageId: string): Promise<void> {
+  if (!db) throw new Error("Firestore not configured");
+  if (!packageId) throw new Error("Package ID is required for deletion");
+  
+  await deleteDoc(doc(db as Firestore, "packages", packageId));
 }
 
 // Bookings
@@ -686,12 +716,29 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
     contactSubtitle: fromFs("contactSubtitle"),
     contactPhone: fromFs("contactPhone"),
     contactEmail: fromFs("contactEmail"),
-    contactAddresses: [],
-    socialChannels: [],
+    contactAddresses: arr(f.contactAddresses as FirestoreArrayValue, (v) => ({
+      name: v.mapValue.fields.name?.stringValue || "",
+      address: v.mapValue.fields.address?.stringValue || "",
+      city: v.mapValue.fields.city?.stringValue || "",
+      postalCode: v.mapValue.fields.postalCode?.stringValue || "",
+      coordinates: v.mapValue.fields.coordinates?.stringValue ? JSON.parse(v.mapValue.fields.coordinates.stringValue) : undefined
+    })),
+    socialChannels: arr(f.socialChannels as FirestoreArrayValue, (v) => ({
+      platform: v.mapValue.fields.platform?.stringValue || "",
+      url: v.mapValue.fields.url?.stringValue || "",
+      icon: v.mapValue.fields.icon?.stringValue || ""
+    })),
     contactSectionTitle: fromFs("contactSectionTitle") || "💬 Contatti Diretti",
     contactSectionSubtitle: fromFs("contactSectionSubtitle"),
     studiosSectionTitle: fromFs("studiosSectionTitle") || "🏢 I Nostri Studi",
     studiosSectionSubtitle: fromFs("studiosSectionSubtitle"),
+    freeConsultationPopup: {
+      isEnabled: fromFs("freeConsultationPopup.isEnabled") === "true",
+      title: fromFs("freeConsultationPopup.title") || "🎯 10 Minuti Consultivi Gratuiti",
+      subtitle: fromFs("freeConsultationPopup.subtitle") || "Valuta i tuoi obiettivi gratuitamente",
+      description: fromFs("freeConsultationPopup.description") || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
+      ctaText: fromFs("freeConsultationPopup.ctaText") || "Prenota Ora - È Gratis!"
+    },
   };
 }
 

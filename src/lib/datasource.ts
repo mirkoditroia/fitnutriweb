@@ -82,8 +82,9 @@ export async function upsertPackage(pkg: Package): Promise<string> {
 export async function deletePackage(packageId: string): Promise<void> {
   const mode = getDataMode();
   if (mode === "firebase") {
-    // Per Firebase, dovremmo implementare la funzione delete in data.ts
-    throw new Error("Eliminazione pacchetti non ancora supportata in Firebase");
+    // Usa la nuova funzione deletePackage implementata in data.ts
+    const { deletePackage: fb_deletePackage } = await import("./data");
+    return fb_deletePackage(packageId);
   }
   if (mode === "demo") throw new Error("Preprod demo read-only");
   
