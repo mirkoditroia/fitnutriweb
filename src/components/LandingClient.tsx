@@ -60,6 +60,9 @@ export default function LandingClient() {
 
   useEffect(() => {
     Promise.all([getSiteContent(), getPackages()]).then(([c, p]) => {
+      console.log("LandingClient: Contenuto caricato:", c);
+      console.log("LandingClient: Pacchetti caricati:", p);
+      
       setContent(
         c ?? {
           heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
@@ -71,6 +74,8 @@ export default function LandingClient() {
         }
       );
       setPackages(Array.isArray(p) ? p : []);
+    }).catch(error => {
+      console.error("LandingClient: Errore nel caricamento:", error);
     });
   }, []);
 
@@ -79,6 +84,9 @@ export default function LandingClient() {
 
   // Determina se è una consultazione gratuita
   const isFreeConsultation = selectedPackageId === 'free-consultation';
+  
+  console.log("LandingClient: selectedPackageId:", selectedPackageId);
+  console.log("LandingClient: isFreeConsultation:", isFreeConsultation);
 
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
