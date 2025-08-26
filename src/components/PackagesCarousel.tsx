@@ -17,24 +17,32 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
   const ordered = [...items].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.price - b.price);
 
   const handleBookingClick = (packageId: string) => {
+    console.log("PackagesCarousel: Click su prenota per pacchetto:", packageId);
+    
     // Aggiorna l'URL con il packageId
     const url = new URL(window.location.href);
     url.searchParams.set('packageId', packageId);
     window.history.pushState({}, '', url.toString());
+    console.log("PackagesCarousel: URL aggiornato:", url.toString());
     
     // Scroll alla sezione booking
     const bookingSection = document.getElementById('booking');
     if (bookingSection) {
+      console.log("PackagesCarousel: Scrolling alla sezione booking");
       bookingSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      console.log("PackagesCarousel: Sezione booking non trovata");
     }
     
     // Trigger un evento personalizzato per aggiornare il LandingClient
     const customEvent = new CustomEvent('packageSelected', { 
       detail: { packageId } 
     });
+    console.log("PackagesCarousel: Dispatching evento packageSelected:", customEvent);
     window.dispatchEvent(customEvent);
     
     // Fallback: trigger anche popstate per compatibilità
+    console.log("PackagesCarousel: Dispatching evento popstate");
     window.dispatchEvent(new PopStateEvent('popstate'));
   };
 

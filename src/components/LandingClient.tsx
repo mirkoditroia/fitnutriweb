@@ -147,7 +147,15 @@ export default function LandingClient() {
             }} 
           />
         </div>
-      ) : null}
+      ) : (
+        <div className="text-red-500 p-4 border border-red-200 rounded">
+          <p><strong>Debug - Sezione contatti non visualizzata:</strong></p>
+          <p>contactPhone: "{content.contactPhone}"</p>
+          <p>contactEmail: "{content.contactEmail}"</p>
+          <p>contactAddresses: {JSON.stringify(content.contactAddresses)}</p>
+          <p>socialChannels: {JSON.stringify(content.socialChannels)}</p>
+        </div>
+      )}
       
       {/* Recensioni Trustpilot */}
       <TrustpilotWall />

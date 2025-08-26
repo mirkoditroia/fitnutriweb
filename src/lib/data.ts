@@ -602,6 +602,10 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     
     const data = snap.data();
     console.log("getSiteContent: Contenuto caricato da Firebase:", data);
+    console.log("getSiteContent: Contatti - phone:", data.contactPhone);
+    console.log("getSiteContent: Contatti - email:", data.contactEmail);
+    console.log("getSiteContent: Contatti - addresses:", data.contactAddresses);
+    console.log("getSiteContent: Contatti - social:", data.socialChannels);
     
     return {
       heroTitle: data.heroTitle ?? "",
