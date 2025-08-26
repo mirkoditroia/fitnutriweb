@@ -101,6 +101,15 @@ export default function LandingClient() {
         />
       )}
       
+      {/* Debug popup */}
+      {!content.freeConsultationPopup && (
+        <div className="text-yellow-500 p-4 border border-yellow-200 rounded m-4">
+          <p><strong>Debug - Popup non caricato:</strong></p>
+          <p>freeConsultationPopup: {JSON.stringify(content.freeConsultationPopup)}</p>
+          <p>content completo: {JSON.stringify(content, null, 2)}</p>
+        </div>
+      )}
+      
       <Hero 
         title={content.heroTitle} 
         subtitle={content.heroSubtitle} 
@@ -150,8 +159,8 @@ export default function LandingClient() {
       ) : (
         <div className="text-red-500 p-4 border border-red-200 rounded">
           <p><strong>Debug - Sezione contatti non visualizzata:</strong></p>
-          <p>contactPhone: "{content.contactPhone}"</p>
-          <p>contactEmail: "{content.contactEmail}"</p>
+          <p>contactPhone: &quot;{content.contactPhone}&quot;</p>
+          <p>contactEmail: &quot;{content.contactEmail}&quot;</p>
           <p>contactAddresses: {JSON.stringify(content.contactAddresses)}</p>
           <p>socialChannels: {JSON.stringify(content.socialChannels)}</p>
         </div>

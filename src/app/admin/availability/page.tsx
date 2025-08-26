@@ -203,7 +203,7 @@ export default function AdminAvailabilityPage() {
   const save = async () => {
     if (availability) {
       await upsertAvailabilityForDate(date, availability.slots, availability.freeConsultationSlots);
-      toast.success("Disponibilità salvata");
+    toast.success("Disponibilità salvata");
     }
   };
 
@@ -438,9 +438,9 @@ export default function AdminAvailabilityPage() {
                     : `📋 ${availability.slots?.length || 0} slot normali configurati`
                   }
                 </p>
-              </div>
+        </div>
               
-              <div className="flex gap-2">
+        <div className="flex gap-2">
                 <Button 
                   type="button" 
                   variant="outline" 
@@ -459,8 +459,8 @@ export default function AdminAvailabilityPage() {
                 >
                   🗑️ Svuota tutti
                 </Button>
-              </div>
-            </div>
+        </div>
+      </div>
 
             {/* Input per aggiungere orari manualmente */}
             {showTimeInput && (
@@ -543,7 +543,7 @@ export default function AdminAvailabilityPage() {
               })()}
             </div>
           </div>
-        </div>
+      </div>
       )}
     </>
   );
