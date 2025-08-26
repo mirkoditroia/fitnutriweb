@@ -308,7 +308,7 @@ export default function AdminClientsPage() {
         </div>
       </div>
 
-      <div className="card p-6">
+      <div className="bg-card border border-border rounded-lg p-6 mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 shadow-sm">
         <form className="space-y-6">
           {/* Basic Information */}
           <section>
@@ -654,13 +654,13 @@ export default function AdminClientsPage() {
   );
 
   return (
-    <main className="container py-8">
-      <h1 className="text-2xl font-bold">Gestione Clienti</h1>
+    <>
+      <h1 className="text-2xl font-bold text-foreground pt-4">Clienti</h1>
       
       {viewMode === "list" && renderClientList()}
       {viewMode === "detail" && selectedClient && renderClientForm(selectedClient)}
       {viewMode === "create" && selectedClient && renderClientForm(selectedClient, true)}
-    </main>
+    </>
   );
 }
 

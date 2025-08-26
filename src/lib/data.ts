@@ -145,6 +145,18 @@ export async function listBookings(): Promise<Booking[]> {
 
 export async function createBooking(b: Booking): Promise<string> {
   if (!db) throw new Error("Firestore not configured");
+  
+  // Validazione: lo slot deve essere obbligatorio e disponibile
+  if (!b.slot) {
+    throw new Error("Lo slot orario è obbligatorio per la prenotazione");
+  }
+  
+  // Controlla che lo slot sia effettivamente disponibile
+  const availability = await getAvailabilityByDate(b.date);
+  if (!availability || !availability.slots.includes(b.slot)) {
+    throw new Error("L'orario selezionato non è più disponibile");
+  }
+  
   const added = await addDoc(col.bookings(db as Firestore), {
     clientId: b.clientId ?? null,
     name: b.name,
@@ -158,6 +170,10 @@ export async function createBooking(b: Booking): Promise<string> {
     channelPreference: b.channelPreference ?? null,
     createdAt: serverTimestamp(),
   });
+  
+  // Rimuovi lo slot occupato dalla disponibilità
+  availability.slots = availability.slots.filter(slot => slot !== b.slot);
+  await upsertAvailabilityForDate(b.date, availability.slots);
   
   // If booking is confirmed, create or update client automatically
   if (b.status === "confirmed") {
@@ -207,6 +223,30 @@ export async function createBooking(b: Booking): Promise<string> {
 export async function updateBooking(booking: Booking): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
   if (!booking.id) throw new Error("Booking ID is required for update");
+  
+  // Trova la prenotazione esistente per confrontare i cambiamenti
+  const existingBookingDoc = await getDoc(doc(db as Firestore, "bookings", booking.id));
+  if (!existingBookingDoc.exists()) {
+    throw new Error("Prenotazione non trovata");
+  }
+  
+  const existingBooking = toBooking(booking.id, existingBookingDoc.data());
+  
+  // Se si sta cambiando lo slot, controlla che sia disponibile
+  if (existingBooking.slot !== booking.slot && booking.slot) {
+    const availability = await getAvailabilityByDate(booking.date);
+    if (!availability || !availability.slots.includes(booking.slot)) {
+      throw new Error("Il nuovo orario selezionato non è più disponibile");
+    }
+  }
+  
+  // Se si sta cambiando la data, controlla che lo slot sia disponibile nella nuova data
+  if (existingBooking.date !== booking.date && booking.slot) {
+    const newDateAvailability = await getAvailabilityByDate(booking.date);
+    if (!newDateAvailability || !newDateAvailability.slots.includes(booking.slot)) {
+      throw new Error("L'orario selezionato non è disponibile per la nuova data");
+    }
+  }
   
   // Firestore does not accept undefined values. Normalize optional fields to null.
   const id = booking.id;
@@ -275,8 +315,43 @@ export async function updateBooking(booking: Booking): Promise<void> {
       
       if (availSnap.exists()) {
         const currentSlots = availSnap.data().slots || [];
-        const updatedSlots = currentSlots.filter((slot: string) => slot !== booking.slot);
-        await setDoc(availDoc, { date: dateStr, slots: updatedSlots }, { merge: true });
+        // Controlla che lo slot sia ancora disponibile prima di rimuoverlo
+        if (currentSlots.includes(booking.slot)) {
+          const updatedSlots = currentSlots.filter((slot: string) => slot !== booking.slot);
+          await setDoc(availDoc, { date: dateStr, slots: updatedSlots }, { merge: true });
+        } else {
+          console.warn(`Slot ${booking.slot} non più disponibile per la data ${dateStr}`);
+        }
+      }
+      
+      // Se si è cambiato lo slot, ripristina quello precedente
+      if (existingBooking.slot && existingBooking.slot !== booking.slot) {
+        const prevDateStr = existingBooking.date.split('T')[0];
+        const prevAvailDoc = col.availability(db as Firestore, prevDateStr);
+        const prevAvailSnap = await getDoc(prevAvailDoc);
+        
+        if (prevAvailSnap.exists()) {
+          const prevSlots = prevAvailSnap.data().slots || [];
+          if (!prevSlots.includes(existingBooking.slot)) {
+            const updatedPrevSlots = [...prevSlots, existingBooking.slot];
+            await setDoc(prevAvailDoc, { date: prevDateStr, slots: updatedPrevSlots }, { merge: true });
+          }
+        }
+      }
+      
+      // Se si è cambiata la data, ripristina lo slot nella data precedente
+      if (existingBooking.date !== booking.date && existingBooking.slot) {
+        const prevDateStr = existingBooking.date.split('T')[0];
+        const prevAvailDoc = col.availability(db as Firestore, prevDateStr);
+        const prevAvailSnap = await getDoc(prevAvailDoc);
+        
+        if (prevAvailSnap.exists()) {
+          const prevSlots = prevAvailSnap.data().slots || [];
+          if (!prevSlots.includes(existingBooking.slot)) {
+            const updatedPrevSlots = [...prevSlots, existingBooking.slot];
+            await setDoc(prevAvailDoc, { date: prevDateStr, slots: updatedPrevSlots }, { merge: true });
+          }
+        }
       }
     } catch (error) {
       console.error("Error updating availability in Firebase:", error);
@@ -289,10 +364,11 @@ export async function deleteBooking(bookingId: string): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
   
   // Get booking data before deletion to create client if needed
+  let bookingData: Booking | null = null;
   try {
     const bookingDoc = await getDoc(doc(db as Firestore, "bookings", bookingId));
     if (bookingDoc.exists()) {
-      const bookingData = bookingDoc.data() as Booking;
+      bookingData = toBooking(bookingId, bookingDoc.data());
       
       // Create inactive client from rejected booking
       const existingClient = await getClientByEmail(bookingData.email);
@@ -333,6 +409,26 @@ export async function deleteBooking(bookingId: string): Promise<void> {
   }
   
   await deleteDoc(doc(db as Firestore, "bookings", bookingId));
+  
+  // Se la prenotazione aveva uno slot confermato, ripristinalo nella disponibilità
+  if (bookingData && bookingData.status === "confirmed" && bookingData.slot && bookingData.date) {
+    try {
+      const dateStr = bookingData.date.split('T')[0];
+      const availDoc = col.availability(db as Firestore, dateStr);
+      const availSnap = await getDoc(availDoc);
+      
+      if (availSnap.exists()) {
+        const currentSlots = availSnap.data().slots || [];
+        if (!currentSlots.includes(bookingData.slot)) {
+          const updatedSlots = [...currentSlots, bookingData.slot];
+          await setDoc(availDoc, { date: dateStr, slots: updatedSlots }, { merge: true });
+        }
+      }
+    } catch (error) {
+      console.error("Error restoring availability after booking deletion in Firebase:", error);
+      // Don't throw here as the main booking deletion was successful
+    }
+  }
 }
 
 // Clients

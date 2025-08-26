@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,20 +12,44 @@ import { format, addDays } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const schema = z.object({
-  name: z.string().min(2, "Nome troppo corto"),
-  email: z.string().email("Email non valida"),
-  phone: z.string().optional(),
-  channelPreference: z.enum(["whatsapp", "email"]).default("whatsapp"),
-  date: z.string().min(1, "Seleziona una data"),
-  slot: z.string().optional(),
-  packageId: z.string().optional(),
-  priority: z.boolean().optional(),
-});
-
-type FormValues = z.input<typeof schema>;
-
 export function BookingForm({ preselectedPackageId }: { preselectedPackageId?: string }) {
+  const params = useSearchParams();
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [packages, setPackages] = useState<Package[]>([]);
+  
+  // Ref per accedere agli slot disponibili nella validazione
+  const availableSlotsRef = useRef<string[]>([]);
+  
+  // Aggiorna il ref quando cambiano gli slot disponibili
+  useEffect(() => {
+    availableSlotsRef.current = availableSlots;
+  }, [availableSlots]);
+
+  // Schema di validazione dinamico che usa il ref per controllare la disponibilità
+  const schema = z.object({
+    name: z.string().min(2, "Nome troppo corto"),
+    email: z.string().email("Email non valida"),
+    phone: z.string().optional(),
+    channelPreference: z.enum(["whatsapp", "email"]).default("whatsapp"),
+    date: z.string().min(1, "Seleziona una data"),
+    slot: z.string().min(1, "Seleziona un orario disponibile"),
+    packageId: z.string().optional(),
+    priority: z.boolean().optional(),
+  }).refine((data) => {
+    // Validazione aggiuntiva: lo slot deve essere effettivamente disponibile
+    if (!data.date || !data.slot) return true; // Skip se mancano date o slot
+    
+    // Controlla che lo slot sia negli slot disponibili
+    return availableSlotsRef.current.includes(data.slot);
+  }, {
+    message: "L'orario selezionato non è più disponibile",
+    path: ["slot"]
+  });
+
+  type FormValues = z.input<typeof schema>;
+
   const {
     register,
     handleSubmit,
@@ -39,12 +63,6 @@ export function BookingForm({ preselectedPackageId }: { preselectedPackageId?: s
       priority: false,
     },
   });
-
-  const params = useSearchParams();
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [packages, setPackages] = useState<Package[]>([]);
 
   // Load packages
   useEffect(() => {
@@ -137,7 +155,7 @@ export function BookingForm({ preselectedPackageId }: { preselectedPackageId?: s
           minDate={minDate}
           placeholderText="Seleziona una data"
         />
-        {errors.date?.message && <p className="mt-1 text-xs text-accent">{errors.date.message}</p>}
+        {errors.date?.message && <p className="mt-1 text-xs text-destructive">{errors.date.message}</p>}
       </div>
       <div>
         <label className="block text-sm font-medium mb-1">Orario</label>
@@ -149,9 +167,9 @@ export function BookingForm({ preselectedPackageId }: { preselectedPackageId?: s
             </option>
           ))}
         </select>
-        {errors.slot?.message && <p className="mt-1 text-xs text-accent">{errors.slot.message}</p>}
+        {errors.slot?.message && <p className="mt-1 text-xs text-destructive">{errors.slot.message}</p>}
         {selectedDate && availableSlots.length === 0 && (
-          <p className="mt-1 text-xs text-foreground/60">Nessun orario disponibile per questa data</p>
+          <p className="mt-1 text-xs text-destructive">Nessun orario disponibile per questa data</p>
         )}
       </div>
       <input type="hidden" {...register("packageId")} />
@@ -160,7 +178,7 @@ export function BookingForm({ preselectedPackageId }: { preselectedPackageId?: s
         Voglio iniziare da subito
       </label>
       <div className="sm:col-span-2 mt-2">
-        <Button type="submit" disabled={isSubmitting || !selectedDate}>
+        <Button type="submit" disabled={isSubmitting || !selectedDate || availableSlots.length === 0}>
           {isSubmitting ? "Invio..." : "Prenota"}
         </Button>
       </div>

@@ -23,12 +23,12 @@ export default function AdminPackagesPage() {
   const add = () => setItems([...items, { title: "", description: "", price: 0, isActive: true }]);
 
   return (
-    <main className="container py-8">
-      <h1 className="text-2xl font-bold">Pacchetti</h1>
+    <>
+      <h1 className="text-2xl font-bold text-foreground pt-4">Gestione Pacchetti</h1>
       <div className="mt-4 flex justify-end"><Button onClick={add}>Aggiungi</Button></div>
       <div className="mt-4 grid gap-4">
         {items.map((p, i) => (
-          <div key={p.id ?? i} className="card p-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div key={p.id ?? i} className="bg-card border border-border rounded-lg p-6 grid grid-cols-1 sm:grid-cols-2 gap-3 shadow-sm">
             <Input label="Titolo" value={p.title} onChange={(e) => setItems(upd(items, i, { title: e.target.value }))} />
             <Input label="Prezzo" type="number" value={p.price} onChange={(e) => setItems(upd(items, i, { price: Number(e.target.value) }))} />
             <div>
@@ -46,7 +46,7 @@ export default function AdminPackagesPage() {
           </div>
         ))}
       </div>
-    </main>
+    </>
   );
 }
 

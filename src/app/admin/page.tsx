@@ -3,14 +3,30 @@ import Link from "next/link";
 
 export default function AdminPage() {
   return (
-    <main className="container py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Admin</h1>
-        <Link href="/" className="text-sm underline hover:text-primary">
-          Torna al sito
-        </Link>
+    <>
+      {/* Header migliorato con spazio extra per la navbar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4 pt-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">⚙️ Admin Panel</h1>
+          <p className="text-lg text-muted-foreground mt-2">Gestione completa del sistema GZnutrition</p>
+        </div>
+        <div className="flex gap-3">
+          <a 
+            href="/" 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+          >
+            🏠 Homepage
+          </a>
+          <a 
+            href="/admin/bookings" 
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
+          >
+            📋 Prenotazioni
+          </a>
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <h2 className="font-semibold">Contenuti Landing</h2>
@@ -20,7 +36,9 @@ export default function AdminPage() {
               Modifica hero (titolo, sottotitolo, CTA), immagini di sezione e microcopy FAQ.
             </p>
             <div className="mt-4 flex gap-3">
-              <Link href="/admin/content" className="btn-outline">Apri editor</Link>
+              <Link href="/admin/content" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium">
+                ✏️ Editor Contenuti
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -34,7 +52,9 @@ export default function AdminPage() {
               Gestisci titolo, descrizione, prezzo, immagine, featured e badge.
             </p>
             <div className="mt-4 flex gap-3">
-              <Link href="/admin/packages" className="btn-outline">Gestisci pacchetti</Link>
+              <Link href="/admin/packages" className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors font-medium">
+                📦 Gestisci Pacchetti
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -46,7 +66,9 @@ export default function AdminPage() {
           <CardContent>
             <p className="text-sm text-foreground/70">Configura gli slot agenda.</p>
             <div className="mt-4 flex gap-3">
-              <Link href="/admin/availability" className="btn-outline">Configura slot</Link>
+              <Link href="/admin/availability" className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors font-medium">
+                ⏰ Configura Slot
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -60,8 +82,12 @@ export default function AdminPage() {
               Visualizza prenotazioni con stato, schede cliente e statistiche rapide.
             </p>
             <div className="mt-4 flex gap-3">
-              <Link href="/admin/bookings" className="btn-outline">Prenotazioni</Link>
-              <Link href="/admin/clients" className="btn-outline">Clienti</Link>
+              <Link href="/admin/bookings" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium">
+                📋 Prenotazioni
+              </Link>
+              <Link href="/admin/clients" className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium">
+                👥 Clienti
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -75,12 +101,14 @@ export default function AdminPage() {
               Monitora esito fetch e ultimi log.
             </p>
             <div className="mt-4 flex gap-3">
-              <Link href="/admin/trustpilot" className="btn-outline">Trustpilot</Link>
+              <Link href="/admin/trustpilot" className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors font-medium">
+                📊 Trustpilot
+              </Link>
             </div>
           </CardContent>
         </Card>
       </div>
-    </main>
+    </>
   );
 }
 

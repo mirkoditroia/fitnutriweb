@@ -43,9 +43,9 @@ export default function AdminAvailabilityPage() {
   };
 
   return (
-    <main className="container py-8">
-      <h1 className="text-2xl font-bold">Disponibilità</h1>
-      <div className="card p-6 mt-4 space-y-4">
+    <>
+      <h1 className="text-2xl font-bold text-foreground pt-4">Disponibilità</h1>
+      <div className="bg-card border border-border rounded-lg p-6 mt-4 space-y-4 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className="block text-sm font-medium mb-1">Data</label>
@@ -53,7 +53,7 @@ export default function AdminAvailabilityPage() {
               selected={selectedDate}
               onChange={(d) => d && setSelectedDate(d)}
               dateFormat="dd/MM/yyyy"
-              className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               minDate={new Date()}
             />
           </div>
@@ -67,15 +67,15 @@ export default function AdminAvailabilityPage() {
           <Button onClick={save}>Salva</Button>
         </div>
       </div>
-      <div className="mt-4 card p-6">
-        <h2 className="font-semibold">Slot ({slots.length})</h2>
+      <div className="mt-4 bg-card border border-border rounded-lg p-6 shadow-sm">
+        <h2 className="font-semibold text-foreground">Slot ({slots.length})</h2>
         <ul className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
           {slots.map((s, i) => (
-            <li key={i} className="rounded-md border border-[color:var(--border)] px-3 py-2">{new Date(s).toLocaleString()}</li>
+            <li key={i} className="rounded-md border border-border px-3 py-2 bg-background">{new Date(s).toLocaleString()}</li>
           ))}
         </ul>
       </div>
-    </main>
+    </>
   );
 }
 

@@ -94,6 +94,18 @@ export async function createBooking(b: Booking): Promise<string> {
   const mode = getDataMode();
   if (mode === "firebase") return fb_createBooking(b);
   if (mode === "demo") throw new Error("Preprod demo read-only");
+  
+  // Validazione: lo slot deve essere obbligatorio e disponibile
+  if (!b.slot) {
+    throw new Error("Lo slot orario è obbligatorio per la prenotazione");
+  }
+  
+  // Controlla che lo slot sia effettivamente disponibile
+  const availability = await getAvailabilityByDate(b.date);
+  if (!availability || !availability.slots.includes(b.slot)) {
+    throw new Error("L'orario selezionato non è più disponibile");
+  }
+  
   const id = cryptoRandomId();
   const createdAt = new Date().toISOString();
   try {
@@ -101,10 +113,28 @@ export async function createBooking(b: Booking): Promise<string> {
     const current = res.ok ? ((await res.json()) as Booking[]) : [];
     const next = [{ ...b, id, createdAt }, ...current];
     await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify(next) });
+    
+    // Rimuovi lo slot occupato dalla disponibilità
+    availability.slots = availability.slots.filter(slot => slot !== b.slot);
+    await upsertAvailabilityForDate(b.date, availability.slots);
+    
     return id;
   } catch {
     // fallback write new list
     await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify([{ ...b, id, createdAt }]) });
+    
+    // Rimuovi lo slot occupato dalla disponibilità anche nel fallback
+    try {
+      const availRes = await fetch("/api/localdb/availability", { cache: "no-store" });
+      const allAvailability = availRes.ok ? ((await availRes.json()) as Record<string, string[]>) : {};
+      if (allAvailability[b.date]) {
+        allAvailability[b.date] = allAvailability[b.date].filter(slot => slot !== b.slot);
+        await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(allAvailability) });
+      }
+    } catch (error) {
+      console.error("Error updating availability in fallback:", error);
+    }
+    
     return id;
   }
 }
@@ -117,6 +147,26 @@ export async function updateBooking(booking: Booking): Promise<void> {
   try {
     const res = await fetch("/api/localdb/bookings", { cache: "no-store" });
     const current = res.ok ? ((await res.json()) as Booking[]) : [];
+    
+    // Trova la prenotazione esistente per confrontare i cambiamenti
+    const existingBooking = current.find(item => item.id === booking.id);
+    
+    // Se si sta cambiando lo slot, controlla che sia disponibile
+    if (existingBooking && existingBooking.slot !== booking.slot && booking.slot) {
+      const availability = await getAvailabilityByDate(booking.date);
+      if (!availability || !availability.slots.includes(booking.slot)) {
+        throw new Error("Il nuovo orario selezionato non è più disponibile");
+      }
+    }
+    
+    // Se si sta cambiando la data, controlla che lo slot sia disponibile nella nuova data
+    if (existingBooking && existingBooking.date !== booking.date && booking.slot) {
+      const newDateAvailability = await getAvailabilityByDate(booking.date);
+      if (!newDateAvailability || !newDateAvailability.slots.includes(booking.slot)) {
+        throw new Error("L'orario selezionato non è disponibile per la nuova data");
+      }
+    }
+    
     const updatedItems = current.map(item => 
       item.id === booking.id ? booking : item
     );
@@ -130,8 +180,31 @@ export async function updateBooking(booking: Booking): Promise<void> {
         const availability = availRes.ok ? ((await availRes.json()) as Record<string, string[]>) : {};
         
         if (availability[dateStr]) {
-          availability[dateStr] = availability[dateStr].filter(slot => slot !== booking.slot);
-          await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+          // Controlla che lo slot sia ancora disponibile prima di rimuoverlo
+          if (availability[dateStr].includes(booking.slot)) {
+            availability[dateStr] = availability[dateStr].filter(slot => slot !== booking.slot);
+            await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+          } else {
+            console.warn(`Slot ${booking.slot} non più disponibile per la data ${dateStr}`);
+          }
+        }
+        
+        // Se si è cambiato lo slot, ripristina quello precedente
+        if (existingBooking && existingBooking.slot && existingBooking.slot !== booking.slot) {
+          const prevDateStr = existingBooking.date.split('T')[0];
+          if (availability[prevDateStr] && !availability[prevDateStr].includes(existingBooking.slot)) {
+            availability[prevDateStr] = [...availability[prevDateStr], existingBooking.slot];
+            await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+          }
+        }
+        
+        // Se si è cambiata la data, ripristina lo slot nella data precedente
+        if (existingBooking && existingBooking.date !== booking.date && existingBooking.slot) {
+          const prevDateStr = existingBooking.date.split('T')[0];
+          if (availability[prevDateStr] && !availability[prevDateStr].includes(existingBooking.slot)) {
+            availability[prevDateStr] = [...availability[prevDateStr], existingBooking.slot];
+            await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+          }
         }
       } catch (error) {
         console.error("Error updating availability:", error);
@@ -152,8 +225,29 @@ export async function deleteBooking(bookingId: string): Promise<void> {
   try {
     const res = await fetch("/api/localdb/bookings", { cache: "no-store" });
     const current = res.ok ? ((await res.json()) as Booking[]) : [];
+    
+    // Trova la prenotazione da eliminare per ripristinare lo slot
+    const bookingToDelete = current.find(item => item.id === bookingId);
+    
     const filteredItems = current.filter(item => item.id !== bookingId);
     await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify(filteredItems) });
+    
+    // Se la prenotazione aveva uno slot confermato, ripristinalo nella disponibilità
+    if (bookingToDelete && bookingToDelete.status === "confirmed" && bookingToDelete.slot && bookingToDelete.date) {
+      try {
+        const dateStr = bookingToDelete.date.split('T')[0];
+        const availRes = await fetch("/api/localdb/availability", { cache: "no-store" });
+        const availability = availRes.ok ? ((await availRes.json()) as Record<string, string[]>) : {};
+        
+        if (availability[dateStr] && !availability[dateStr].includes(bookingToDelete.slot)) {
+          availability[dateStr] = [...availability[dateStr], bookingToDelete.slot];
+          await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+        }
+      } catch (error) {
+        console.error("Error restoring availability after booking deletion:", error);
+        // Don't throw here as the main booking deletion was successful
+      }
+    }
   } catch (error) {
     console.error("Error deleting booking:", error);
     throw error;

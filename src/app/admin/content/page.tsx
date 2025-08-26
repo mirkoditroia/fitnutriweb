@@ -39,9 +39,9 @@ export default function AdminContentPage() {
   };
 
   return (
-    <main className="container py-8">
-      <h1 className="text-2xl font-bold">Contenuti Landing</h1>
-      <div className="mt-6 card p-6 space-y-6">
+    <>
+      <h1 className="text-2xl font-bold text-foreground pt-4">Contenuti Landing</h1>
+      <div className="mt-6 bg-card border border-border rounded-lg p-6 space-y-6 shadow-sm">
         <section className="space-y-3">
           <h2 className="font-semibold">Hero</h2>
           <Input label="Hero title" value={content.heroTitle} onChange={(e) => setContent({ ...content, heroTitle: e.target.value })} />
@@ -102,7 +102,7 @@ export default function AdminContentPage() {
           <Button onClick={save}>Salva contenuti</Button>
         </div>
       </div>
-    </main>
+    </>
   );
 }
 

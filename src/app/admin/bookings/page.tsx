@@ -94,6 +94,20 @@ export default function AdminBookingsPage() {
   // Calendar state
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const [dayBookings, setDayBookings] = useState<Booking[]>([]);
+  
+  // Edit/Reschedule state
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    packageId: "",
+    date: "",
+    slot: "",
+    status: "pending" as "pending" | "confirmed" | "cancelled"
+  });
+  const [editAvailableSlots, setEditAvailableSlots] = useState<string[]>([]);
+  const [editSelectedDate, setEditSelectedDate] = useState<Date | null>(null);
 
   const loadData = async () => {
     try {
@@ -160,19 +174,143 @@ export default function AdminBookingsPage() {
   };
 
   // Manual booking functions
-  const handleManualDateChange = async (date: Date | null) => {
+  const handleManualDateChange = (date: Date | null) => {
     setSelectedDate(date);
-    if (!date) return;
+    if (date) {
+      const dateStr = format(date, "yyyy-MM-dd");
+      setManualForm(prev => ({ ...prev, date: dateStr }));
+      getAvailabilityByDate(dateStr).then(availability => {
+        setAvailableSlots(availability?.slots || []);
+      });
+    } else {
+      setAvailableSlots([]);
+    }
+  };
+
+  // Funzioni per la modifica e rischedulazione
+  const handleEditBooking = (booking: Booking) => {
+    console.log("handleEditBooking chiamata con:", booking);
     
-    const dateStr = format(date, "yyyy-MM-dd");
-    setManualForm(prev => ({ ...prev, date: dateStr, slot: "" }));
+    setEditingBooking(booking);
+    console.log("editingBooking impostato a:", booking);
+    
+    setEditForm({
+      name: booking.name,
+      email: booking.email,
+      phone: booking.phone || "",
+      packageId: booking.packageId || "",
+      date: booking.date,
+      slot: booking.slot || "",
+      status: booking.status
+    });
+    console.log("editForm impostato con:", {
+      name: booking.name,
+      email: booking.email,
+      phone: booking.phone || "",
+      packageId: booking.packageId || "",
+      date: booking.date,
+      slot: booking.slot || "",
+      status: booking.status
+    });
+    
+    setEditSelectedDate(new Date(booking.date));
+    console.log("editSelectedDate impostato a:", new Date(booking.date));
+    
+    // Carica gli slot disponibili per la data
+    const dateStr = format(new Date(booking.date), "yyyy-MM-dd");
+    console.log("Caricamento disponibilità per data:", dateStr);
+    
+    getAvailabilityByDate(dateStr).then(availability => {
+      console.log("Disponibilità caricata:", availability);
+      setEditAvailableSlots(availability?.slots || []);
+      console.log("editAvailableSlots impostato a:", availability?.slots || []);
+    }).catch(error => {
+      console.error("Errore nel caricamento disponibilità:", error);
+      setEditAvailableSlots([]);
+    });
+  };
+
+  const handleEditDateChange = (date: Date | null) => {
+    setEditSelectedDate(date);
+    if (date) {
+      const dateStr = format(date, "yyyy-MM-dd");
+      setEditForm(prev => ({ ...prev, date: dateStr }));
+      getAvailabilityByDate(dateStr).then(availability => {
+        setEditAvailableSlots(availability?.slots || []);
+      });
+    } else {
+      setEditAvailableSlots([]);
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingBooking) return;
     
     try {
-      const availability = await getAvailabilityByDate(dateStr);
-      setAvailableSlots(availability?.slots || []);
+      const updatedBooking: Booking = {
+        ...editingBooking,
+        name: editForm.name,
+        email: editForm.email,
+        phone: editForm.phone || undefined,
+        packageId: editForm.packageId || undefined,
+        date: editForm.date,
+        slot: editForm.slot || undefined,
+        status: editForm.status
+      };
+      
+      await updateBooking(updatedBooking);
+      toast.success("Prenotazione aggiornata con successo!");
+      
+      // Reset form e ricarica dati
+      setEditingBooking(null);
+      setEditForm({
+        name: "",
+        email: "",
+        phone: "",
+        packageId: "",
+        date: "",
+        slot: "",
+        status: "pending"
+      });
+      setEditSelectedDate(null);
+      setEditAvailableSlots([]);
+      
+      await loadData();
     } catch (error) {
-      console.error("Error loading availability:", error);
-      setAvailableSlots([]);
+      console.error("Error updating booking:", error);
+      toast.error("Errore nell'aggiornamento della prenotazione");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBooking(null);
+    setEditForm({
+      name: "",
+      email: "",
+      phone: "",
+      packageId: "",
+      date: "",
+      slot: "",
+      status: "pending"
+    });
+    setEditSelectedDate(null);
+    setEditAvailableSlots([]);
+  };
+
+  const handleDelete = async (booking: Booking) => {
+    if (!confirm(`Sei sicuro di voler eliminare la prenotazione di ${booking.name}?`)) {
+      return;
+    }
+    
+    try {
+      await deleteBooking(booking.id!);
+      toast.success("Prenotazione eliminata con successo!");
+      await loadData();
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      toast.error("Errore nell'eliminazione della prenotazione");
     }
   };
 
@@ -181,6 +319,18 @@ export default function AdminBookingsPage() {
     
     if (!manualForm.name || !manualForm.email || !manualForm.date) {
       toast.error("Compila almeno nome, email e data");
+      return;
+    }
+
+    // Validazione aggiuntiva: lo slot deve essere obbligatorio per le prenotazioni manuali
+    if (!manualForm.slot) {
+      toast.error("Seleziona un orario disponibile per la prenotazione");
+      return;
+    }
+
+    // Controlla che lo slot sia effettivamente disponibile
+    if (!availableSlots.includes(manualForm.slot)) {
+      toast.error("L'orario selezionato non è più disponibile");
       return;
     }
 
@@ -303,6 +453,14 @@ export default function AdminBookingsPage() {
     }
   }, [calendarDate, items, viewMode, loadDayBookings]);
 
+  // Debug: traccia i cambiamenti di editingBooking
+  useEffect(() => {
+    console.log("editingBooking cambiato:", editingBooking);
+    console.log("editForm cambiato:", editForm);
+    console.log("editSelectedDate cambiato:", editSelectedDate);
+    console.log("editAvailableSlots cambiato:", editAvailableSlots);
+  }, [editingBooking, editForm, editSelectedDate, editAvailableSlots]);
+
   // Filter bookings by status for requests view
   const pendingBookings = items.filter(b => b.status === "pending");
   const confirmedBookings = items.filter(b => b.status === "confirmed");
@@ -318,12 +476,12 @@ export default function AdminBookingsPage() {
   }
 
   const renderBookingCard = (b: Booking) => (
-    <div key={b.id} className="card p-4">
+    <div key={b.id} className="bg-card border border-border rounded-lg p-4 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <div className="font-semibold">{b.name}</div>
-            <span className={`chip text-xs ${
+            <div className="font-semibold text-foreground">{b.name}</div>
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
               b.status === "confirmed" ? "bg-green-100 text-green-800" :
               b.status === "cancelled" ? "bg-red-100 text-red-800" :
               "bg-yellow-100 text-yellow-800"
@@ -331,33 +489,35 @@ export default function AdminBookingsPage() {
               {b.status === "pending" ? "In attesa" : 
                b.status === "confirmed" ? "Confermata" : "Rifiutata"}
             </span>
-            {b.priority && <span className="chip bg-orange-100 text-orange-800 text-xs">Priorità</span>}
+            {b.priority && <span className="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-medium">Priorità</span>}
           </div>
-          <div className="text-sm text-foreground/70">
+          <div className="text-sm text-muted-foreground">
             📧 {b.email} {b.phone && `• 📱 ${b.phone}`}
           </div>
-          <div className="text-sm text-foreground/70">
+          <div className="text-sm text-muted-foreground">
             📅 {new Date(b.date).toLocaleDateString("it-IT")} 
             {b.slot && ` • ⏰ ${new Date(b.slot).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`}
           </div>
-          <div className="text-sm text-foreground/70">
+          <div className="text-sm text-muted-foreground">
             📦 {getPackageName(b.packageId)}
           </div>
-          <div className="text-xs text-foreground/50 mt-1">
+          <div className="text-xs text-muted-foreground/70 mt-1">
             Richiesta il: {new Date(b.createdAt ?? b.date).toLocaleString("it-IT")}
           </div>
         </div>
         
-                 {b.status === "pending" && (
-           <div className="flex gap-2">
-             <Button 
-               size="sm" 
-               onClick={() => handleConfirm(b)}
-               className="bg-green-600 hover:bg-green-700 text-white"
-             >
-               ✅ Conferma
-             </Button>
-                           <Button 
+        <div className="flex gap-2 flex-wrap">
+          {/* Pulsanti per prenotazioni in attesa */}
+          {b.status === "pending" && (
+            <>
+              <Button 
+                size="sm" 
+                onClick={() => handleConfirm(b)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                ✅ Conferma
+              </Button>
+              <Button 
                 size="sm" 
                 variant="outline"
                 onClick={() => handleCreateClientFromPending(b)}
@@ -367,27 +527,74 @@ export default function AdminBookingsPage() {
                   <span className="flex items-center gap-1">
                     <span>👥</span>
                     <span className="hidden sm:inline">Crea Cliente</span>
-                    <span className="sm:inline">Crea</span>
+                    <span className="sm:hidden">Crea</span>
                   </span>
                 </span>
               </Button>
-             <Button 
-               size="sm" 
-               variant="outline"
-               onClick={() => handleReject(b)}
-               className="border-red-300 text-red-600 hover:bg-red-50"
-             >
-               🗑️ Rifiuta
-             </Button>
-           </div>
-         )}
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleReject(b)}
+                className="border-red-300 text-red-600 hover:bg-red-50"
+              >
+                🗑️ Rifiuta
+              </Button>
+            </>
+          )}
+          
+          {/* Pulsanti per tutte le prenotazioni */}
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => {
+              console.log("Pulsante Modifica cliccato per prenotazione:", b);
+              handleEditBooking(b);
+            }}
+            className="border-gray-300 text-gray-600 hover:bg-gray-50"
+          >
+            ✏️ Modifica
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => handleDelete(b)}
+            className="border-red-300 text-red-600 hover:bg-red-50"
+          >
+            🗑️ Elimina
+          </Button>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <main className="container py-8">
-      <h1 className="text-2xl font-bold">Gestione Prenotazioni</h1>
+    <>
+      {/* Header con navigazione e spazio extra per la navbar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4 pt-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Gestione Prenotazioni</h1>
+          <p className="text-sm text-muted-foreground mt-1">Amministrazione sistema prenotazioni</p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open('/', '_blank')}
+            className="flex items-center gap-2"
+          >
+            🏠 Homepage
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open('/admin', '_blank')}
+            className="flex items-center gap-2"
+          >
+            ⚙️ Admin Panel
+          </Button>
+        </div>
+      </div>
       
              {/* Navigation Tabs */}
        <div className="flex items-center justify-between mt-6 border-b border-foreground/20">
@@ -559,12 +766,137 @@ export default function AdminBookingsPage() {
         </div>
       )}
 
+      {/* Form di modifica/rischedulazione - SEMPRE VISIBILE quando editingBooking è impostato */}
+      {editingBooking && (
+        <div className="mt-8">
+          {/* Debug info */}
+          <div className="mb-4 p-2 bg-blue-100 border border-blue-300 rounded text-xs text-blue-800">
+            DEBUG: Form di modifica attivo per prenotazione: {editingBooking.name} ({editingBooking.id})
+          </div>
+          
+          <div className="bg-card border border-border rounded-lg p-6 max-w-2xl shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Modifica Prenotazione</h2>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCancelEdit}
+                className="text-xs px-3 py-1"
+              >
+                ❌ Annulla
+              </Button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Nome e cognome *</label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Email *</label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Telefono</label>
+                  <input
+                    type="text"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Pacchetto</label>
+                  <select
+                    value={editForm.packageId}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, packageId: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  >
+                    <option value="">Nessun pacchetto</option>
+                    {packages.map(pkg => (
+                      <option key={pkg.id} value={pkg.id}>{pkg.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Data *</label>
+                  <DatePicker
+                    selected={editSelectedDate}
+                    onChange={handleEditDateChange}
+                    dateFormat="dd/MM/yyyy"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    minDate={new Date()}
+                    placeholderText="Seleziona una data"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Slot orario *</label>
+                  <select
+                    value={editForm.slot}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, slot: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    disabled={!editSelectedDate || editAvailableSlots.length === 0}
+                    required
+                  >
+                    <option value="">Seleziona un orario disponibile</option>
+                    {editAvailableSlots.map(slot => (
+                      <option key={slot} value={slot}>
+                        {new Date(slot).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+                      </option>
+                    ))}
+                  </select>
+                  {editSelectedDate && editAvailableSlots.length === 0 && (
+                    <p className="text-xs text-destructive mt-1">Nessun slot disponibile per questa data</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Status</label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value as "pending" | "confirmed" | "cancelled" }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  >
+                    <option value="pending">In attesa</option>
+                    <option value="confirmed">Confermata</option>
+                    <option value="cancelled">Rifiutata</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button type="submit">
+                  💾 Salva Modifiche
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                >
+                  ❌ Annulla
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
              {/* Manual Booking Form */}
        {viewMode === "manual" && (
          <div className="mt-6">
-           <div className="card p-6 max-w-2xl">
+           <div className="bg-card border border-border rounded-lg p-6 max-w-2xl shadow-sm">
              <div className="flex items-center justify-between mb-4">
-               <h2 className="text-lg font-semibold">Inserimento Manuale Prenotazione</h2>
+               <h2 className="text-lg font-semibold text-foreground">Inserimento Manuale Prenotazione</h2>
                <Button
                  size="sm"
                  variant="outline"
@@ -577,40 +909,40 @@ export default function AdminBookingsPage() {
             <form onSubmit={handleManualSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nome e cognome *</label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Nome e cognome *</label>
                   <input
                     type="text"
                     value={manualForm.name}
                     onChange={(e) => setManualForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email *</label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Email *</label>
                   <input
                     type="email"
                     value={manualForm.email}
                     onChange={(e) => setManualForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Telefono</label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Telefono</label>
                   <input
                     type="tel"
                     value={manualForm.phone}
                     onChange={(e) => setManualForm(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Pacchetto</label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Pacchetto</label>
                   <select
                     value={manualForm.packageId}
                     onChange={(e) => setManualForm(prev => ({ ...prev, packageId: e.target.value }))}
-                    className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                   >
                     <option value="">Nessun pacchetto</option>
                     {packages.map(pkg => (
@@ -619,25 +951,26 @@ export default function AdminBookingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Data *</label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Data *</label>
                   <DatePicker
                     selected={selectedDate}
                     onChange={handleManualDateChange}
                     dateFormat="dd/MM/yyyy"
-                    className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                     minDate={new Date()}
                     placeholderText="Seleziona una data"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Slot orario</label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Slot orario *</label>
                   <select
                     value={manualForm.slot}
                     onChange={(e) => setManualForm(prev => ({ ...prev, slot: e.target.value }))}
-                    className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                     disabled={!selectedDate || availableSlots.length === 0}
+                    required
                   >
-                    <option value="">Nessun slot specifico</option>
+                    <option value="">Seleziona un orario disponibile</option>
                     {availableSlots.map(slot => (
                       <option key={slot} value={slot}>
                         {new Date(slot).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
@@ -645,15 +978,15 @@ export default function AdminBookingsPage() {
                     ))}
                   </select>
                   {selectedDate && availableSlots.length === 0 && (
-                    <p className="text-xs text-foreground/50 mt-1">Nessun slot disponibile per questa data</p>
+                    <p className="text-xs text-destructive mt-1">Nessun orario disponibile per questa data</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Contatto preferito</label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Contatto preferito</label>
                   <select
                     value={manualForm.channelPreference}
                     onChange={(e) => setManualForm(prev => ({ ...prev, channelPreference: e.target.value as "whatsapp" | "email" }))}
-                    className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                   >
                     <option value="whatsapp">WhatsApp</option>
                     <option value="email">Email</option>
@@ -661,7 +994,7 @@ export default function AdminBookingsPage() {
                 </div>
               </div>
               <div className="flex gap-2 pt-4">
-                <Button type="submit">
+                <Button type="submit" disabled={!manualForm.slot || availableSlots.length === 0}>
                   ➕ Crea Prenotazione
                 </Button>
                 <Button 
@@ -692,9 +1025,9 @@ export default function AdminBookingsPage() {
              {/* Calendar View */}
        {viewMode === "calendar" && (
          <div className="mt-6">
-           <div className="card p-6">
+           <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
              <div className="flex items-center justify-between mb-4">
-               <h2 className="text-lg font-semibold">Vista Calendario</h2>
+               <h2 className="text-lg font-semibold text-foreground">Vista Calendario</h2>
                <div className="flex gap-2">
                  <Button
                    size="sm"
@@ -733,7 +1066,7 @@ export default function AdminBookingsPage() {
              <div className="flex flex-col lg:flex-row gap-6">
                {/* Calendar Picker */}
                <div className="flex-shrink-0">
-                 <h2 className="text-lg font-semibold mb-4">Seleziona Data</h2>
+                 <h2 className="text-lg font-semibold mb-4 text-foreground">Seleziona Data</h2>
                 <DatePicker
                   selected={calendarDate}
                   onChange={(date) => date && setCalendarDate(date)}
@@ -745,7 +1078,7 @@ export default function AdminBookingsPage() {
                              {/* Daily Agenda */}
                <div className="flex-1">
                  <div className="flex items-center justify-between mb-6">
-                   <h2 className="text-xl font-semibold">
+                   <h2 className="text-xl font-semibold text-foreground">
                      📅 Agenda del {calendarDate.toLocaleDateString("it-IT", { 
                        weekday: "long", 
                        year: "numeric", 
@@ -894,7 +1227,7 @@ export default function AdminBookingsPage() {
           </div>
         </div>
       )}
-    </main>
+    </>
   );
 }
 
