@@ -189,11 +189,7 @@ export default function AdminBookingsPage() {
 
   // Funzioni per la modifica e rischedulazione
   const handleEditBooking = (booking: Booking) => {
-    console.log("handleEditBooking chiamata con:", booking);
-    
     setEditingBooking(booking);
-    console.log("editingBooking impostato a:", booking);
-    
     setEditForm({
       name: booking.name,
       email: booking.email,
@@ -203,27 +199,12 @@ export default function AdminBookingsPage() {
       slot: booking.slot || "",
       status: booking.status
     });
-    console.log("editForm impostato con:", {
-      name: booking.name,
-      email: booking.email,
-      phone: booking.phone || "",
-      packageId: booking.packageId || "",
-      date: booking.date,
-      slot: booking.slot || "",
-      status: booking.status
-    });
-    
     setEditSelectedDate(new Date(booking.date));
-    console.log("editSelectedDate impostato a:", new Date(booking.date));
     
     // Carica gli slot disponibili per la data
     const dateStr = format(new Date(booking.date), "yyyy-MM-dd");
-    console.log("Caricamento disponibilità per data:", dateStr);
-    
     getAvailabilityByDate(dateStr).then(availability => {
-      console.log("Disponibilità caricata:", availability);
       setEditAvailableSlots(availability?.slots || []);
-      console.log("editAvailableSlots impostato a:", availability?.slots || []);
     }).catch(error => {
       console.error("Errore nel caricamento disponibilità:", error);
       setEditAvailableSlots([]);
@@ -371,13 +352,19 @@ export default function AdminBookingsPage() {
   };
 
   // Calendar functions
-  const loadDayBookings = async (date: Date) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    const dayBookings = items.filter(booking => 
-      booking.date.startsWith(dateStr)
-    );
-    setDayBookings(dayBookings);
-  };
+  useEffect(() => {
+    if (viewMode === "calendar" && items.length > 0) {
+      const loadDayBookings = async (date: Date) => {
+        const dateStr = format(date, "yyyy-MM-dd");
+        const dayBookings = items.filter(booking => 
+          booking.date.startsWith(dateStr)
+        );
+        setDayBookings(dayBookings);
+      };
+      
+      loadDayBookings(calendarDate);
+    }
+  }, [calendarDate, items, viewMode]);
 
   // Generate time slots for agenda view (9:00 to 18:00 with 1-hour intervals)
   const generateTimeSlots = () => {
@@ -446,20 +433,6 @@ export default function AdminBookingsPage() {
       toast.error("Errore nell'esportazione del calendario");
     }
   };
-
-  useEffect(() => {
-    if (viewMode === "calendar" && items.length > 0) {
-      loadDayBookings(calendarDate);
-    }
-  }, [calendarDate, items, viewMode, loadDayBookings]);
-
-  // Debug: traccia i cambiamenti di editingBooking
-  useEffect(() => {
-    console.log("editingBooking cambiato:", editingBooking);
-    console.log("editForm cambiato:", editForm);
-    console.log("editSelectedDate cambiato:", editSelectedDate);
-    console.log("editAvailableSlots cambiato:", editAvailableSlots);
-  }, [editingBooking, editForm, editSelectedDate, editAvailableSlots]);
 
   // Filter bookings by status for requests view
   const pendingBookings = items.filter(b => b.status === "pending");
@@ -547,7 +520,6 @@ export default function AdminBookingsPage() {
             size="sm" 
             variant="outline"
             onClick={() => {
-              console.log("Pulsante Modifica cliccato per prenotazione:", b);
               handleEditBooking(b);
             }}
             className="border-gray-300 text-gray-600 hover:bg-gray-50"
@@ -769,11 +741,6 @@ export default function AdminBookingsPage() {
       {/* Form di modifica/rischedulazione - SEMPRE VISIBILE quando editingBooking è impostato */}
       {editingBooking && (
         <div className="mt-8">
-          {/* Debug info */}
-          <div className="mb-4 p-2 bg-blue-100 border border-blue-300 rounded text-xs text-blue-800">
-            DEBUG: Form di modifica attivo per prenotazione: {editingBooking.name} ({editingBooking.id})
-          </div>
-          
           <div className="bg-card border border-border rounded-lg p-6 max-w-2xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-foreground">Modifica Prenotazione</h2>

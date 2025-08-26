@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "Admin | GZnutrition",
 };
@@ -16,45 +18,45 @@ export default function AdminLayout({
             <div className="flex items-center gap-6">
               <h1 className="text-xl font-bold text-foreground">⚙️ Admin Panel</h1>
               <nav className="hidden md:flex gap-6">
-                <a 
+                <Link 
                   href="/admin" 
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Dashboard
-                </a>
-                <a 
+                </Link>
+                <Link 
                   href="/admin/bookings" 
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Prenotazioni
-                </a>
-                <a 
+                </Link>
+                <Link 
                   href="/admin/clients" 
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Clienti
-                </a>
-                <a 
+                </Link>
+                <Link 
                   href="/admin/packages" 
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Pacchetti
-                </a>
-                <a 
+                </Link>
+                <Link 
                   href="/admin/availability" 
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Disponibilità
-                </a>
+                </Link>
               </nav>
             </div>
             <div className="flex gap-3">
-              <a 
+              <Link 
                 href="/" 
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium text-sm"
               >
                 🏠 Homepage
-              </a>
+              </Link>
             </div>
           </div>
         </div>

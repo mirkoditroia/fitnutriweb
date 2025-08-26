@@ -11,18 +11,18 @@ export default function AdminPage() {
           <p className="text-lg text-muted-foreground mt-2">Gestione completa del sistema GZnutrition</p>
         </div>
         <div className="flex gap-3">
-          <a 
+          <Link 
             href="/" 
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
           >
             🏠 Homepage
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/admin/bookings" 
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
           >
             📋 Prenotazioni
-          </a>
+          </Link>
         </div>
       </div>
       
