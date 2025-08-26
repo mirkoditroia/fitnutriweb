@@ -30,11 +30,6 @@ export default function LandingClient() {
     // Gestisce il packageId dall'URL iniziale
     setSelectedPackageId(getPackageIdFromUrl());
 
-    // Listener per i cambiamenti dell'URL
-    const handleUrlChange = () => {
-      setSelectedPackageId(getPackageIdFromUrl());
-    };
-
     // Listener per eventi personalizzati di selezione pacchetti
     const handlePackageSelected = (event: CustomEvent) => {
       console.log("LandingClient: Evento packageSelected ricevuto:", event);
@@ -51,6 +46,15 @@ export default function LandingClient() {
       setSelectedPackageId(newPackageId);
     };
 
+    // Fallback: controlla l'URL ogni secondo per cambiamenti
+    const urlCheckInterval = setInterval(() => {
+      const currentPackageId = getPackageIdFromUrl();
+      if (currentPackageId !== selectedPackageId) {
+        console.log("LandingClient: Fallback - packageId cambiato nell'URL:", currentPackageId);
+        setSelectedPackageId(currentPackageId);
+      }
+    }, 1000);
+
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('packageSelected', handlePackageSelected as EventListener);
     
@@ -61,8 +65,9 @@ export default function LandingClient() {
     return () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('packageSelected', handlePackageSelected as EventListener);
+      clearInterval(urlCheckInterval);
     };
-  }, []);
+  }, [selectedPackageId]);
 
   useEffect(() => {
     console.log("LandingClient: useEffect iniziato - chiamata getSiteContent e getPackages");
@@ -88,7 +93,16 @@ export default function LandingClient() {
     });
   }, []);
 
-  if (!content || !packages) return null;
+  if (!content || !packages) {
+    console.log("LandingClient: Non renderizzato - content:", content);
+    console.log("LandingClient: Non renderizzato - packages:", packages);
+    console.log("LandingClient: Non renderizzato - content è null:", content === null);
+    console.log("LandingClient: Non renderizzato - packages è null:", packages === null);
+    return null;
+  }
+  
+  console.log("LandingClient: Renderizzato - content:", content);
+  console.log("LandingClient: Renderizzato - packages:", packages);
   const featuredFirst = [...packages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
   // Determina se è una consultazione gratuita
@@ -100,13 +114,13 @@ export default function LandingClient() {
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
       {/* Popup 10 Minuti Consultivi Gratuiti */}
-      {content.freeConsultationPopup && (
+      {(content.freeConsultationPopup?.isEnabled === true) && (
         <FreeConsultationPopup
-          title={content.freeConsultationPopup.title || "🎯 10 Minuti Consultivi Gratuiti"}
-          subtitle={content.freeConsultationPopup.subtitle || "Valuta i tuoi obiettivi gratuitamente"}
-          description={content.freeConsultationPopup.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance."}
-          ctaText={content.freeConsultationPopup.ctaText || "Prenota Ora - È Gratis!"}
-          isEnabled={content.freeConsultationPopup.isEnabled || false}
+          title={content.freeConsultationPopup?.title || "🎯 10 Minuti Consultivi Gratuiti"}
+          subtitle={content.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente"}
+          description={content.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance."}
+          ctaText={content.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"}
+          isEnabled={true}
         />
       )}
       
@@ -149,32 +163,41 @@ export default function LandingClient() {
       </section>
       
       {/* Sezione Contatti - POSIZIONATA CORRETTAMENTE */}
-      {(content.contactPhone || content.contactEmail || (content.contactAddresses && content.contactAddresses.length > 0) || (content.socialChannels && content.socialChannels.length > 0)) ? (
-        <div id="contatti">
-          <ContactSection 
-            contactInfo={{
-              title: content.contactTitle,
-              subtitle: content.contactSubtitle,
-              phone: content.contactPhone || "",
-              email: content.contactEmail || "",
-              addresses: content.contactAddresses || [],
-              socialChannels: content.socialChannels,
-              contactTitle: content.contactSectionTitle,
-              contactSubtitle: content.contactSectionSubtitle,
-              studiosTitle: content.studiosSectionTitle,
-              studiosSubtitle: content.studiosSectionSubtitle
-            }} 
-          />
-        </div>
-      ) : (
-        <div className="text-red-500 p-4 border border-red-200 rounded">
-          <p><strong>Debug - Sezione contatti non visualizzata:</strong></p>
-          <p>contactPhone: &quot;{content.contactPhone}&quot;</p>
-          <p>contactEmail: &quot;{content.contactEmail}&quot;</p>
-          <p>contactAddresses: {JSON.stringify(content.contactAddresses)}</p>
-          <p>socialChannels: {JSON.stringify(content.socialChannels)}</p>
-        </div>
-      )}
+      <div id="contatti">
+        <ContactSection 
+          contactInfo={{
+            title: content.contactTitle || "📞 Contattami",
+            subtitle: content.contactSubtitle || "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
+            phone: content.contactPhone || "+39 123 456 7890",
+            email: content.contactEmail || "info@gznutrition.it",
+            addresses: content.contactAddresses && content.contactAddresses.length > 0 ? content.contactAddresses : [
+              {
+                name: "Studio Principale",
+                address: "Via Roma 123",
+                city: "Milano",
+                postalCode: "20100",
+                coordinates: { lat: 45.4642, lng: 9.1900 }
+              }
+            ],
+            socialChannels: content.socialChannels && content.socialChannels.length > 0 ? content.socialChannels : [
+              {
+                platform: "Instagram",
+                url: "https://instagram.com/gznutrition",
+                icon: "📸"
+              },
+              {
+                platform: "LinkedIn",
+                url: "https://linkedin.com/in/gznutrition",
+                icon: "💼"
+              }
+            ],
+            contactTitle: content.contactSectionTitle || "💬 Contatti Diretti",
+            contactSubtitle: content.contactSectionSubtitle || "Siamo qui per aiutarti",
+            studiosTitle: content.studiosSectionTitle || "🏢 I Nostri Studi",
+            studiosSubtitle: content.studiosSectionSubtitle || "Trova lo studio più vicino a te"
+          }} 
+        />
+      </div>
       
       {/* Recensioni Trustpilot */}
       <TrustpilotWall />

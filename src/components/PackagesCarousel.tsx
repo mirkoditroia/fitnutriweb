@@ -35,12 +35,19 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
     }
     
     // Trigger un evento personalizzato per aggiornare il LandingClient
+    console.log("PackagesCarousel: Creazione evento con packageId:", packageId);
+    console.log("PackagesCarousel: Tipo di packageId:", typeof packageId);
+    console.log("PackagesCarousel: packageId è truthy:", !!packageId);
+    
     const customEvent = new CustomEvent('packageSelected', { 
       detail: { packageId } 
     });
-    console.log("PackagesCarousel: Dispatching evento packageSelected:", customEvent);
+    
+    console.log("PackagesCarousel: Evento creato:", customEvent);
     console.log("PackagesCarousel: Event detail:", customEvent.detail);
     console.log("PackagesCarousel: PackageId nell'evento:", customEvent.detail.packageId);
+    console.log("PackagesCarousel: Event detail completo:", JSON.stringify(customEvent.detail));
+    
     window.dispatchEvent(customEvent);
     
     // Fallback: trigger anche popstate per compatibilità

@@ -240,6 +240,32 @@ export function BookingForm({
         // Se abbiamo pacchetti esterni, usiamo quelli
         if (externalPackages && externalPackages.length > 0) {
           console.log("BookingForm: Usando pacchetti esterni:", externalPackages);
+          
+          // Verifica se i pacchetti esterni sono vuoti
+          const hasValidPackages = externalPackages.some(p => p.title && p.price !== undefined);
+          if (!hasValidPackages) {
+            console.log("BookingForm: Pacchetti esterni sono vuoti, carico direttamente");
+            const directPackages = await getPackages();
+            console.log("BookingForm: Pacchetti caricati direttamente:", directPackages);
+            setPackages(directPackages);
+            
+            // Usa i pacchetti caricati direttamente per la selezione
+            if (isFreeConsultation) {
+              const promotionalPackage = directPackages.find(p => p.isPromotional);
+              if (promotionalPackage) {
+                setSelectedPackage(promotionalPackage);
+                setValue("packageId", promotionalPackage.id || "");
+              }
+            } else if (packageId) {
+              const pkg = directPackages.find(p => p.id === packageId);
+              if (pkg) {
+                setSelectedPackage(pkg);
+                setValue("packageId", pkg.id || "");
+              }
+            }
+            return;
+          }
+          
           setPackages(externalPackages);
           
           // Se è una consultazione gratuita, cerca il pacchetto promozionale
