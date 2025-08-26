@@ -110,7 +110,7 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
                 {!isValidPhone && (
                   <div className="text-red-500 text-sm p-3 bg-red-50 border border-red-200 rounded">
                     <p><strong>Debug - Numero di telefono mancante:</strong></p>
-                    <p>contactInfo.phone: "{contactInfo.phone}"</p>
+                    <p>contactInfo.phone: &quot;{contactInfo.phone}&quot;</p>
                     <p>Tipo: {typeof contactInfo.phone}</p>
                     <p>Lunghezza: {contactInfo.phone?.length || 0}</p>
                     <p>Trim length: {contactInfo.phone?.trim().length || 0}</p>

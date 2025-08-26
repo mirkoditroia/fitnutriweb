@@ -67,7 +67,7 @@ export default function AdminPackagesPage() {
     }
   }, ...items]);
 
-  const updateDetails = (idx: number, field: keyof NonNullable<Package['details']>, value: any) => {
+  const updateDetails = (idx: number, field: keyof NonNullable<Package['details']>, value: string | number | string[]) => {
     setItems(upd(items, idx, {
       details: {
         ...items[idx].details,

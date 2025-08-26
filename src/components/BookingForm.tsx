@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getAvailabilityByDate, getPackages } from "@/lib/datasource";
-import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday } from "date-fns";
+import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday } from "date-fns";
 import { it } from "date-fns/locale";
 import { type Package } from "@/lib/data";
 
@@ -285,7 +285,6 @@ export function BookingForm({ packageId, isFreeConsultation = false }: BookingFo
       });
 
       // Filtra solo le date con slot disponibili
-      const datesWithAvailability: string[] = [];
       
       // Controlla la disponibilità in parallelo per migliorare le performance
       const availabilityPromises = allDates.map(async (date) => {
@@ -407,7 +406,7 @@ export function BookingForm({ packageId, isFreeConsultation = false }: BookingFo
         <div className="bg-muted/20 border border-border rounded-lg p-4">
           <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">
-              Seleziona un pacchetto dalla sezione "Pacchetti" per vedere le date e orari disponibili
+              Seleziona un pacchetto dalla sezione &quot;Pacchetti&quot; per vedere le date e orari disponibili
             </p>
             <p className="text-xs text-muted-foreground">
               Il form sarà completato automaticamente con le opzioni di prenotazione
