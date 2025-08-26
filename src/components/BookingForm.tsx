@@ -191,7 +191,15 @@ function DateCalendar({
   );
 }
 
-export function BookingForm({ packageId, isFreeConsultation = false }: BookingFormProps) {
+export function BookingForm({ 
+  packageId, 
+  isFreeConsultation,
+  packages: externalPackages // Aggiungo questo parametro
+}: { 
+  packageId?: string; 
+  isFreeConsultation?: boolean;
+  packages?: Package[]; // Aggiungo questo tipo
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
@@ -228,35 +236,59 @@ export function BookingForm({ packageId, isFreeConsultation = false }: BookingFo
     const loadPackages = async () => {
       try {
         console.log("BookingForm: Caricamento pacchetti...");
-        const allPackages = await getPackages();
-        console.log("BookingForm: Pacchetti caricati:", allPackages);
-        setPackages(allPackages);
         
-        // Se è una consultazione gratuita, cerca il pacchetto promozionale
-        if (isFreeConsultation) {
-          console.log("BookingForm: Cercando pacchetto promozionale...");
-          const promotionalPackage = allPackages.find(p => p.isPromotional);
-          if (promotionalPackage) {
-            console.log("BookingForm: Pacchetto promozionale trovato:", promotionalPackage);
-            setSelectedPackage(promotionalPackage);
-            setValue("packageId", promotionalPackage.id || "");
+        // Se abbiamo pacchetti esterni, usiamo quelli
+        if (externalPackages && externalPackages.length > 0) {
+          console.log("BookingForm: Usando pacchetti esterni:", externalPackages);
+          setPackages(externalPackages);
+          
+          // Se è una consultazione gratuita, cerca il pacchetto promozionale
+          if (isFreeConsultation) {
+            console.log("BookingForm: Cercando pacchetto promozionale...");
+            const promotionalPackage = externalPackages.find(p => p.isPromotional);
+            if (promotionalPackage) {
+              console.log("BookingForm: Pacchetto promozionale trovato:", promotionalPackage);
+              setSelectedPackage(promotionalPackage);
+              setValue("packageId", promotionalPackage.id || "");
+            } else {
+              console.log("BookingForm: Nessun pacchetto promozionale trovato");
+            }
+          } else if (packageId) {
+            // Se è specificato un pacchetto, lo seleziona
+            console.log("BookingForm: Cercando pacchetto con ID:", packageId);
+            const pkg = externalPackages.find(p => p.id === packageId);
+            if (pkg) {
+              console.log("BookingForm: Pacchetto trovato:", pkg);
+              setSelectedPackage(pkg);
+              setValue("packageId", pkg.id || "");
+            } else {
+              console.log("BookingForm: Pacchetto non trovato per ID:", packageId);
+              console.log("BookingForm: Pacchetti disponibili:", externalPackages.map(p => ({ id: p.id, title: p.title })));
+            }
           } else {
-            console.log("BookingForm: Nessun pacchetto promozionale trovato");
-          }
-        } else if (packageId) {
-          // Se è specificato un pacchetto, lo seleziona
-          console.log("BookingForm: Cercando pacchetto con ID:", packageId);
-          const pkg = allPackages.find(p => p.id === packageId);
-          if (pkg) {
-            console.log("BookingForm: Pacchetto trovato:", pkg);
-            setSelectedPackage(pkg);
-            setValue("packageId", pkg.id || "");
-          } else {
-            console.log("BookingForm: Pacchetto non trovato per ID:", packageId);
-            console.log("BookingForm: Pacchetti disponibili:", allPackages.map(p => ({ id: p.id, title: p.title })));
+            console.log("BookingForm: Nessun packageId specificato");
           }
         } else {
-          console.log("BookingForm: Nessun packageId specificato");
+          // Fallback: carica i pacchetti direttamente
+          console.log("BookingForm: Nessun pacchetto esterno, caricamento diretto...");
+          const allPackages = await getPackages();
+          console.log("BookingForm: Pacchetti caricati direttamente:", allPackages);
+          setPackages(allPackages);
+          
+          // Logica di selezione per pacchetti caricati direttamente
+          if (isFreeConsultation) {
+            const promotionalPackage = allPackages.find(p => p.isPromotional);
+            if (promotionalPackage) {
+              setSelectedPackage(promotionalPackage);
+              setValue("packageId", promotionalPackage.id || "");
+            }
+          } else if (packageId) {
+            const pkg = allPackages.find(p => p.id === packageId);
+            if (pkg) {
+              setSelectedPackage(pkg);
+              setValue("packageId", pkg.id || "");
+            }
+          }
         }
       } catch (error) {
         console.error("Errore nel caricamento pacchetti:", error);
@@ -264,7 +296,7 @@ export function BookingForm({ packageId, isFreeConsultation = false }: BookingFo
     };
     
     loadPackages();
-  }, [packageId, isFreeConsultation, setValue]);
+  }, [packageId, isFreeConsultation, setValue, externalPackages]);
 
   // Gestisce il cambio di pacchetto
   const handlePackageChange = (newPackage: Package | null) => {

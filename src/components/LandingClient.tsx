@@ -53,6 +53,10 @@ export default function LandingClient() {
 
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('packageSelected', handlePackageSelected as EventListener);
+    
+    console.log("LandingClient: Event listener registrati");
+    console.log("LandingClient: Listener packageSelected registrato:", handlePackageSelected);
+    console.log("LandingClient: Listener popstate registrato:", handlePopState);
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
@@ -61,7 +65,10 @@ export default function LandingClient() {
   }, []);
 
   useEffect(() => {
+    console.log("LandingClient: useEffect iniziato - chiamata getSiteContent e getPackages");
+    
     Promise.all([getSiteContent(), getPackages()]).then(([c, p]) => {
+      console.log("LandingClient: Promise.all completata");
       console.log("LandingClient: Contenuto caricato:", c);
       console.log("LandingClient: Pacchetti caricati:", p);
       
@@ -135,7 +142,8 @@ export default function LandingClient() {
         <div className="mt-8 max-w-lg mx-auto">
           <BookingForm 
             packageId={selectedPackageId} 
-            isFreeConsultation={isFreeConsultation} 
+            isFreeConsultation={isFreeConsultation}
+            packages={packages} // Passo i pacchetti caricati
           />
         </div>
       </section>
