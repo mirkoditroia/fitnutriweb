@@ -227,23 +227,36 @@ export function BookingForm({ packageId, isFreeConsultation = false }: BookingFo
   useEffect(() => {
     const loadPackages = async () => {
       try {
+        console.log("BookingForm: Caricamento pacchetti...");
         const allPackages = await getPackages();
+        console.log("BookingForm: Pacchetti caricati:", allPackages);
         setPackages(allPackages);
         
         // Se è una consultazione gratuita, cerca il pacchetto promozionale
         if (isFreeConsultation) {
+          console.log("BookingForm: Cercando pacchetto promozionale...");
           const promotionalPackage = allPackages.find(p => p.isPromotional);
           if (promotionalPackage) {
+            console.log("BookingForm: Pacchetto promozionale trovato:", promotionalPackage);
             setSelectedPackage(promotionalPackage);
             setValue("packageId", promotionalPackage.id || "");
+          } else {
+            console.log("BookingForm: Nessun pacchetto promozionale trovato");
           }
         } else if (packageId) {
           // Se è specificato un pacchetto, lo seleziona
+          console.log("BookingForm: Cercando pacchetto con ID:", packageId);
           const pkg = allPackages.find(p => p.id === packageId);
           if (pkg) {
+            console.log("BookingForm: Pacchetto trovato:", pkg);
             setSelectedPackage(pkg);
             setValue("packageId", pkg.id || "");
+          } else {
+            console.log("BookingForm: Pacchetto non trovato per ID:", packageId);
+            console.log("BookingForm: Pacchetti disponibili:", allPackages.map(p => ({ id: p.id, title: p.title })));
           }
+        } else {
+          console.log("BookingForm: Nessun packageId specificato");
         }
       } catch (error) {
         console.error("Errore nel caricamento pacchetti:", error);

@@ -28,7 +28,13 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
       bookingSection.scrollIntoView({ behavior: 'smooth' });
     }
     
-    // Trigger un evento per aggiornare il LandingClient
+    // Trigger un evento personalizzato per aggiornare il LandingClient
+    const customEvent = new CustomEvent('packageSelected', { 
+      detail: { packageId } 
+    });
+    window.dispatchEvent(customEvent);
+    
+    // Fallback: trigger anche popstate per compatibilità
     window.dispatchEvent(new PopStateEvent('popstate'));
   };
 

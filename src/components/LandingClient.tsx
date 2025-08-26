@@ -35,17 +35,26 @@ export default function LandingClient() {
       setSelectedPackageId(getPackageIdFromUrl());
     };
 
-    window.addEventListener('popstate', handleUrlChange);
-    
-    // Custom event listener per i cambiamenti programmatici
-    const handleCustomPopState = () => {
-      setSelectedPackageId(getPackageIdFromUrl());
+    // Listener per eventi personalizzati di selezione pacchetti
+    const handlePackageSelected = (event: CustomEvent) => {
+      const { packageId } = event.detail;
+      console.log("LandingClient: Pacchetto selezionato:", packageId);
+      setSelectedPackageId(packageId);
     };
-    window.addEventListener('popstate', handleCustomPopState);
+
+    // Listener per popstate (navigazione browser)
+    const handlePopState = () => {
+      const newPackageId = getPackageIdFromUrl();
+      console.log("LandingClient: PopState - nuovo packageId:", newPackageId);
+      setSelectedPackageId(newPackageId);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('packageSelected', handlePackageSelected as EventListener);
 
     return () => {
-      window.removeEventListener('popstate', handleUrlChange);
-      window.removeEventListener('popstate', handleCustomPopState);
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('packageSelected', handlePackageSelected as EventListener);
     };
   }, []);
 

@@ -165,10 +165,22 @@ const col = {
 
 // Packages
 export async function getPackages(): Promise<Package[]> {
-  if (!db) return [];
-  const database = db as Firestore;
-  const snap = await getDocs(query(col.packages(database), orderBy("createdAt", "desc")));
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Package) }));
+  if (!db) {
+    console.log("getPackages: Database non configurato");
+    return [];
+  }
+  
+  try {
+    console.log("getPackages: Caricamento pacchetti da Firebase...");
+    const database = db as Firestore;
+    const snap = await getDocs(query(col.packages(database), orderBy("createdAt", "desc")));
+    const packages = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Package) }));
+    console.log("getPackages: Pacchetti caricati da Firebase:", packages);
+    return packages;
+  } catch (error) {
+    console.error("getPackages: Errore nel caricamento da Firebase:", error);
+    return [];
+  }
 }
 
 export async function upsertPackage(pkg: Package): Promise<string> {
@@ -579,32 +591,52 @@ export async function getClientByEmail(email: string): Promise<ClientCard | null
 // Site content
 export async function getSiteContent(): Promise<SiteContent | null> {
   if (!db) return null;
-  const snap = await getDoc(col.content(db as Firestore));
-  if (!snap.exists()) return null;
-  const data = snap.data() as DocumentData;
-  return {
-    heroTitle: data.heroTitle ?? "",
-    heroSubtitle: data.heroSubtitle ?? "",
-    heroCta: data.heroCta ?? "",
-    heroBackgroundImage: data.heroBackgroundImage ?? "",
-    heroBadgeText: data.heroBadgeText ?? "Performance • Estetica • Energia",
-    heroBadgeColor: data.heroBadgeColor ?? "bg-primary text-primary-foreground",
-    aboutTitle: data.aboutTitle ?? "",
-    aboutBody: data.aboutBody ?? "",
-    aboutImageUrl: data.aboutImageUrl ?? "",
-    images: Array.isArray(data.images) ? data.images : [],
-    contactTitle: data.contactTitle ?? "",
-    contactSubtitle: data.contactSubtitle ?? "",
-    contactPhone: data.contactPhone ?? "",
-    contactEmail: data.contactEmail ?? "",
-    contactAddresses: Array.isArray(data.contactAddresses) ? data.contactAddresses : [],
-    socialChannels: Array.isArray(data.socialChannels) ? data.socialChannels : [],
-    contactSectionTitle: data.contactSectionTitle ?? "💬 Contatti Diretti",
-    contactSectionSubtitle: data.contactSectionSubtitle ?? "",
-    studiosSectionTitle: data.studiosSectionTitle ?? "🏢 I Nostri Studi",
-    studiosSectionSubtitle: data.studiosSectionSubtitle ?? "",
-    freeConsultationPopup: data.freeConsultationPopup,
-  };
+  
+  try {
+    console.log("getSiteContent: Caricamento contenuto da Firebase...");
+    const snap = await getDoc(col.content(db as Firestore));
+    if (!snap.exists()) {
+      console.log("getSiteContent: Nessun contenuto trovato in Firebase");
+      return null;
+    }
+    
+    const data = snap.data();
+    console.log("getSiteContent: Contenuto caricato da Firebase:", data);
+    
+    const fromFs = (field: string) => data[field]?.stringValue || "";
+    return {
+      heroTitle: fromFs("heroTitle"),
+      heroSubtitle: fromFs("heroSubtitle"),
+      heroCta: fromFs("heroCta"),
+      heroBackgroundImage: fromFs("heroBackgroundImage"),
+      heroBadgeText: fromFs("heroBadgeText") || "Performance • Estetica • Energia",
+      heroBadgeColor: fromFs("heroBadgeColor") || "bg-primary text-primary-foreground",
+      aboutTitle: fromFs("aboutTitle"),
+      aboutBody: fromFs("aboutBody"),
+      aboutImageUrl: fromFs("aboutImageUrl"),
+      images: Array.isArray(data.images) ? data.images : [],
+      contactTitle: fromFs("contactTitle"),
+      contactSubtitle: fromFs("contactSubtitle"),
+      contactPhone: fromFs("contactPhone"),
+      contactEmail: fromFs("contactEmail"),
+      contactAddresses: Array.isArray(data.contactAddresses) ? data.contactAddresses : [],
+      socialChannels: Array.isArray(data.socialChannels) ? data.socialChannels : [],
+      contactSectionTitle: fromFs("contactSectionTitle") || "💬 Contatti Diretti",
+      contactSectionSubtitle: fromFs("contactSectionSubtitle"),
+      studiosSectionTitle: fromFs("studiosSectionTitle") || "🏢 I Nostri Studi",
+      studiosSectionSubtitle: fromFs("studiosSectionSubtitle"),
+      freeConsultationPopup: {
+        isEnabled: fromFs("freeConsultationPopup.isEnabled") === "true",
+        title: fromFs("freeConsultationPopup.title") || "🎯 10 Minuti Consultivi Gratuiti",
+        subtitle: fromFs("freeConsultationPopup.subtitle") || "Valuta i tuoi obiettivi gratuitamente",
+        description: fromFs("freeConsultationPopup.description") || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
+        ctaText: fromFs("freeConsultationPopup.ctaText") || "Prenota Ora - È Gratis!"
+      },
+    };
+  } catch (error) {
+    console.error("getSiteContent: Errore nel caricamento da Firebase:", error);
+    return null;
+  }
 }
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
