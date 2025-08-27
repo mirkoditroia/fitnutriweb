@@ -736,6 +736,14 @@ export function BookingForm() {
           </div>
       </div>
 
+        {/* Pacchetto selezionato - sempre visibile */}
+        <div>
+          <label className="block text-sm font-medium mb-2">Pacchetto selezionato</label>
+          <div className="w-full p-3 border border-border rounded-lg bg-muted/30 text-sm">
+            {selectedPackage ? selectedPackage.title : "Nessun pacchetto selezionato"}
+          </div>
+        </div>
+
         {/* Data con calendario interattivo */}
         {selectedPackage && (
       <div>

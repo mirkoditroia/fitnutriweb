@@ -65,7 +65,7 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
               </span>
             )}
           </div>
-          <div className="text-xs text-foreground/60">{pkg.paymentText || "pagabile mensilmente"}</div>
+          <div className="text-xs text-foreground/60">{pkg.paymentText ?? "pagabile mensilmente"}</div>
         </div>
       );
     }
@@ -73,7 +73,7 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
     return (
       <div>
         <div className="text-2xl font-extrabold">€ {pkg.price}</div>
-        <div className="text-xs text-foreground/60">{pkg.paymentText || "pagabile mensilmente"}</div>
+        <div className="text-xs text-foreground/60">{pkg.paymentText ?? "pagabile mensilmente"}</div>
       </div>
     );
   };
