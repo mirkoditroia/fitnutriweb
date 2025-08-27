@@ -581,13 +581,13 @@ export function BookingForm() {
             </p>
           </div>
 
-          {/* Submit disabilitato */}
+          {/* Submit attivo per richiesta generica */}
           <Button
             type="submit"
-            disabled={true}
-            className="w-full opacity-50 cursor-not-allowed"
+            disabled={isSubmitting}
+            className="w-full"
           >
-            Seleziona un pacchetto per continuare
+            {isSubmitting ? "Invio in corso..." : "Invia richiesta"}
           </Button>
         </form>
       </div>
