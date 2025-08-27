@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { setDirectState } from "@/lib/directState";
 
 interface FreeConsultationPopupProps {
   title: string;
@@ -46,19 +47,14 @@ export function FreeConsultationPopup({
     setHasSeen(true);
     localStorage.setItem('freeConsultationPopupSeen', 'true');
     
-    // Aggiorna l'URL per indicare che è una consultazione gratuita
-    const url = new URL(window.location.href);
-    url.searchParams.set('packageId', 'free-consultation');
-    window.history.pushState({}, '', url.toString());
+    // NUOVO SISTEMA DIRETTO: seleziona il pacchetto promozionale
+    setDirectState('free-consultation', true);
     
     // Scroll alla sezione prenota
     const bookingSection = document.getElementById('booking');
     if (bookingSection) {
       bookingSection.scrollIntoView({ behavior: 'smooth' });
     }
-    
-    // Trigger un evento per aggiornare il LandingClient
-    window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
   if (!isEnabled || !isOpen || hasSeen) return null;
