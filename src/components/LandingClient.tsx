@@ -10,33 +10,14 @@ import { ContactSection } from "@/components/ContactSection";
 import { FreeConsultationPopup } from "@/components/FreeConsultationPopup";
 import { type SiteContent } from "@/lib/data";
 import { getPackages, getSiteContent } from "@/lib/datasource";
-import { subscribeToGlobalState, getGlobalState, initializeFromUrl, setPackages as setGlobalPackages, setSiteContent as setGlobalSiteContent } from "@/lib/globalState";
+// Rimosso sistema globale - ora usa approccio diretto
 
 export default function LandingClient() {
   const [content, setContent] = useState<SiteContent | null>(null);
   type Pack = { id?: string; title: string; description: string; price: number; imageUrl?: string; featured?: boolean; isActive: boolean; badge?: string };
   const [packages, setPackages] = useState<Pack[] | null>(null);
   
-  // SOLUZIONE DEFINITIVA: Usa stato globale invece di eventi
-  const [globalState, setGlobalStateLocal] = useState(getGlobalState());
-
-  // Funzione rimossa: ora gestita da globalState.initializeFromUrl()
-
-  // SOLUZIONE DEFINITIVA: Sostituisce completamente il sistema di eventi
-  useEffect(() => {
-    console.log("LandingClient: Inizializzazione stato globale");
-    
-    // Inizializza da URL
-    initializeFromUrl();
-    
-    // Sottoscrivi ai cambiamenti dello stato globale
-    const unsubscribe = subscribeToGlobalState((newState) => {
-      console.log("LandingClient: Stato globale cambiato:", newState);
-      setGlobalStateLocal(newState);
-    });
-    
-    return unsubscribe;
-  }, []);
+  // NUOVO SISTEMA DIRETTO - SEMPLICE
 
   useEffect(() => {
     console.log("LandingClient: useEffect iniziato - chiamata getSiteContent e getPackages");
@@ -58,19 +39,10 @@ export default function LandingClient() {
       setContent(finalContent);
       setPackages(finalPackages);
       
-      // SOLUZIONE DEFINITIVA: Sincronizza con stato globale
-      console.log("LandingClient: Sincronizzando con stato globale");
+      // NUOVO SISTEMA: Semplice caricamento dati
+      console.log("LandingClient: Dati caricati con successo");
       console.log("LandingClient: finalContent:", finalContent);
       console.log("LandingClient: finalPackages:", finalPackages);
-      
-      setGlobalSiteContent(finalContent);
-      setGlobalPackages(finalPackages);
-      
-      // Forza l'inizializzazione del packageId dall'URL dopo aver caricato i pacchetti
-      setTimeout(() => {
-        console.log("LandingClient: Forzando inizializzazione da URL dopo caricamento dati");
-        initializeFromUrl();
-      }, 100);
     }).catch(error => {
       console.error("LandingClient: Errore nel caricamento:", error);
     });
@@ -134,14 +106,9 @@ export default function LandingClient() {
   console.log("LandingClient: Renderizzato - content:", finalContent);
   console.log("LandingClient: Renderizzato - packages:", finalPackages);
   
-  console.log("LandingClient: Stato globale attuale:", globalState);
-  console.log("LandingClient: selectedPackageId dallo stato globale:", globalState.selectedPackageId);
-  console.log("LandingClient: isFreeConsultation dallo stato globale:", globalState.isFreeConsultation);
-  console.log("LandingClient: siteContent dallo stato globale:", globalState.siteContent);
-  
-  // Usa i dati dallo stato globale se disponibili, altrimenti fallback ai dati locali
-  const effectiveContent = globalState.siteContent || finalContent;
-  const effectivePackages = globalState.packages.length > 0 ? globalState.packages : finalPackages;
+  // NUOVO SISTEMA: Usa direttamente i dati caricati
+  const effectiveContent = finalContent;
+  const effectivePackages = finalPackages;
   
   const featuredFirst = [...effectivePackages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
   
@@ -191,11 +158,7 @@ export default function LandingClient() {
           Inizia il tuo percorso di trasformazione. Compila il modulo e ti contatteremo per definire i dettagli.
         </p>
         <div className="mt-8 max-w-lg mx-auto" data-booking-form>
-          <BookingForm 
-            packageId={globalState.selectedPackageId || undefined} 
-            isFreeConsultation={globalState.isFreeConsultation}
-            packages={effectivePackages} // Usa pacchetti effettivi
-          />
+          <BookingForm />
         </div>
       </section>
       

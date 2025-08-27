@@ -10,7 +10,8 @@ import { getAvailabilityByDate } from "@/lib/datasource";
 import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday } from "date-fns";
 import { it } from "date-fns/locale";
 import { type Package } from "@/lib/data";
-import { subscribeToGlobalState, getGlobalState } from "@/lib/globalState";
+import { getDirectState } from "@/lib/directState";
+import { getPackages } from "@/lib/datasource";
 
 // Schema di validazione
 const schema = z.object({
@@ -192,15 +193,7 @@ function DateCalendar({
   );
 }
 
-export function BookingForm({ 
-  packageId, 
-  isFreeConsultation,
-  packages: externalPackages // Aggiungo questo parametro
-}: { 
-  packageId?: string; 
-  isFreeConsultation?: boolean;
-  packages?: Package[]; // Aggiungo questo tipo
-}) {
+export function BookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
@@ -209,8 +202,11 @@ export function BookingForm({
   const [packages, setPackages] = useState<Package[]>([]);
   const availableSlotsRef = useRef<string[]>([]);
   
-  // SOLUZIONE DEFINITIVA: Usa stato globale
-  const [, setGlobalStateLocal] = useState(getGlobalState());
+  // NUOVO SISTEMA DIRETTO - SEMPLICE E AFFIDABILE
+  const [directState, setDirectStateLocal] = useState(getDirectState());
+  
+  // Derivato dal directState
+  const isFreeConsultation = directState.isFreeConsultation;
 
   // Schema di validazione con validazione personalizzata
   const validationSchema = schema.refine((data) => {
@@ -230,67 +226,70 @@ export function BookingForm({
   } = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
-      packageId,
+      name: "",
+      email: "",
+      phone: "",
+      date: "",
+      slot: "",
+      notes: "",
+      packageId: directState.selectedPackageId || "",
       channelPreference: "whatsapp",
     },
   });
 
-    // SOLUZIONE DEFINITIVA: Sottoscrivi allo stato globale
+  // NUOVO SISTEMA DIRETTO: Carica pacchetti e applica stato
   useEffect(() => {
-    console.log("BookingForm: Inizializzazione listener stato globale");
+    console.log("BookingForm: NUOVO SISTEMA - Inizializzazione");
     
-    // Sottoscrivi ai cambiamenti dello stato globale
-    const unsubscribe = subscribeToGlobalState((newState) => {
-      console.log("BookingForm: Stato globale cambiato:", newState);
-      setGlobalStateLocal(newState);
-      
-      // Usa i pacchetti dallo stato globale
-      if (newState.packages && newState.packages.length > 0) {
-        console.log("BookingForm: Aggiornando pacchetti dallo stato globale:", newState.packages);
-        setPackages(newState.packages);
+    // 1. Carica i pacchetti direttamente
+    const loadPackages = async () => {
+      try {
+        console.log("BookingForm: Caricamento pacchetti...");
+        const pkgs = await getPackages();
+        console.log("BookingForm: Pacchetti caricati:", pkgs);
+        setPackages(pkgs || []);
         
-        // Seleziona il pacchetto corretto
-        if (newState.selectedPackageId) {
-          const pkg = newState.packages.find(p => p.id === newState.selectedPackageId);
-          if (pkg) {
-            console.log("BookingForm: Pacchetto selezionato dallo stato globale:", pkg);
-            setSelectedPackage(pkg);
-            setValue("packageId", pkg.id || "");
-            console.log("BookingForm: Form aggiornato con packageId:", pkg.id);
+        // 2. Applica lo stato diretto
+        const currentDirectState = getDirectState();
+        console.log("BookingForm: Stato diretto attuale:", currentDirectState);
+        
+        if (currentDirectState.selectedPackageId && pkgs && pkgs.length > 0) {
+          const selectedPkg = pkgs.find(p => p.id === currentDirectState.selectedPackageId);
+          console.log("BookingForm: Pacchetto trovato:", selectedPkg);
+          
+          if (selectedPkg) {
+            setSelectedPackage(selectedPkg);
+            setValue("packageId", selectedPkg.id || "");
+            console.log("BookingForm: SUCCESSO - Form precompilato con:", selectedPkg.title);
           }
         }
-      }
-    });
-    
-    // Funzione per controllare e applicare lo stato globale
-    const checkAndApplyGlobalState = () => {
-      const currentState = getGlobalState();
-      console.log("BookingForm: Controllo stato globale:", currentState);
-      
-      if (currentState.packages && currentState.packages.length > 0) {
-        console.log("BookingForm: Applicando pacchetti dallo stato globale:", currentState.packages);
-        setPackages(currentState.packages);
-        
-        if (currentState.selectedPackageId) {
-          const pkg = currentState.packages.find(p => p.id === currentState.selectedPackageId);
-          console.log("BookingForm: Pacchetto trovato per ID:", currentState.selectedPackageId, "->", pkg);
-          if (pkg) {
-            setSelectedPackage(pkg);
-            setValue("packageId", pkg.id || "");
-            console.log("BookingForm: Form aggiornato con packageId:", pkg.id);
-          }
-        }
-      } else {
-        console.log("BookingForm: Stato globale ancora vuoto, riprovo tra 500ms");
-        // Riprova dopo un breve delay se i dati non sono ancora caricati
-        setTimeout(checkAndApplyGlobalState, 500);
+      } catch (error) {
+        console.error("BookingForm: Errore caricamento pacchetti:", error);
       }
     };
     
-    // Inizializza immediatamente
-    checkAndApplyGlobalState();
+    loadPackages();
     
-    return unsubscribe;
+    // 3. Ascolta i cambiamenti di stato diretto
+    const handleDirectStateChange = (event: CustomEvent) => {
+      console.log("BookingForm: Cambio stato diretto:", event.detail);
+      setDirectStateLocal(event.detail);
+      
+      if (event.detail.selectedPackageId && packages.length > 0) {
+        const selectedPkg = packages.find(p => p.id === event.detail.selectedPackageId);
+        if (selectedPkg) {
+          setSelectedPackage(selectedPkg);
+          setValue("packageId", selectedPkg.id || "");
+          console.log("BookingForm: Form aggiornato via evento:", selectedPkg.title);
+        }
+      }
+    };
+    
+    window.addEventListener('directStateChange', handleDirectStateChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('directStateChange', handleDirectStateChange as EventListener);
+    };
   }, [setValue]);
 
   // Gestisce il cambio di pacchetto

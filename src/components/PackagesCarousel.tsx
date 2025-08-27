@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Package } from "@/lib/data";
 import { PackageModal } from "@/components/PackageModal";
-import { setSelectedPackage, getGlobalState } from "@/lib/globalState";
+import { setDirectState } from "@/lib/directState";
 
 function parseBenefits(description: string): string[] {
   // Try split by bullet '•', fallback to first 3 lines
@@ -35,28 +35,21 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
       console.log("PackagesCarousel: Sezione booking non trovata");
     }
     
-    // SOLUZIONE DEFINITIVA: Usa il sistema di stato globale diretto
-    console.log("PackagesCarousel: handleBookingClick - packageId ricevuto:", packageId);
-    console.log("PackagesCarousel: handleBookingClick - tipo packageId:", typeof packageId);
+    // NUOVO SISTEMA DIRETTO - PIÙ SEMPLICE E AFFIDABILE
+    console.log("PackagesCarousel: CLICK - packageId:", packageId);
     
-    // Verifica che packageId sia valido
     if (!packageId) {
-      console.error("PackagesCarousel: packageId è null/undefined, aborting");
+      console.error("PackagesCarousel: packageId non valido");
       return;
     }
     
     const isFreeConsultation = packageId === 'free-consultation';
-    console.log("PackagesCarousel: Chiamando setSelectedPackage con:", { packageId, isFreeConsultation });
+    console.log("PackagesCarousel: Impostazione stato diretto:", { packageId, isFreeConsultation });
     
-    setSelectedPackage(packageId, isFreeConsultation);
+    // Usa il nuovo sistema diretto
+    setDirectState(packageId, isFreeConsultation);
     
-    console.log("PackagesCarousel: setSelectedPackage chiamato, verificando stato globale...");
-    
-    // Verifica che lo stato sia stato aggiornato
-    setTimeout(() => {
-      const newState = getGlobalState();
-      console.log("PackagesCarousel: Stato globale dopo aggiornamento:", newState);
-    }, 50);
+    console.log("PackagesCarousel: Stato diretto impostato, scroll al form");
   };
 
   const renderPrice = (pkg: Package) => {
