@@ -256,30 +256,39 @@ export function BookingForm({
             console.log("BookingForm: Pacchetto selezionato dallo stato globale:", pkg);
             setSelectedPackage(pkg);
             setValue("packageId", pkg.id || "");
+            console.log("BookingForm: Form aggiornato con packageId:", pkg.id);
           }
         }
       }
     });
     
-    // Inizializza con lo stato attuale
-    const currentState = getGlobalState();
-    console.log("BookingForm: Stato globale attuale all'inizializzazione:", currentState);
-    
-    if (currentState.packages && currentState.packages.length > 0) {
-      console.log("BookingForm: Inizializzando con pacchetti dallo stato globale:", currentState.packages);
-      setPackages(currentState.packages);
+    // Funzione per controllare e applicare lo stato globale
+    const checkAndApplyGlobalState = () => {
+      const currentState = getGlobalState();
+      console.log("BookingForm: Controllo stato globale:", currentState);
       
-      if (currentState.selectedPackageId) {
-        const pkg = currentState.packages.find(p => p.id === currentState.selectedPackageId);
-        console.log("BookingForm: Pacchetto trovato per ID:", currentState.selectedPackageId, "->", pkg);
-        if (pkg) {
-          setSelectedPackage(pkg);
-          setValue("packageId", pkg.id || "");
+      if (currentState.packages && currentState.packages.length > 0) {
+        console.log("BookingForm: Applicando pacchetti dallo stato globale:", currentState.packages);
+        setPackages(currentState.packages);
+        
+        if (currentState.selectedPackageId) {
+          const pkg = currentState.packages.find(p => p.id === currentState.selectedPackageId);
+          console.log("BookingForm: Pacchetto trovato per ID:", currentState.selectedPackageId, "->", pkg);
+          if (pkg) {
+            setSelectedPackage(pkg);
+            setValue("packageId", pkg.id || "");
+            console.log("BookingForm: Form aggiornato con packageId:", pkg.id);
+          }
         }
+      } else {
+        console.log("BookingForm: Stato globale ancora vuoto, riprovo tra 500ms");
+        // Riprova dopo un breve delay se i dati non sono ancora caricati
+        setTimeout(checkAndApplyGlobalState, 500);
       }
-    } else {
-      console.log("BookingForm: Nessun pacchetto nello stato globale, stato globale ancora vuoto");
-    }
+    };
+    
+    // Inizializza immediatamente
+    checkAndApplyGlobalState();
     
     return unsubscribe;
   }, [setValue]);
@@ -431,8 +440,14 @@ export function BookingForm({
   // Mostra banner informativo per pacchetti promozionali
   const showPromotionalBanner = selectedPackage?.isPromotional;
 
+  // DEBUG: Log stato del componente
+  console.log("BookingForm: RENDER - selectedPackage:", selectedPackage);
+  console.log("BookingForm: RENDER - packages:", packages);
+  console.log("BookingForm: RENDER - packages.length:", packages.length);
+
   // Se non c'è un pacchetto selezionato, mostra solo il form base
   if (!selectedPackage) {
+    console.log("BookingForm: RENDER - Nessun pacchetto selezionato, mostrando form base");
     return (
       <div className="space-y-6">
         {/* Messaggio informativo */}
