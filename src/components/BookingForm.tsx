@@ -313,11 +313,7 @@ export function BookingForm() {
 
   // Genera le date disponibili e controlla la disponibilità
   useEffect(() => {
-    // Se non c'è un pacchetto selezionato, non generare date
-    if (!selectedPackage) {
-      setAvailableDates([]);
-      return;
-    }
+    // Se non c'è un pacchetto selezionato, usa slot normali
 
     const generateAvailableDates = async () => {
       // Genera solo le prossime 14 date invece di 30 per migliorare le performance
