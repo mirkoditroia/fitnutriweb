@@ -240,9 +240,18 @@ export function BookingForm({
         // Se abbiamo pacchetti esterni, usiamo quelli
         if (externalPackages && externalPackages.length > 0) {
           console.log("BookingForm: Usando pacchetti esterni:", externalPackages);
+          console.log("BookingForm: Primo pacchetto esterno:", externalPackages[0]);
+          console.log("BookingForm: Campi del primo pacchetto:", Object.keys(externalPackages[0] || {}));
           
-          // Verifica se i pacchetti esterni sono vuoti
-          const hasValidPackages = externalPackages.some(p => p.title && p.price !== undefined);
+          // Verifica se i pacchetti esterni sono vuoti (controllo più specifico)
+          const hasValidPackages = externalPackages.some(p => {
+            const isValid = p && p.title && (p.title.trim() !== "") && (p.price !== undefined && p.price !== null);
+            console.log(`BookingForm: Pacchetto ${p?.id} valido:`, isValid, "- title:", p?.title, "- price:", p?.price);
+            return isValid;
+          });
+          
+          console.log("BookingForm: Pacchetti esterni validi:", hasValidPackages);
+          
           if (!hasValidPackages) {
             console.log("BookingForm: Pacchetti esterni sono vuoti, carico direttamente");
             const directPackages = await getPackages();
@@ -253,11 +262,13 @@ export function BookingForm({
             if (isFreeConsultation) {
               const promotionalPackage = directPackages.find(p => p.isPromotional);
               if (promotionalPackage) {
+                console.log("BookingForm: Selezionando pacchetto promozionale:", promotionalPackage);
                 setSelectedPackage(promotionalPackage);
                 setValue("packageId", promotionalPackage.id || "");
               }
             } else if (packageId) {
               const pkg = directPackages.find(p => p.id === packageId);
+              console.log("BookingForm: Cercando pacchetto con ID:", packageId, "- Trovato:", pkg);
               if (pkg) {
                 setSelectedPackage(pkg);
                 setValue("packageId", pkg.id || "");

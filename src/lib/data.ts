@@ -172,7 +172,7 @@ export async function getPackages(): Promise<Package[]> {
   
   try {
     console.log("getPackages: Caricamento pacchetti da Firebase...");
-    const database = db as Firestore;
+  const database = db as Firestore;
     const snap = await getDocs(query(col.packages(database), orderBy("createdAt", "desc")));
     
     console.log("getPackages: Snap ricevuto:", snap);
@@ -182,13 +182,28 @@ export async function getPackages(): Promise<Package[]> {
       const data = d.data();
       console.log(`getPackages: Documento ${d.id}:`, data);
       
-      // Correggi il mapping del campo active/isActive per Firebase
-      const mappedData = {
-        ...data,
-        isActive: data.active !== undefined ? data.active : data.isActive, // Firebase usa 'active', locale usa 'isActive'
+      // Mapping completo per Firebase con tutti i campi necessari
+      const mappedPackage: Package = {
+        id: d.id,
+        title: data.title || "",
+        description: data.description || "",
+        price: data.price || 0,
+        imageUrl: data.imageUrl || "",
+        isActive: data.active !== undefined ? data.active : (data.isActive || false),
+        featured: data.featured || false,
+        badge: data.badge || "",
+        isPromotional: data.isPromotional || false,
+        hasDiscount: data.hasDiscount || false,
+        basePrice: data.basePrice || undefined,
+        discountedPrice: data.discountedPrice || undefined,
+        discountPercentage: data.discountPercentage || undefined,
+        paymentText: data.paymentText || "pagabile mensilmente",
+        details: data.details || undefined,
+        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt) : undefined
       };
       
-      return { id: d.id, ...mappedData as Package };
+      console.log(`getPackages: Pacchetto mappato ${d.id}:`, mappedPackage);
+      return mappedPackage;
     });
     
     console.log("getPackages: Pacchetti processati:", packages);
@@ -226,14 +241,14 @@ export async function upsertPackage(pkg: Package): Promise<string> {
     return pkg.id;
   } else {
     // Create new package
-    const added = await addDoc(col.packages(db as Firestore), {
-      title: pkg.title,
-      description: pkg.description,
-      price: pkg.price,
-      imageUrl: pkg.imageUrl ?? null,
+  const added = await addDoc(col.packages(db as Firestore), {
+    title: pkg.title,
+    description: pkg.description,
+    price: pkg.price,
+    imageUrl: pkg.imageUrl ?? null,
       active: pkg.isActive,
-      featured: pkg.featured ?? false,
-      badge: pkg.badge ?? null,
+    featured: pkg.featured ?? false,
+    badge: pkg.badge ?? null,
       isPromotional: pkg.isPromotional ?? false,
       // Nuovi campi per sconti e personalizzazione
       hasDiscount: pkg.hasDiscount ?? false,
@@ -243,9 +258,9 @@ export async function upsertPackage(pkg: Package): Promise<string> {
       paymentText: pkg.paymentText ?? "pagabile mensilmente",
       // Sezione dettagli completa
       details: pkg.details ?? null,
-      createdAt: serverTimestamp(),
-    });
-    return added.id;
+    createdAt: serverTimestamp(),
+  });
+  return added.id;
   }
 }
 
@@ -438,8 +453,8 @@ export async function updateBooking(booking: Booking): Promise<void> {
         const currentSlots = availSnap.data().slots || [];
         // Controlla che lo slot sia ancora disponibile prima di rimuoverlo
         if (currentSlots.includes(booking.slot)) {
-          const updatedSlots = currentSlots.filter((slot: string) => slot !== booking.slot);
-          await setDoc(availDoc, { date: dateStr, slots: updatedSlots }, { merge: true });
+        const updatedSlots = currentSlots.filter((slot: string) => slot !== booking.slot);
+        await setDoc(availDoc, { date: dateStr, slots: updatedSlots }, { merge: true });
         } else {
           console.warn(`Slot ${booking.slot} non più disponibile per la data ${dateStr}`);
         }
@@ -617,7 +632,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
   
   try {
     console.log("getSiteContent: Caricamento contenuto da Firebase...");
-    const snap = await getDoc(col.content(db as Firestore));
+  const snap = await getDoc(col.content(db as Firestore));
     console.log("getSiteContent: Snap ricevuto:", snap);
     console.log("getSiteContent: Snap exists:", snap.exists());
     
@@ -696,35 +711,58 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     console.log("getSiteContent: Popup - isEnabled:", data.freeConsultationPopup?.isEnabled);
     console.log("getSiteContent: Popup - title:", data.freeConsultationPopup?.title);
     
-    return {
-      heroTitle: data.heroTitle ?? "",
-      heroSubtitle: data.heroSubtitle ?? "",
-      heroCta: data.heroCta ?? "",
-      heroBackgroundImage: data.heroBackgroundImage ?? "",
-      heroBadgeText: data.heroBadgeText ?? "Performance • Estetica • Energia",
-      heroBadgeColor: data.heroBadgeColor ?? "bg-primary text-primary-foreground",
-      aboutTitle: data.aboutTitle ?? "",
-      aboutBody: data.aboutBody ?? "",
-      aboutImageUrl: data.aboutImageUrl ?? "",
-      images: Array.isArray(data.images) ? data.images : [],
-      contactTitle: data.contactTitle ?? "",
-      contactSubtitle: data.contactSubtitle ?? "",
-      contactPhone: data.contactPhone ?? "",
-      contactEmail: data.contactEmail ?? "",
-      contactAddresses: Array.isArray(data.contactAddresses) ? data.contactAddresses : [],
-      socialChannels: Array.isArray(data.socialChannels) ? data.socialChannels : [],
-      contactSectionTitle: data.contactSectionTitle ?? "💬 Contatti Diretti",
-      contactSectionSubtitle: data.contactSectionSubtitle ?? "",
-      studiosSectionTitle: data.studiosSectionTitle ?? "🏢 I Nostri Studi",
-      studiosSectionSubtitle: data.studiosSectionSubtitle ?? "",
+    // Forza sempre valori di default se i campi sono vuoti o undefined
+    const siteContent = {
+      heroTitle: data.heroTitle || "Trasforma il tuo fisico. Potenzia la tua performance.",
+      heroSubtitle: data.heroSubtitle || "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
+      heroCta: data.heroCta || "Prenota ora",
+      heroBackgroundImage: data.heroBackgroundImage || "",
+      heroBadgeText: data.heroBadgeText || "Performance • Estetica • Energia",
+      heroBadgeColor: data.heroBadgeColor || "bg-primary text-primary-foreground",
+      aboutTitle: data.aboutTitle || "Chi Sono",
+      aboutBody: data.aboutBody || "Sono Gabriele Zambonin, nutrizionista e personal trainer. Ti guido con un metodo scientifico e pratico per raggiungere forma fisica, energia e benessere reale.",
+      aboutImageUrl: data.aboutImageUrl || "",
+    images: Array.isArray(data.images) ? data.images : [],
+      contactTitle: data.contactTitle || "📞 Contattami",
+      contactSubtitle: data.contactSubtitle || "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
+      contactPhone: data.contactPhone || "+39 123 456 7890",
+      contactEmail: data.contactEmail || "info@gznutrition.it",
+      contactAddresses: Array.isArray(data.contactAddresses) && data.contactAddresses.length > 0 ? data.contactAddresses : [
+        {
+          name: "Studio Principale",
+          address: "Via Roma 123",
+          city: "Milano",
+          postalCode: "20100",
+          coordinates: { lat: 45.4642, lng: 9.1900 }
+        }
+      ],
+      socialChannels: Array.isArray(data.socialChannels) && data.socialChannels.length > 0 ? data.socialChannels : [
+        {
+          platform: "Instagram",
+          url: "https://instagram.com/gznutrition",
+          icon: "📸"
+        },
+        {
+          platform: "LinkedIn",
+          url: "https://linkedin.com/in/gznutrition",
+          icon: "💼"
+        }
+      ],
+      contactSectionTitle: data.contactSectionTitle || "💬 Contatti Diretti",
+      contactSectionSubtitle: data.contactSectionSubtitle || "Siamo qui per aiutarti",
+      studiosSectionTitle: data.studiosSectionTitle || "🏢 I Nostri Studi",
+      studiosSectionSubtitle: data.studiosSectionSubtitle || "Trova lo studio più vicino a te",
       freeConsultationPopup: {
-        isEnabled: data.freeConsultationPopup?.isEnabled === true || data.freeConsultationPopup?.isEnabled === "true",
-        title: data.freeConsultationPopup?.title ?? "🎯 10 Minuti Consultivi Gratuiti",
-        subtitle: data.freeConsultationPopup?.subtitle ?? "Valuta i tuoi obiettivi gratuitamente",
-        description: data.freeConsultationPopup?.description ?? "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
-        ctaText: data.freeConsultationPopup?.ctaText ?? "Prenota Ora - È Gratis!"
+        isEnabled: data.freeConsultationPopup?.isEnabled === true || data.freeConsultationPopup?.isEnabled === "true" || String(data.freeConsultationPopup?.isEnabled) === "true",
+        title: data.freeConsultationPopup?.title || "🎯 10 Minuti Consultivi Gratuiti",
+        subtitle: data.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente",
+        description: data.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
+        ctaText: data.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"
       },
     };
+    
+    console.log("getSiteContent: Contenuto finale mappato:", siteContent);
+    return siteContent;
   } catch (error) {
     console.error("getSiteContent: Errore nel caricamento da Firebase:", error);
     return null;
