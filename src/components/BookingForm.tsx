@@ -485,7 +485,7 @@ export function BookingForm() {
           </div>
         </div>
 
-        {/* Form di prenotazione base (senza data e slot) */}
+        {/* Form di prenotazione base (senza data e slot obbligatori) */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Nome */}
           <div>
@@ -546,6 +546,16 @@ export function BookingForm() {
                 <span>Email</span>
               </label>
             </div>
+          </div>
+
+          {/* Data (opzionale) */}
+          <div>
+            <Input label="Data (opzionale)" type="date" {...register("date")} />
+          </div>
+
+          {/* Orario (opzionale) */}
+          <div>
+            <Input label="Orario (opzionale)" type="time" {...register("slot")} />
           </div>
 
           {/* Priorità */}
@@ -847,13 +857,13 @@ export function BookingForm() {
         {/* Submit */}
         <Button
           type="submit"
-          disabled={isSubmitting || availableDates.length === 0 || !selectedPackage}
+          disabled={isSubmitting}
           className="w-full"
         >
           {isSubmitting 
             ? "Invio in corso..." 
             : !selectedPackage
-              ? "Seleziona un pacchetto per continuare"
+              ? "Invia richiesta"
               : showPromotionalBanner 
                 ? "Prenota Consultazione Gratuita" 
                 : "Prenota Consulenza"
