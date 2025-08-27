@@ -95,7 +95,7 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
                   <h3 className="font-semibold text-lg">{p.title}</h3>
                   {badge && <span className="chip">{badge}</span>}
                 </div>
-                <ul className="mt-3 space-y-2 text-sm list-disc pl-5">
+                <ul className="mt-3 space-y-2 text-sm list-disc pl-5 max-h-28 overflow-y-auto pr-2">
                   {benefits.map((b, i) => (
                     <li key={i}>{b}</li>
                   ))}

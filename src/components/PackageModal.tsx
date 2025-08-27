@@ -74,10 +74,10 @@ export function PackageModal({ pkg, onClose }: Props) {
         onClick={handleBackdropClick}
       >
         {/* Modal */}
-        <div className="bg-gradient-to-br from-background to-muted/20 text-foreground rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-border/50">
-          <div className="p-8">
-            {/* Header con gradiente */}
-            <div className="flex items-start justify-between gap-4 mb-6">
+        <div className="bg-gradient-to-br from-background to-muted/20 text-foreground rounded-2xl w-full max-w-3xl max-h-[90vh] shadow-2xl border border-border/50 flex flex-col overflow-hidden">
+          {/* Header sticky */}
+          <div className="sticky top-0 z-10 bg-gradient-to-br from-background to-muted/30 border-b border-border/30 p-6 md:p-8">
+            <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   {pkg.title}
@@ -96,7 +96,10 @@ export function PackageModal({ pkg, onClose }: Props) {
                 <span className="text-center">✕</span>
               </button>
             </div>
-            
+          </div>
+          {/* Content scrollable */}
+          <div className="flex-1 overflow-y-auto p-6 md:p-8">
+
             {/* Immagine con overlay gradiente */}
             {pkg.imageUrl && (
               <div className="relative mb-6 rounded-xl overflow-hidden">
