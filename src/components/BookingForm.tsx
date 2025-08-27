@@ -333,8 +333,8 @@ export function BookingForm() {
         try {
           const availability = await getAvailabilityByDate(date);
           if (availability) {
-            // Se è una consultazione gratuita, controlla solo gli slot promozionali
-            if (isFreeConsultation && selectedPackage?.isPromotional) {
+            // Usa gli slot promozionali se è un flusso di consultazione gratuita
+            if (isFreeConsultation || selectedPackage?.isPromotional === true) {
               if (availability.freeConsultationSlots && availability.freeConsultationSlots.length > 0) {
                 return date;
               }
@@ -370,7 +370,7 @@ export function BookingForm() {
       try {
         const availability = await getAvailabilityByDate(selectedDate);
         if (availability) {
-          if (isFreeConsultation && selectedPackage?.isPromotional) {
+          if (isFreeConsultation || selectedPackage?.isPromotional === true) {
             // Per consultazioni gratuite, mostra solo slot promozionali
             setAvailableSlots(availability.freeConsultationSlots || []);
           } else {
