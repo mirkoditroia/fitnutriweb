@@ -468,15 +468,15 @@ export function BookingForm() {
         <div className="bg-muted/20 border border-border rounded-lg p-4">
           <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">
-              Seleziona un pacchetto dalla sezione &quot;Pacchetti&quot; per vedere le date e orari disponibili
+              Puoi prenotare anche senza selezionare un pacchetto: scegli una data e un orario dagli slot disponibili.
             </p>
             <p className="text-xs text-muted-foreground">
-              Il form sarà completato automaticamente con le opzioni di prenotazione
+              In alternativa, invia la richiesta senza selezione e ti consiglieremo il pacchetto più adatto.
             </p>
           </div>
         </div>
 
-        {/* Form di prenotazione base (senza data e slot obbligatori) */}
+        {/* Form di prenotazione base con lo stesso calendario/slot (slot normali) */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Nome */}
           <div>
@@ -539,15 +539,49 @@ export function BookingForm() {
             </div>
           </div>
 
-          {/* Data (opzionale) */}
+          {/* Data con calendario e orari: usa slot normali */}
           <div>
-            <Input label="Data (opzionale)" type="date" {...register("date")} />
+            <label className="block text-sm font-medium mb-2">Data *</label>
+            <DateCalendar
+              availableDates={availableDates}
+              selectedDate={selectedDate}
+              onDateSelect={(date) => {
+                setSelectedDate(date);
+                setValue("date", date);
+                setValue("slot", "");
+              }}
+              showPromotionalBanner={false}
+            />
+            {errors.date && (
+              <p className="text-destructive text-sm mt-1">{errors.date.message}</p>
+            )}
           </div>
 
-          {/* Orario (opzionale) */}
-          <div>
-            <Input label="Orario (opzionale)" type="time" {...register("slot")} />
-          </div>
+          {/* Slot orari per la data selezionata (normali) */}
+          {selectedDate && availableSlots.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Orario disponibile *</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {availableSlots.map((slot) => (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setValue("slot", slot)}
+                    className={`p-3 border rounded-lg text-sm transition-colors ${
+                      watch("slot") === slot
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+              {errors.slot && (
+                <p className="text-destructive text-sm mt-1">{errors.slot.message}</p>
+              )}
+            </div>
+          )}
 
           {/* Priorità */}
           <div>
