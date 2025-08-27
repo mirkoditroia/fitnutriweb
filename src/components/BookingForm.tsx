@@ -201,6 +201,7 @@ export function BookingForm() {
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [packages, setPackages] = useState<Package[]>([]);
   const availableSlotsRef = useRef<string[]>([]);
+  const packagesRef = useRef<Package[]>([]);
   
   // NUOVO SISTEMA DIRETTO - SEMPLICE E AFFIDABILE
   const [directState, setDirectStateLocal] = useState(getDirectState());
@@ -247,14 +248,16 @@ export function BookingForm() {
         console.log("BookingForm: Caricamento pacchetti...");
         const pkgs = await getPackages();
         console.log("BookingForm: Pacchetti caricati:", pkgs);
-        setPackages(pkgs || []);
+        const finalPackages = pkgs || [];
+        setPackages(finalPackages);
+        packagesRef.current = finalPackages;
         
         // 2. Applica lo stato diretto
         const currentDirectState = getDirectState();
         console.log("BookingForm: Stato diretto attuale:", currentDirectState);
         
-        if (currentDirectState.selectedPackageId && pkgs && pkgs.length > 0) {
-          const selectedPkg = pkgs.find(p => p.id === currentDirectState.selectedPackageId);
+        if (currentDirectState.selectedPackageId && finalPackages.length > 0) {
+          const selectedPkg = finalPackages.find(p => p.id === currentDirectState.selectedPackageId);
           console.log("BookingForm: Pacchetto trovato:", selectedPkg);
           
           if (selectedPkg) {
@@ -275,8 +278,8 @@ export function BookingForm() {
       console.log("BookingForm: Cambio stato diretto:", event.detail);
       setDirectStateLocal(event.detail);
       
-      if (event.detail.selectedPackageId && packages.length > 0) {
-        const selectedPkg = packages.find(p => p.id === event.detail.selectedPackageId);
+      if (event.detail.selectedPackageId && packagesRef.current.length > 0) {
+        const selectedPkg = packagesRef.current.find(p => p.id === event.detail.selectedPackageId);
         if (selectedPkg) {
           setSelectedPackage(selectedPkg);
           setValue("packageId", selectedPkg.id || "");
