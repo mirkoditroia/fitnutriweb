@@ -1,9 +1,11 @@
 // Sistema di stato globale semplice per bypassare problemi di eventi
+import type { Package, SiteContent } from "@/lib/data";
+
 export interface GlobalState {
   selectedPackageId: string | null;
   isFreeConsultation: boolean;
-  packages: any[];
-  siteContent: any;
+  packages: Package[];
+  siteContent: SiteContent | null;
 }
 
 // Stato globale
@@ -58,12 +60,12 @@ export const setSelectedPackage = (packageId: string | null, isFreeConsultation:
   });
 };
 
-export const setPackages = (packages: any[]): void => {
+export const setPackages = (packages: Package[]): void => {
   console.log("GlobalState: setPackages chiamato:", packages);
   setGlobalState({ packages });
 };
 
-export const setSiteContent = (siteContent: any): void => {
+export const setSiteContent = (siteContent: SiteContent | null): void => {
   console.log("GlobalState: setSiteContent chiamato:", siteContent);
   setGlobalState({ siteContent });
 };
