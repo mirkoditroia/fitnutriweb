@@ -8,6 +8,8 @@ import { LandingImages } from "@/components/LandingImages";
 import { PackagesCarousel } from "@/components/PackagesCarousel";
 import { TrustpilotWall } from "@/components/TrustpilotWall";
 import { BookingForm } from "@/components/BookingForm";
+import { ContactSection } from "@/components/ContactSection";
+import { FreeConsultationPopup } from "@/components/FreeConsultationPopup";
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +35,16 @@ export default async function Home() {
 
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
+      {/* Popup Promozionale - se abilitato da contenuti */}
+      {c.freeConsultationPopup && (c.freeConsultationPopup.isEnabled === true || String(c.freeConsultationPopup.isEnabled) === "true") && (
+        <FreeConsultationPopup
+          title={c.freeConsultationPopup?.title || "🎯 10 Minuti Consultivi Gratuiti"}
+          subtitle={c.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente"}
+          description={c.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance."}
+          ctaText={c.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"}
+          isEnabled={true}
+        />
+      )}
       <Hero title={c.heroTitle} subtitle={c.heroSubtitle} ctaLabel={c.heroCta} backgroundImage={c.heroBackgroundImage} />
       <AboutSection title={c.aboutTitle} body={c.aboutBody} imageUrl={c.aboutImageUrl} />
       <LandingImages images={c.images} />
@@ -46,6 +58,38 @@ export default async function Home() {
           <BookingForm />
         </div>
       </section>
+      {/* Contatti - sempre visibili con fallback */}
+      <div id="contatti" className="border-t border-foreground/10">
+        <ContactSection
+          contactInfo={{
+            title: c.contactTitle || "📞 Contattami",
+            subtitle: c.contactSubtitle || "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
+            phone: c.contactPhone || "+39 123 456 7890",
+            email: c.contactEmail || "info@gznutrition.it",
+            addresses: Array.isArray(c.contactAddresses) && c.contactAddresses.length > 0
+              ? c.contactAddresses
+              : [
+                {
+                  name: "Studio Principale",
+                  address: "Via Roma 123",
+                  city: "Milano",
+                  postalCode: "20100",
+                  coordinates: { lat: 45.4642, lng: 9.19 },
+                },
+              ],
+            socialChannels: Array.isArray(c.socialChannels) && c.socialChannels.length > 0
+              ? c.socialChannels
+              : [
+                { platform: "Instagram", url: "https://instagram.com/gznutrition", icon: "📸" },
+                { platform: "LinkedIn", url: "https://linkedin.com/in/gznutrition", icon: "💼" },
+              ],
+            contactTitle: c.contactSectionTitle || "💬 Contatti Diretti",
+            contactSubtitle: c.contactSectionSubtitle || "Siamo qui per aiutarti",
+            studiosTitle: c.studiosSectionTitle || "🏢 I Nostri Studi",
+            studiosSubtitle: c.studiosSectionSubtitle || "Trova lo studio più vicino a te",
+          }}
+        />
+      </div>
       <TrustpilotWall />
     </main>
   );

@@ -763,7 +763,21 @@ export function BookingForm() {
                       : "border-border hover:border-primary/50"
                   }`}
                 >
-                  {slot}
+                  {(() => {
+                    // Renderizza orari in formato HH:mm se slot è formato con data ISO
+                    // e mantiene già HH:mm se è semplice
+                    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(slot)) {
+                      try {
+                        const d = new Date(slot);
+                        const hh = String(d.getHours()).padStart(2, "0");
+                        const mm = String(d.getMinutes()).padStart(2, "0");
+                        return `${hh}:${mm}`;
+                      } catch {
+                        return slot;
+                      }
+                    }
+                    return slot;
+                  })()}
                 </button>
               ))}
             </div>
