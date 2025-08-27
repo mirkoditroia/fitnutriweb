@@ -181,7 +181,14 @@ export async function getPackages(): Promise<Package[]> {
     const packages = snap.docs.map((d) => {
       const data = d.data();
       console.log(`getPackages: Documento ${d.id}:`, data);
-      return { id: d.id, ...(data as Package) };
+      
+      // Correggi il mapping del campo active/isActive per Firebase
+      const mappedData = {
+        ...data,
+        isActive: data.active !== undefined ? data.active : data.isActive, // Firebase usa 'active', locale usa 'isActive'
+      };
+      
+      return { id: d.id, ...mappedData as Package };
     });
     
     console.log("getPackages: Pacchetti processati:", packages);
@@ -711,7 +718,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       studiosSectionTitle: data.studiosSectionTitle ?? "🏢 I Nostri Studi",
       studiosSectionSubtitle: data.studiosSectionSubtitle ?? "",
       freeConsultationPopup: {
-        isEnabled: data.freeConsultationPopup?.isEnabled === true,
+        isEnabled: data.freeConsultationPopup?.isEnabled === true || data.freeConsultationPopup?.isEnabled === "true",
         title: data.freeConsultationPopup?.title ?? "🎯 10 Minuti Consultivi Gratuiti",
         subtitle: data.freeConsultationPopup?.subtitle ?? "Valuta i tuoi obiettivi gratuitamente",
         description: data.freeConsultationPopup?.description ?? "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",

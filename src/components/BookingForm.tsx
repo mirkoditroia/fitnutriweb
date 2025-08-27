@@ -416,6 +416,32 @@ export function BookingForm({
     loadAvailability();
   }, [selectedDate, selectedPackage, isFreeConsultation]);
 
+  // Listener per eventi forzati di aggiornamento pacchetto (fallback per Firebase)
+  useEffect(() => {
+    const handleForcePackageUpdate = (event: CustomEvent) => {
+      const { packageId: newPackageId } = event.detail;
+      console.log("BookingForm: Evento forcePackageUpdate ricevuto:", newPackageId);
+      
+      if (newPackageId && externalPackages && externalPackages.length > 0) {
+        const pkg = externalPackages.find(p => p.id === newPackageId);
+        if (pkg) {
+          console.log("BookingForm: Pacchetto trovato tramite evento forzato:", pkg);
+          setSelectedPackage(pkg);
+          setValue("packageId", pkg.id || "");
+        }
+      }
+    };
+
+    const bookingForm = document.querySelector('[data-booking-form]');
+    if (bookingForm) {
+      bookingForm.addEventListener('forcePackageUpdate', handleForcePackageUpdate as EventListener);
+      
+      return () => {
+        bookingForm.removeEventListener('forcePackageUpdate', handleForcePackageUpdate as EventListener);
+      };
+    }
+  }, [externalPackages, setValue]);
+
   const onSubmit = async (data: FormValues) => {
     // Se non c'è un pacchetto selezionato, non permettere l'invio
     if (!selectedPackage) {

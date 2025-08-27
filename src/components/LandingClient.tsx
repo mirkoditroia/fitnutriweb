@@ -46,14 +46,22 @@ export default function LandingClient() {
       setSelectedPackageId(newPackageId);
     };
 
-    // Fallback: controlla l'URL ogni secondo per cambiamenti
+    // Fallback: controlla l'URL ogni 500ms per cambiamenti (più veloce per Firebase)
     const urlCheckInterval = setInterval(() => {
       const currentPackageId = getPackageIdFromUrl();
       if (currentPackageId !== selectedPackageId) {
         console.log("LandingClient: Fallback - packageId cambiato nell'URL:", currentPackageId);
         setSelectedPackageId(currentPackageId);
+        
+        // Forza l'aggiornamento del form anche se gli eventi non funzionano
+        const bookingForm = document.querySelector('[data-booking-form]');
+        if (bookingForm) {
+          console.log("LandingClient: Forzo aggiornamento form");
+          const event = new CustomEvent('forcePackageUpdate', { detail: { packageId: currentPackageId } });
+          bookingForm.dispatchEvent(event);
+        }
       }
-    }, 1000);
+    }, 500);
 
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('packageSelected', handlePackageSelected as EventListener);
@@ -114,7 +122,7 @@ export default function LandingClient() {
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
       {/* Popup 10 Minuti Consultivi Gratuiti */}
-      {(content.freeConsultationPopup?.isEnabled === true) && (
+      {(content.freeConsultationPopup && (content.freeConsultationPopup.isEnabled === true || (content.freeConsultationPopup.isEnabled as any) === "true")) && (
         <FreeConsultationPopup
           title={content.freeConsultationPopup?.title || "🎯 10 Minuti Consultivi Gratuiti"}
           subtitle={content.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente"}
@@ -153,7 +161,7 @@ export default function LandingClient() {
         <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
           Inizia il tuo percorso di trasformazione. Compila il modulo e ti contatteremo per definire i dettagli.
         </p>
-        <div className="mt-8 max-w-lg mx-auto">
+        <div className="mt-8 max-w-lg mx-auto" data-booking-form>
           <BookingForm 
             packageId={selectedPackageId} 
             isFreeConsultation={isFreeConsultation}
