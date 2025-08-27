@@ -408,9 +408,8 @@ export function BookingForm() {
       // In produzione (Firebase) usa la funzione datasource ufficiale
       try {
         const { createBooking } = await import("@/lib/datasource");
+        // Tipi stretti coerenti con `Booking`
         await createBooking({
-          id: undefined as any,
-          clientId: undefined,
           name: bookingData.name,
           email: bookingData.email,
           phone: bookingData.phone || undefined,
@@ -419,9 +418,10 @@ export function BookingForm() {
           slot: bookingData.slot,
           status: "pending",
           priority: bookingData.priority || false,
-          channelPreference: bookingData.channelPreference as any,
+          channelPreference: bookingData.channelPreference,
           notes: bookingData.notes,
-        } as any);
+          isFreeConsultation,
+        });
         // Simula response.ok
         const response = { ok: true } as const;
         if (!response.ok) throw new Error("failed");
