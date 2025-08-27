@@ -480,7 +480,7 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
 
 export async function upsertAvailabilityForDate(date: string, slots: string[], freeConsultationSlots?: string[]): Promise<void> {
   const mode = getDataMode();
-  if (mode === "firebase") return fb_upsertAvailabilityForDate(date, slots);
+  if (mode === "firebase") return fb_upsertAvailabilityForDate(date, slots, freeConsultationSlots);
   if (mode === "demo") throw new Error("Preprod demo read-only");
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });

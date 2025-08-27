@@ -405,13 +405,36 @@ export function BookingForm() {
         status: "pending" as const,
       };
 
-      const response = await fetch("/api/localdb/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData),
-      });
-
-      if (response.ok) {
+      // In produzione (Firebase) usa la funzione datasource ufficiale
+      try {
+        const { createBooking } = await import("@/lib/datasource");
+        await createBooking({
+          id: undefined as any,
+          clientId: undefined,
+          name: bookingData.name,
+          email: bookingData.email,
+          phone: bookingData.phone || undefined,
+          packageId: selectedPackage.id,
+          date: bookingData.date,
+          slot: bookingData.slot,
+          status: "pending",
+          priority: bookingData.priority || false,
+          channelPreference: bookingData.channelPreference as any,
+          notes: bookingData.notes,
+        } as any);
+        // Simula response.ok
+        const response = { ok: true } as const;
+        if (!response.ok) throw new Error("failed");
+      } catch (e) {
+        // Fallback locale
+        const response = await fetch("/api/localdb/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        });
+        if (!response.ok) throw new Error("failed");
+      }
+      {
         alert(isFreeConsultation 
           ? "Prenotazione per i 10 minuti consultivi gratuiti inviata con successo!" 
           : "Prenotazione inviata con successo!"
@@ -428,8 +451,6 @@ export function BookingForm() {
         // Reset del pacchetto selezionato per tornare al selettore
         setSelectedPackage(null);
       setValue("packageId", "");
-      } else {
-        alert("Errore nell'invio della prenotazione");
       }
     } catch (error) {
       console.error("Errore:", error);

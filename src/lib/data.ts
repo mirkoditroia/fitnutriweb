@@ -789,7 +789,12 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
 
 export async function upsertAvailabilityForDate(date: string, slots: string[], freeConsultationSlots?: string[]): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
-  await setDoc(col.availability(db as Firestore, date), { date, slots, freeConsultationSlots }, { merge: true });
+  const payload: Record<string, unknown> = { date, slots };
+  // Evita di inviare campi undefined a Firestore
+  if (Array.isArray(freeConsultationSlots)) {
+    payload.freeConsultationSlots = freeConsultationSlots;
+  }
+  await setDoc(col.availability(db as Firestore, date), payload, { merge: true });
 }
 
 // Serialization helpers
