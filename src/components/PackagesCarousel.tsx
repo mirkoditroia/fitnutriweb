@@ -39,8 +39,18 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
     console.log("PackagesCarousel: Tipo di packageId:", typeof packageId);
     console.log("PackagesCarousel: packageId è truthy:", !!packageId);
     
+    // Verifica che packageId sia valido
+    if (!packageId) {
+      console.error("PackagesCarousel: packageId è null/undefined, non posso creare evento");
+      return;
+    }
+    
+    // Crea evento con detail più robusto
+    const eventDetail = { packageId: String(packageId) };
     const customEvent = new CustomEvent('packageSelected', { 
-      detail: { packageId } 
+      detail: eventDetail,
+      bubbles: true,
+      cancelable: true
     });
     
     console.log("PackagesCarousel: Evento creato:", customEvent);
@@ -48,7 +58,9 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
     console.log("PackagesCarousel: PackageId nell'evento:", customEvent.detail.packageId);
     console.log("PackagesCarousel: Event detail completo:", JSON.stringify(customEvent.detail));
     
+    // Dispatch su entrambi window e document
     window.dispatchEvent(customEvent);
+    document.dispatchEvent(customEvent);
     
     // Fallback: trigger anche popstate per compatibilità
     console.log("PackagesCarousel: Dispatching evento popstate");
