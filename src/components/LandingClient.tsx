@@ -66,8 +66,18 @@ export default function LandingClient() {
       setPackages(finalPackages);
       
       // SOLUZIONE DEFINITIVA: Sincronizza con stato globale
+      console.log("LandingClient: Sincronizzando con stato globale");
+      console.log("LandingClient: finalContent:", finalContent);
+      console.log("LandingClient: finalPackages:", finalPackages);
+      
       setGlobalSiteContent(finalContent);
       setGlobalPackages(finalPackages);
+      
+      // Forza l'inizializzazione del packageId dall'URL dopo aver caricato i pacchetti
+      setTimeout(() => {
+        console.log("LandingClient: Forzando inizializzazione da URL dopo caricamento dati");
+        initializeFromUrl();
+      }, 100);
     }).catch(error => {
       console.error("LandingClient: Errore nel caricamento:", error);
     });
@@ -130,21 +140,30 @@ export default function LandingClient() {
   
   console.log("LandingClient: Renderizzato - content:", finalContent);
   console.log("LandingClient: Renderizzato - packages:", finalPackages);
-  const featuredFirst = [...finalPackages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-
+  
   console.log("LandingClient: Stato globale attuale:", globalState);
   console.log("LandingClient: selectedPackageId dallo stato globale:", globalState.selectedPackageId);
   console.log("LandingClient: isFreeConsultation dallo stato globale:", globalState.isFreeConsultation);
+  console.log("LandingClient: siteContent dallo stato globale:", globalState.siteContent);
+  
+  // Usa i dati dallo stato globale se disponibili, altrimenti fallback ai dati locali
+  const effectiveContent = globalState.siteContent || finalContent;
+  const effectivePackages = globalState.packages.length > 0 ? globalState.packages : finalPackages;
+  
+  const featuredFirst = [...effectivePackages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+  
+  console.log("LandingClient: effectiveContent:", effectiveContent);
+  console.log("LandingClient: effectivePackages:", effectivePackages);
 
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
       {/* Popup 10 Minuti Consultivi Gratuiti */}
-      {(finalContent.freeConsultationPopup && (finalContent.freeConsultationPopup.isEnabled === true || String(finalContent.freeConsultationPopup.isEnabled) === "true")) && (
+      {(effectiveContent.freeConsultationPopup && (effectiveContent.freeConsultationPopup.isEnabled === true || String(effectiveContent.freeConsultationPopup.isEnabled) === "true")) && (
         <FreeConsultationPopup
-          title={finalContent.freeConsultationPopup?.title || "🎯 10 Minuti Consultivi Gratuiti"}
-          subtitle={finalContent.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente"}
-          description={finalContent.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance."}
-          ctaText={finalContent.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"}
+          title={effectiveContent.freeConsultationPopup?.title || "🎯 10 Minuti Consultivi Gratuiti"}
+          subtitle={effectiveContent.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente"}
+          description={effectiveContent.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance."}
+          ctaText={effectiveContent.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"}
           isEnabled={true}
         />
       )}
@@ -159,16 +178,16 @@ export default function LandingClient() {
       )}
       
       <Hero 
-        title={finalContent.heroTitle} 
-        subtitle={finalContent.heroSubtitle} 
-        ctaLabel={finalContent.heroCta} 
-        backgroundImage={finalContent.heroBackgroundImage}
-        badgeText={finalContent.heroBadgeText}
-        badgeColor={finalContent.heroBadgeColor}
+        title={effectiveContent.heroTitle} 
+        subtitle={effectiveContent.heroSubtitle} 
+        ctaLabel={effectiveContent.heroCta} 
+        backgroundImage={effectiveContent.heroBackgroundImage}
+        badgeText={effectiveContent.heroBadgeText}
+        badgeColor={effectiveContent.heroBadgeColor}
       />
-      <AboutSection title={finalContent.aboutTitle} body={finalContent.aboutBody} imageUrl={finalContent.aboutImageUrl} />
-      {finalContent.images && finalContent.images.length > 0 && (
-        <LandingImages images={finalContent.images} />
+      <AboutSection title={effectiveContent.aboutTitle} body={effectiveContent.aboutBody} imageUrl={effectiveContent.aboutImageUrl} />
+      {effectiveContent.images && effectiveContent.images.length > 0 && (
+        <LandingImages images={effectiveContent.images} />
       )}
       <PackagesCarousel items={featuredFirst} />
       
@@ -182,7 +201,7 @@ export default function LandingClient() {
           <BookingForm 
             packageId={globalState.selectedPackageId || undefined} 
             isFreeConsultation={globalState.isFreeConsultation}
-            packages={globalState.packages} // Usa stato globale
+            packages={effectivePackages} // Usa pacchetti effettivi
           />
         </div>
       </section>
@@ -191,11 +210,11 @@ export default function LandingClient() {
       <div id="contatti">
         <ContactSection 
           contactInfo={{
-            title: finalContent.contactTitle || "📞 Contattami",
-            subtitle: finalContent.contactSubtitle || "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
-            phone: finalContent.contactPhone || "+39 123 456 7890",
-            email: finalContent.contactEmail || "info@gznutrition.it",
-            addresses: finalContent.contactAddresses && finalContent.contactAddresses.length > 0 ? finalContent.contactAddresses : [
+            title: effectiveContent.contactTitle || "📞 Contattami",
+            subtitle: effectiveContent.contactSubtitle || "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
+            phone: effectiveContent.contactPhone || "+39 123 456 7890",
+            email: effectiveContent.contactEmail || "info@gznutrition.it",
+            addresses: effectiveContent.contactAddresses && effectiveContent.contactAddresses.length > 0 ? effectiveContent.contactAddresses : [
               {
                 name: "Studio Principale",
                 address: "Via Roma 123",
@@ -204,7 +223,7 @@ export default function LandingClient() {
                 coordinates: { lat: 45.4642, lng: 9.1900 }
               }
             ],
-            socialChannels: finalContent.socialChannels && finalContent.socialChannels.length > 0 ? finalContent.socialChannels : [
+            socialChannels: effectiveContent.socialChannels && effectiveContent.socialChannels.length > 0 ? effectiveContent.socialChannels : [
               {
                 platform: "Instagram",
                 url: "https://instagram.com/gznutrition",
@@ -216,10 +235,10 @@ export default function LandingClient() {
                 icon: "💼"
               }
             ],
-            contactTitle: finalContent.contactSectionTitle || "💬 Contatti Diretti",
-            contactSubtitle: finalContent.contactSectionSubtitle || "Siamo qui per aiutarti",
-            studiosTitle: finalContent.studiosSectionTitle || "🏢 I Nostri Studi",
-            studiosSubtitle: finalContent.studiosSectionSubtitle || "Trova lo studio più vicino a te"
+            contactTitle: effectiveContent.contactSectionTitle || "💬 Contatti Diretti",
+            contactSubtitle: effectiveContent.contactSectionSubtitle || "Siamo qui per aiutarti",
+            studiosTitle: effectiveContent.studiosSectionTitle || "🏢 I Nostri Studi",
+            studiosSubtitle: effectiveContent.studiosSectionSubtitle || "Trova lo studio più vicino a te"
           }} 
         />
       </div>

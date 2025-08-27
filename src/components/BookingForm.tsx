@@ -263,14 +263,26 @@ export function BookingForm({
     
     // Inizializza con lo stato attuale
     const currentState = getGlobalState();
+    console.log("BookingForm: Stato globale attuale all'inizializzazione:", currentState);
+    
     if (currentState.packages && currentState.packages.length > 0) {
+      console.log("BookingForm: Inizializzando con pacchetti dallo stato globale:", currentState.packages);
       setPackages(currentState.packages);
+      
       if (currentState.selectedPackageId) {
         const pkg = currentState.packages.find(p => p.id === currentState.selectedPackageId);
+        console.log("BookingForm: Pacchetto trovato per ID:", currentState.selectedPackageId, "->", pkg);
         if (pkg) {
           setSelectedPackage(pkg);
           setValue("packageId", pkg.id || "");
         }
+      }
+    } else {
+      console.log("BookingForm: Nessun pacchetto nello stato globale, usando props esterni");
+      // Fallback: usa i pacchetti dalle props se lo stato globale è vuoto
+      if (externalPackages && externalPackages.length > 0) {
+        console.log("BookingForm: Usando pacchetti dalle props:", externalPackages);
+        setPackages(externalPackages);
       }
     }
     

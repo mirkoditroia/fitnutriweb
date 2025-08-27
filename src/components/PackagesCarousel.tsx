@@ -36,17 +36,27 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
     }
     
     // SOLUZIONE DEFINITIVA: Usa il sistema di stato globale diretto
-    console.log("PackagesCarousel: Usando stato globale diretto per packageId:", packageId);
+    console.log("PackagesCarousel: handleBookingClick - packageId ricevuto:", packageId);
+    console.log("PackagesCarousel: handleBookingClick - tipo packageId:", typeof packageId);
     
     // Verifica che packageId sia valido
     if (!packageId) {
-      console.error("PackagesCarousel: packageId è null/undefined");
+      console.error("PackagesCarousel: packageId è null/undefined, aborting");
       return;
     }
     
     const isFreeConsultation = packageId === 'free-consultation';
+    console.log("PackagesCarousel: Chiamando setSelectedPackage con:", { packageId, isFreeConsultation });
+    
     setSelectedPackage(packageId, isFreeConsultation);
-    console.log("PackagesCarousel: Stato globale aggiornato:", { packageId, isFreeConsultation });
+    
+    console.log("PackagesCarousel: setSelectedPackage chiamato, verificando stato globale...");
+    
+    // Verifica che lo stato sia stato aggiornato
+    setTimeout(() => {
+      const newState = require('@/lib/globalState').getGlobalState();
+      console.log("PackagesCarousel: Stato globale dopo aggiornamento:", newState);
+    }, 50);
   };
 
   const renderPrice = (pkg: Package) => {
