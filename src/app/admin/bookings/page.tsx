@@ -172,9 +172,10 @@ export default function AdminBookingsPage() {
   const handleCreateClientFromPending = async (booking: Booking) => {
     try {
       await createClientFromPendingBooking(booking);
-      toast.success("Cliente creato/aggiornato dalla prenotazione in attesa!");
+      toast.success("Cliente creato/aggiornato dalla prenotazione!");
+      await loadData();
     } catch (error) {
-      console.error("Error creating client from pending booking:", error);
+      console.error("Error creating client from booking:", error);
       toast.error("Errore nella creazione del cliente");
     }
   };
@@ -714,7 +715,21 @@ export default function AdminBookingsPage() {
                  </Button>
                </div>
                <div className="space-y-4">
-                 {confirmedBookings.map(renderBookingCard)}
+                {confirmedBookings.map((b) => (
+                  <div key={b.id}>
+                    {renderBookingCard(b)}
+                    <div className="mt-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCreateClientFromPending(b)}
+                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                      >
+                        👥 Crea Cliente
+                      </Button>
+                    </div>
+                  </div>
+                ))}
                </div>
              </div>
            )}
