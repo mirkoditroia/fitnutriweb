@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Package } from "@/lib/data";
 import { PackageModal } from "@/components/PackageModal";
+import { setSelectedPackage } from "@/lib/globalState";
 
 function parseBenefits(description: string): string[] {
   // Try split by bullet '•', fallback to first 3 lines
@@ -34,37 +35,18 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
       console.log("PackagesCarousel: Sezione booking non trovata");
     }
     
-    // Trigger un evento personalizzato per aggiornare il LandingClient
-    console.log("PackagesCarousel: Creazione evento con packageId:", packageId);
-    console.log("PackagesCarousel: Tipo di packageId:", typeof packageId);
-    console.log("PackagesCarousel: packageId è truthy:", !!packageId);
+    // SOLUZIONE DEFINITIVA: Usa il sistema di stato globale diretto
+    console.log("PackagesCarousel: Usando stato globale diretto per packageId:", packageId);
     
     // Verifica che packageId sia valido
     if (!packageId) {
-      console.error("PackagesCarousel: packageId è null/undefined, non posso creare evento");
+      console.error("PackagesCarousel: packageId è null/undefined");
       return;
     }
     
-    // Crea evento con detail più robusto
-    const eventDetail = { packageId: String(packageId) };
-    const customEvent = new CustomEvent('packageSelected', { 
-      detail: eventDetail,
-      bubbles: true,
-      cancelable: true
-    });
-    
-    console.log("PackagesCarousel: Evento creato:", customEvent);
-    console.log("PackagesCarousel: Event detail:", customEvent.detail);
-    console.log("PackagesCarousel: PackageId nell'evento:", customEvent.detail.packageId);
-    console.log("PackagesCarousel: Event detail completo:", JSON.stringify(customEvent.detail));
-    
-    // Dispatch su entrambi window e document
-    window.dispatchEvent(customEvent);
-    document.dispatchEvent(customEvent);
-    
-    // Fallback: trigger anche popstate per compatibilità
-    console.log("PackagesCarousel: Dispatching evento popstate");
-    window.dispatchEvent(new PopStateEvent('popstate'));
+    const isFreeConsultation = packageId === 'free-consultation';
+    setSelectedPackage(packageId, isFreeConsultation);
+    console.log("PackagesCarousel: Stato globale aggiornato:", { packageId, isFreeConsultation });
   };
 
   const renderPrice = (pkg: Package) => {

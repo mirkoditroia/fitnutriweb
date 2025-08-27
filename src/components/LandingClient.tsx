@@ -10,12 +10,15 @@ import { ContactSection } from "@/components/ContactSection";
 import { FreeConsultationPopup } from "@/components/FreeConsultationPopup";
 import { type SiteContent } from "@/lib/data";
 import { getPackages, getSiteContent } from "@/lib/datasource";
+import { subscribeToGlobalState, getGlobalState, initializeFromUrl, setPackages as setGlobalPackages, setSiteContent as setGlobalSiteContent } from "@/lib/globalState";
 
 export default function LandingClient() {
   const [content, setContent] = useState<SiteContent | null>(null);
   type Pack = { id?: string; title: string; description: string; price: number; imageUrl?: string; featured?: boolean; isActive: boolean; badge?: string };
   const [packages, setPackages] = useState<Pack[] | null>(null);
-  const [selectedPackageId, setSelectedPackageId] = useState<string | undefined>();
+  
+  // SOLUZIONE DEFINITIVA: Usa stato globale invece di eventi
+  const [globalState, setGlobalStateLocal] = useState(getGlobalState());
 
   // Funzione per estrarre il packageId dall'URL
   const getPackageIdFromUrl = () => {
@@ -26,58 +29,21 @@ export default function LandingClient() {
     return undefined;
   };
 
+  // SOLUZIONE DEFINITIVA: Sostituisce completamente il sistema di eventi
   useEffect(() => {
-    // Gestisce il packageId dall'URL iniziale
-    setSelectedPackageId(getPackageIdFromUrl());
-
-    // Listener per eventi personalizzati di selezione pacchetti
-    const handlePackageSelected = (event: CustomEvent) => {
-      console.log("LandingClient: Evento packageSelected ricevuto:", event);
-      console.log("LandingClient: Event detail:", event.detail);
-      const { packageId } = event.detail;
-      console.log("LandingClient: Pacchetto selezionato:", packageId);
-      setSelectedPackageId(packageId);
-    };
-
-    // Listener per popstate (navigazione browser)
-    const handlePopState = () => {
-      const newPackageId = getPackageIdFromUrl();
-      console.log("LandingClient: PopState - nuovo packageId:", newPackageId);
-      setSelectedPackageId(newPackageId);
-    };
-
-    // Fallback: controlla l'URL ogni 500ms per cambiamenti (più veloce per Firebase)
-    const urlCheckInterval = setInterval(() => {
-      const currentPackageId = getPackageIdFromUrl();
-      if (currentPackageId !== selectedPackageId) {
-        console.log("LandingClient: Fallback - packageId cambiato nell'URL:", currentPackageId);
-        setSelectedPackageId(currentPackageId);
-        
-        // Forza l'aggiornamento del form anche se gli eventi non funzionano
-        const bookingForm = document.querySelector('[data-booking-form]');
-        if (bookingForm) {
-          console.log("LandingClient: Forzo aggiornamento form");
-          const event = new CustomEvent('forcePackageUpdate', { detail: { packageId: currentPackageId } });
-          bookingForm.dispatchEvent(event);
-        }
-      }
-    }, 500);
-
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('packageSelected', handlePackageSelected as EventListener);
-    document.addEventListener('packageSelected', handlePackageSelected as EventListener);
+    console.log("LandingClient: Inizializzazione stato globale");
     
-    console.log("LandingClient: Event listener registrati");
-    console.log("LandingClient: Listener packageSelected registrato:", handlePackageSelected);
-    console.log("LandingClient: Listener popstate registrato:", handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('packageSelected', handlePackageSelected as EventListener);
-      document.removeEventListener('packageSelected', handlePackageSelected as EventListener);
-      clearInterval(urlCheckInterval);
-    };
-  }, [selectedPackageId]);
+    // Inizializza da URL
+    initializeFromUrl();
+    
+    // Sottoscrivi ai cambiamenti dello stato globale
+    const unsubscribe = subscribeToGlobalState((newState) => {
+      console.log("LandingClient: Stato globale cambiato:", newState);
+      setGlobalStateLocal(newState);
+    });
+    
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     console.log("LandingClient: useEffect iniziato - chiamata getSiteContent e getPackages");
@@ -87,17 +53,21 @@ export default function LandingClient() {
       console.log("LandingClient: Contenuto caricato:", c);
       console.log("LandingClient: Pacchetti caricati:", p);
       
-      setContent(
-        c ?? {
-          heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
-          heroSubtitle:
-            "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
-          heroCta: "Prenota ora",
-          heroBackgroundImage: "",
-          images: [],
-        }
-      );
-      setPackages(Array.isArray(p) ? p : []);
+      const finalContent = c ?? {
+        heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
+        heroSubtitle: "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
+        heroCta: "Prenota ora",
+        heroBackgroundImage: "",
+        images: [],
+      };
+      const finalPackages = Array.isArray(p) ? p : [];
+      
+      setContent(finalContent);
+      setPackages(finalPackages);
+      
+      // SOLUZIONE DEFINITIVA: Sincronizza con stato globale
+      setGlobalSiteContent(finalContent);
+      setGlobalPackages(finalPackages);
     }).catch(error => {
       console.error("LandingClient: Errore nel caricamento:", error);
     });
@@ -162,11 +132,9 @@ export default function LandingClient() {
   console.log("LandingClient: Renderizzato - packages:", finalPackages);
   const featuredFirst = [...finalPackages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
-  // Determina se è una consultazione gratuita
-  const isFreeConsultation = selectedPackageId === 'free-consultation';
-  
-  console.log("LandingClient: selectedPackageId:", selectedPackageId);
-  console.log("LandingClient: isFreeConsultation:", isFreeConsultation);
+  console.log("LandingClient: Stato globale attuale:", globalState);
+  console.log("LandingClient: selectedPackageId dallo stato globale:", globalState.selectedPackageId);
+  console.log("LandingClient: isFreeConsultation dallo stato globale:", globalState.isFreeConsultation);
 
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
@@ -212,9 +180,9 @@ export default function LandingClient() {
         </p>
         <div className="mt-8 max-w-lg mx-auto" data-booking-form>
           <BookingForm 
-            packageId={selectedPackageId} 
-            isFreeConsultation={isFreeConsultation}
-            packages={finalPackages} // Passo i pacchetti caricati
+            packageId={globalState.selectedPackageId || undefined} 
+            isFreeConsultation={globalState.isFreeConsultation}
+            packages={globalState.packages} // Usa stato globale
           />
         </div>
       </section>
