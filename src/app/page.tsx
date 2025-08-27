@@ -45,7 +45,14 @@ export default async function Home() {
           isEnabled={true}
         />
       )}
-      <Hero title={c.heroTitle} subtitle={c.heroSubtitle} ctaLabel={c.heroCta} backgroundImage={c.heroBackgroundImage} />
+      <Hero 
+        title={c.heroTitle} 
+        subtitle={c.heroSubtitle} 
+        ctaLabel={c.heroCta} 
+        backgroundImage={c.heroBackgroundImage}
+        badgeText={c.heroBadgeText}
+        badgeColor={c.heroBadgeColor}
+      />
       <AboutSection title={c.aboutTitle} body={c.aboutBody} imageUrl={c.aboutImageUrl} />
       <LandingImages images={c.images} />
       <PackagesCarousel items={featuredFirst} />
