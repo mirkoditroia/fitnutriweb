@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getAvailabilityByDate, upsertAvailabilityForDate } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
@@ -138,14 +138,14 @@ export default function AdminAvailabilityPage() {
   
   const date = yyyyMmDd(selectedDate);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const res = await getAvailabilityByDate(date);
     if (res) {
       setAvailability(res);
     } else {
       setAvailability({ date, slots: [], freeConsultationSlots: [] });
     }
-  };
+  }, [date]);
 
   const generate = () => {
     if (!selectedDate) return;
@@ -193,11 +193,12 @@ export default function AdminAvailabilityPage() {
       }
     }
     
-    setAvailability({
+    const next = {
       date: yyyyMmDd(selectedDate),
       slots: viewMode === "normal" ? slots : (availability?.slots || []),
       freeConsultationSlots: viewMode === "promotional" ? freeConsultationSlots : (availability?.freeConsultationSlots || [])
-    });
+    } as Availability;
+    setAvailability(next);
   };
 
   const save = async () => {
@@ -516,7 +517,11 @@ export default function AdminAvailabilityPage() {
                         key={slot}
                         className="group relative p-3 border border-border rounded-lg bg-background hover:border-primary/50 transition-all duration-200"
                       >
-                        <span className="text-sm font-medium text-foreground">{slot}</span>
+                        <span className="text-sm font-medium text-foreground">{(() => {
+                          const m = /^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})/.exec(slot);
+                          if (m) return `${m[1]}:${m[2]}`;
+                          return slot;
+                        })()}</span>
                         <button
                           type="button"
                           onClick={() => removeTimeSlot(slot)}
