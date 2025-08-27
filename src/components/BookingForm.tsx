@@ -283,10 +283,10 @@ export function BookingForm({
             // Se è specificato un pacchetto, lo seleziona
             console.log("BookingForm: Cercando pacchetto con ID:", packageId);
             const pkg = externalPackages.find(p => p.id === packageId);
-            if (pkg) {
+      if (pkg) {
               console.log("BookingForm: Pacchetto trovato:", pkg);
               setSelectedPackage(pkg);
-              setValue("packageId", pkg.id || "");
+        setValue("packageId", pkg.id || "");
             } else {
               console.log("BookingForm: Pacchetto non trovato per ID:", packageId);
               console.log("BookingForm: Pacchetti disponibili:", externalPackages.map(p => ({ id: p.id, title: p.title })));
@@ -311,7 +311,7 @@ export function BookingForm({
           } else if (packageId) {
             const pkg = allPackages.find(p => p.id === packageId);
             if (pkg) {
-              setSelectedPackage(pkg);
+        setSelectedPackage(pkg);
               setValue("packageId", pkg.id || "");
             }
           }

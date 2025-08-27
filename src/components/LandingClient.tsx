@@ -122,7 +122,7 @@ export default function LandingClient() {
   return (
     <main className="min-h-dvh bg-background text-foreground pt-16">
       {/* Popup 10 Minuti Consultivi Gratuiti */}
-      {(content.freeConsultationPopup && (content.freeConsultationPopup.isEnabled === true || (content.freeConsultationPopup.isEnabled as any) === "true")) && (
+      {(content.freeConsultationPopup && (content.freeConsultationPopup.isEnabled === true || String(content.freeConsultationPopup.isEnabled) === "true")) && (
         <FreeConsultationPopup
           title={content.freeConsultationPopup?.title || "🎯 10 Minuti Consultivi Gratuiti"}
           subtitle={content.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente"}
