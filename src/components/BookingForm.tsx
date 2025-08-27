@@ -390,11 +390,6 @@ export function BookingForm() {
   // RIMOSSO: Vecchio sistema di eventi sostituito da stato globale
 
   const onSubmit = async (data: FormValues) => {
-    // Se non c'è un pacchetto selezionato, non permettere l'invio
-    if (!selectedPackage) {
-      alert("Seleziona un pacchetto per continuare");
-      return;
-    }
 
     setIsSubmitting(true);
     try {
@@ -413,10 +408,10 @@ export function BookingForm() {
           name: bookingData.name,
           email: bookingData.email,
           phone: bookingData.phone || undefined,
-          packageId: selectedPackage.id,
+          packageId: selectedPackage?.id,
           date: bookingData.date,
           slot: bookingData.slot,
-          status: "pending",
+        status: "pending",
           priority: bookingData.priority || false,
           channelPreference: bookingData.channelPreference,
           notes: bookingData.notes,
@@ -752,7 +747,7 @@ export function BookingForm() {
           <div className="w-full p-3 border border-border rounded-lg bg-muted/30 text-sm">
             {selectedPackage ? selectedPackage.title : "Nessun pacchetto selezionato"}
           </div>
-        </div>
+      </div>
 
         {/* Data con calendario interattivo */}
         {selectedPackage && (
