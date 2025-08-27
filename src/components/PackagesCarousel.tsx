@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Package } from "@/lib/data";
 import { PackageModal } from "@/components/PackageModal";
-import { setSelectedPackage } from "@/lib/globalState";
+import { setSelectedPackage, getGlobalState } from "@/lib/globalState";
 
 function parseBenefits(description: string): string[] {
   // Try split by bullet '•', fallback to first 3 lines
@@ -54,7 +54,7 @@ export function PackagesCarousel({ items }: { items: Package[] }) {
     
     // Verifica che lo stato sia stato aggiornato
     setTimeout(() => {
-      const newState = require('@/lib/globalState').getGlobalState();
+      const newState = getGlobalState();
       console.log("PackagesCarousel: Stato globale dopo aggiornamento:", newState);
     }, 50);
   };

@@ -20,14 +20,7 @@ export default function LandingClient() {
   // SOLUZIONE DEFINITIVA: Usa stato globale invece di eventi
   const [globalState, setGlobalStateLocal] = useState(getGlobalState());
 
-  // Funzione per estrarre il packageId dall'URL
-  const getPackageIdFromUrl = () => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get('packageId') || undefined;
-    }
-    return undefined;
-  };
+  // Funzione rimossa: ora gestita da globalState.initializeFromUrl()
 
   // SOLUZIONE DEFINITIVA: Sostituisce completamente il sistema di eventi
   useEffect(() => {

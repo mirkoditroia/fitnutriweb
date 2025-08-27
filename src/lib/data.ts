@@ -922,7 +922,7 @@ export async function listClients(): Promise<ClientCard[]> {
 export async function getClientById(id: string): Promise<ClientCard | null> {
   if (!db) return null;
   const database = db as Firestore;
-  const snap = await getDoc(doc(db as Firestore, "clients", id));
+  const snap = await getDoc(doc(database, "clients", id));
   if (!snap.exists()) return null;
   return toClientCard(snap.id, snap.data());
 }

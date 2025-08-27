@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getAvailabilityByDate, getPackages } from "@/lib/datasource";
+import { getAvailabilityByDate } from "@/lib/datasource";
 import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday } from "date-fns";
 import { it } from "date-fns/locale";
 import { type Package } from "@/lib/data";
@@ -210,7 +210,7 @@ export function BookingForm({
   const availableSlotsRef = useRef<string[]>([]);
   
   // SOLUZIONE DEFINITIVA: Usa stato globale
-  const [globalState, setGlobalStateLocal] = useState(getGlobalState());
+  const [, setGlobalStateLocal] = useState(getGlobalState());
 
   // Schema di validazione con validazione personalizzata
   const validationSchema = schema.refine((data) => {
@@ -278,12 +278,7 @@ export function BookingForm({
         }
       }
     } else {
-      console.log("BookingForm: Nessun pacchetto nello stato globale, usando props esterni");
-      // Fallback: usa i pacchetti dalle props se lo stato globale è vuoto
-      if (externalPackages && externalPackages.length > 0) {
-        console.log("BookingForm: Usando pacchetti dalle props:", externalPackages);
-        setPackages(externalPackages);
-      }
+      console.log("BookingForm: Nessun pacchetto nello stato globale, stato globale ancora vuoto");
     }
     
     return unsubscribe;
