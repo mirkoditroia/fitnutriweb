@@ -197,7 +197,8 @@ export async function getPackages(): Promise<Package[]> {
         basePrice: data.basePrice || undefined,
         discountedPrice: data.discountedPrice || undefined,
         discountPercentage: data.discountPercentage || undefined,
-        paymentText: data.paymentText || "pagabile mensilmente",
+        // Usa nullish coalescing per rispettare stringhe non vuote
+        paymentText: data.paymentText ?? "pagabile mensilmente",
         details: data.details || undefined,
         createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt) : undefined
       };
