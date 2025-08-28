@@ -96,6 +96,7 @@ export type Booking = {
   date: string;
   slot: string;
   location?: "online" | "studio"; // sede appuntamento
+  studioLocation?: string; // nome/ID della sede specifica se location = studio
   packageId?: string;
   priority?: boolean;
   status: "pending" | "confirmed" | "cancelled";
@@ -155,6 +156,7 @@ export type Availability = {
   // Slot separati per sede
   onlineSlots?: string[];
   inStudioSlots?: string[];
+  studioSlots?: Record<string, string[]>; // mappa sede -> slot specifici
   // Retrocompatibilità: slots aggregati (preferire i campi sopra)
   slots?: string[];
   // Slot dedicati ai 10 minuti consultivi (sempre online per default)
@@ -300,7 +302,7 @@ export async function createBooking(b: Booking): Promise<string> {
   const location: "online" | "studio" = b.isFreeConsultation ? "online" : (b.location || "online");
   const pool = location === "online"
     ? (availability?.onlineSlots ?? availability?.slots ?? [])
-    : (availability?.inStudioSlots ?? []);
+    : (b.studioLocation ? (availability?.studioSlots?.[b.studioLocation] ?? []) : (availability?.inStudioSlots ?? []));
   if (!availability || !pool.includes(b.slot)) {
     throw new Error("L'orario selezionato non è più disponibile");
   }
@@ -314,19 +316,32 @@ export async function createBooking(b: Booking): Promise<string> {
     date: b.date,
     slot: b.slot ?? null,
     location: location,
+    studioLocation: b.studioLocation ?? null,
     status: b.status || "confirmed",
     priority: !!b.priority,
     channelPreference: b.channelPreference ?? null,
     createdAt: serverTimestamp(),
   });
   
-  // Rimuovi lo slot occupato dalla disponibilità
+  // Rimuovi lo slot occupato dalla disponibilità (blocca anche in pending)
   if (location === "online") {
     const next = (availability.onlineSlots ?? availability.slots ?? []).filter((slot) => slot !== b.slot);
-    await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? []);
+    await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? [], availability.studioSlots ?? {});
   } else {
-    const nextStudio = (availability.inStudioSlots ?? []).filter((slot) => slot !== b.slot);
-    await upsertAvailabilityForDate(b.date, availability.onlineSlots ?? availability.slots ?? [], availability.freeConsultationSlots, nextStudio);
+    if (b.studioLocation) {
+      const studioMap = { ...(availability.studioSlots ?? {}) };
+      studioMap[b.studioLocation] = (studioMap[b.studioLocation] ?? []).filter((slot) => slot !== b.slot);
+      await upsertAvailabilityForDate(
+        b.date,
+        availability.onlineSlots ?? availability.slots ?? [],
+        availability.freeConsultationSlots,
+        availability.inStudioSlots ?? [],
+        studioMap
+      );
+    } else {
+      const nextStudio = (availability.inStudioSlots ?? []).filter((slot) => slot !== b.slot);
+      await upsertAvailabilityForDate(b.date, availability.onlineSlots ?? availability.slots ?? [], availability.freeConsultationSlots, nextStudio, availability.studioSlots ?? {});
+    }
   }
   
   // If booking is confirmed, create or update client automatically
@@ -421,6 +436,7 @@ export async function updateBooking(booking: Booking): Promise<void> {
     date: booking.date,
     slot: booking.slot ?? null,
     location: booking.isFreeConsultation ? "online" : (booking.location ?? null),
+    studioLocation: booking.studioLocation ?? null,
     status: booking.status,
     priority: !!booking.priority,
     channelPreference: booking.channelPreference ?? null,
@@ -842,6 +858,7 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
     date,
     onlineSlots: Array.isArray(data.onlineSlots) ? data.onlineSlots : (Array.isArray(data.slots) ? data.slots : []),
     inStudioSlots: Array.isArray(data.inStudioSlots) ? data.inStudioSlots : [],
+    studioSlots: (data.studioSlots && typeof data.studioSlots === 'object') ? (data.studioSlots as Record<string, string[]>) : {},
     slots: Array.isArray(data.slots) ? data.slots : undefined,
     freeConsultationSlots: Array.isArray(data.freeConsultationSlots) ? data.freeConsultationSlots : []
   };
@@ -851,7 +868,8 @@ export async function upsertAvailabilityForDate(
   date: string,
   onlineSlots: string[],
   freeConsultationSlots?: string[],
-  inStudioSlots?: string[]
+  inStudioSlots?: string[],
+  studioSlots?: Record<string, string[]>
 ): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
   const payload: Record<string, unknown> = { date, onlineSlots };
@@ -861,6 +879,9 @@ export async function upsertAvailabilityForDate(
   }
   if (Array.isArray(inStudioSlots)) {
     payload.inStudioSlots = inStudioSlots;
+  }
+  if (studioSlots && typeof studioSlots === 'object') {
+    payload.studioSlots = studioSlots;
   }
   await setDoc(col.availability(db as Firestore, date), payload, { merge: true });
 }
@@ -885,6 +906,8 @@ function toBooking(id: string, data: DocumentData): Booking {
     packageId: data.packageId ?? undefined,
     date: data.date,
     slot: data.slot ?? undefined,
+    location: data.location ?? undefined,
+    studioLocation: data.studioLocation ?? undefined,
     status: data.status,
     priority: !!data.priority,
     channelPreference: data.channelPreference ?? undefined,

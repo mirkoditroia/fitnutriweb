@@ -120,7 +120,7 @@ export async function createBooking(b: Booking): Promise<string> {
   const location: "online" | "studio" = b.isFreeConsultation ? "online" : (b.location || "online");
   const pool = location === "online"
     ? (availability?.onlineSlots ?? availability?.slots ?? [])
-    : (availability?.inStudioSlots ?? []);
+    : (b.studioLocation ? (availability?.studioSlots?.[b.studioLocation] ?? []) : (availability?.inStudioSlots ?? []));
   if (!availability || !pool.includes(b.slot)) {
     throw new Error("L'orario selezionato non è più disponibile");
   }
@@ -136,10 +136,22 @@ export async function createBooking(b: Booking): Promise<string> {
     // Rimuovi lo slot occupato dalla disponibilità
     if (location === "online") {
       const next = (availability.onlineSlots ?? availability.slots ?? []).filter((slot) => slot !== b.slot);
-      await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? []);
+      await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? [], availability.studioSlots ?? {});
     } else {
-      const nextStudio = (availability.inStudioSlots ?? []).filter((slot) => slot !== b.slot);
-      await upsertAvailabilityForDate(b.date, availability.onlineSlots ?? availability.slots ?? [], availability.freeConsultationSlots, nextStudio);
+      if (b.studioLocation) {
+        const studioMap = { ...(availability.studioSlots ?? {}) };
+        studioMap[b.studioLocation] = (studioMap[b.studioLocation] ?? []).filter((slot) => slot !== b.slot);
+        await upsertAvailabilityForDate(
+          b.date,
+          availability.onlineSlots ?? availability.slots ?? [],
+          availability.freeConsultationSlots,
+          availability.inStudioSlots ?? [],
+          studioMap
+        );
+      } else {
+        const nextStudio = (availability.inStudioSlots ?? []).filter((slot) => slot !== b.slot);
+        await upsertAvailabilityForDate(b.date, availability.onlineSlots ?? availability.slots ?? [], availability.freeConsultationSlots, nextStudio, availability.studioSlots ?? {});
+      }
     }
     
     return id;
@@ -204,12 +216,12 @@ export async function updateBooking(booking: Booking): Promise<void> {
     );
     await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify(updatedItems) });
     
-    // If booking is confirmed and has a slot, remove that slot from availability
-    if (booking.status === "confirmed" && booking.slot && booking.date) {
+    // Blocca lo slot anche quando la prenotazione è in attesa (pending)
+    if ((booking.status === "pending" || booking.status === "confirmed") && booking.slot && booking.date) {
       try {
         const dateStr = booking.date.split('T')[0]; // Extract YYYY-MM-DD from date
         const availRes = await fetch("/api/localdb/availability", { cache: "no-store" });
-        const availability = availRes.ok ? ((await availRes.json()) as Record<string, { slots: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[] }>) : {};
+        const availability = availRes.ok ? ((await availRes.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[]; studioSlots?: Record<string, string[]> }>) : {};
         const location: "online" | "studio" = booking.isFreeConsultation ? "online" : (booking.location || "online");
         if (availability[dateStr]) {
           if (location === "online") {
@@ -222,13 +234,21 @@ export async function updateBooking(booking: Booking): Promise<void> {
               console.warn(`Slot ${booking.slot} non più disponibile (online) per la data ${dateStr}`);
             }
           } else {
-            const studio = availability[dateStr].inStudioSlots ?? [];
-            if (studio.includes(booking.slot)) {
-              const updated = studio.filter((s) => s !== booking.slot);
-              availability[dateStr].inStudioSlots = updated;
-              await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+            if (booking.studioLocation) {
+              const studioMap = availability[dateStr].studioSlots ?? {};
+              const studio = studioMap[booking.studioLocation] ?? [];
+              if (studio.includes(booking.slot)) {
+                studioMap[booking.studioLocation] = studio.filter((s) => s !== booking.slot);
+                availability[dateStr].studioSlots = studioMap;
+                await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+              }
             } else {
-              console.warn(`Slot ${booking.slot} non più disponibile (studio) per la data ${dateStr}`);
+              const studio = availability[dateStr].inStudioSlots ?? [];
+              if (studio.includes(booking.slot)) {
+                const updated = studio.filter((s) => s !== booking.slot);
+                availability[dateStr].inStudioSlots = updated;
+                await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+              }
             }
           }
         }
@@ -300,15 +320,56 @@ export async function deleteBooking(bookingId: string): Promise<void> {
     const filteredItems = current.filter(item => item.id !== bookingId);
     await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify(filteredItems) });
     
-    // Se la prenotazione aveva uno slot confermato, ripristinalo nella disponibilità
-    if (bookingToDelete && bookingToDelete.status === "confirmed" && bookingToDelete.slot && bookingToDelete.date) {
+    // Ripristina lo slot per pending/confirmed alla cancellazione
+    if (bookingToDelete && (bookingToDelete.status === "pending" || bookingToDelete.status === "confirmed") && bookingToDelete.slot && bookingToDelete.date) {
       try {
         const dateStr = bookingToDelete.date.split('T')[0];
         const availRes = await fetch("/api/localdb/availability", { cache: "no-store" });
-        const availability = availRes.ok ? ((await availRes.json()) as Record<string, string[]>) : {};
-        
-        if (availability[dateStr] && !availability[dateStr].includes(bookingToDelete.slot)) {
-          availability[dateStr] = [...availability[dateStr], bookingToDelete.slot];
+        const availability = availRes.ok ? ((await availRes.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[]; studioSlots?: Record<string, string[]> }>) : {};
+        const location: "online" | "studio" = bookingToDelete.isFreeConsultation ? "online" : (bookingToDelete.location || "online");
+        if (availability[dateStr]) {
+          if (location === "online") {
+            const online = availability[dateStr].onlineSlots ?? availability[dateStr].slots ?? [];
+            if (!online.includes(bookingToDelete.slot)) {
+              const merged = [...online, bookingToDelete.slot].sort();
+              availability[dateStr].onlineSlots = merged;
+              await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+            }
+          } else {
+            if (bookingToDelete.studioLocation) {
+              const studioMap = availability[dateStr].studioSlots ?? {};
+              const studio = studioMap[bookingToDelete.studioLocation] ?? [];
+              if (!studio.includes(bookingToDelete.slot)) {
+                studioMap[bookingToDelete.studioLocation] = [...studio, bookingToDelete.slot].sort();
+                availability[dateStr].studioSlots = studioMap;
+                await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+              }
+            } else {
+              const studio = availability[dateStr].inStudioSlots ?? [];
+              if (!studio.includes(bookingToDelete.slot)) {
+                availability[dateStr].inStudioSlots = [...studio, bookingToDelete.slot].sort();
+                await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+              }
+            }
+          }
+        } else {
+          // Se non esiste ancora la data in archivio, creala
+          if (location === "online") {
+            availability[dateStr] = {
+              onlineSlots: [bookingToDelete.slot],
+              inStudioSlots: [],
+              freeConsultationSlots: [],
+              studioSlots: {}
+            };
+          } else {
+            const studioSlots = bookingToDelete.studioLocation ? { [bookingToDelete.studioLocation]: [bookingToDelete.slot] } : {};
+            availability[dateStr] = {
+              onlineSlots: [],
+              inStudioSlots: bookingToDelete.studioLocation ? [] : [bookingToDelete.slot],
+              freeConsultationSlots: [],
+              studioSlots
+            };
+          }
           await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
         }
       } catch (error) {
@@ -518,14 +579,15 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
   if (mode === "demo") return fetchDemo<Availability>(`/demo/availability/${date}.json`, { date, slots: [] });
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
-    const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[] }>) : {};
+    const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[]; studioSlots?: Record<string, string[]> }>) : {};
     const dateData = all[date];
     if (dateData) {
       return { 
         date, 
         onlineSlots: dateData.onlineSlots ?? dateData.slots ?? [],
         inStudioSlots: dateData.inStudioSlots ?? [],
-        slots: dateData.slots,
+        studioSlots: dateData.studioSlots ?? {},
+        slots: dateData.slots, 
         freeConsultationSlots: dateData.freeConsultationSlots ?? [] 
       };
     }
@@ -533,14 +595,14 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
   } catch { return { date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] } as Availability; }
 }
 
-export async function upsertAvailabilityForDate(date: string, onlineSlots: string[], freeConsultationSlots?: string[], inStudioSlots?: string[]): Promise<void> {
+export async function upsertAvailabilityForDate(date: string, onlineSlots: string[], freeConsultationSlots?: string[], inStudioSlots?: string[], studioSlots?: Record<string, string[]>): Promise<void> {
   const mode = getDataMode();
-  if (mode === "firebase") return fb_upsertAvailabilityForDate(date, onlineSlots, freeConsultationSlots, inStudioSlots);
+  if (mode === "firebase") return fb_upsertAvailabilityForDate(date, onlineSlots, freeConsultationSlots, inStudioSlots, studioSlots);
   if (mode === "demo") throw new Error("Preprod demo read-only");
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
-    const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[] }>) : {};
-    all[date] = { onlineSlots, inStudioSlots: inStudioSlots || [], freeConsultationSlots: freeConsultationSlots || [] };
+    const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[]; studioSlots?: Record<string, string[]> }>) : {};
+    all[date] = { onlineSlots, inStudioSlots: inStudioSlots || [], freeConsultationSlots: freeConsultationSlots || [], studioSlots: studioSlots ?? all[date]?.studioSlots ?? {} };
     await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(all) });
   } catch {}
 }

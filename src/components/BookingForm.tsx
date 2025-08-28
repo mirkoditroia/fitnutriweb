@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getAvailabilityByDate } from "@/lib/datasource";
+import { getAvailabilityByDate, getSiteContent } from "@/lib/datasource";
 import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday } from "date-fns";
 import { it } from "date-fns/locale";
 import { type Package } from "@/lib/data";
@@ -159,7 +159,7 @@ function DateCalendar({
           <div className="mt-4 pt-3 border-t border-border">
             <div className="flex items-center justify-center gap-4 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-emerald-100 rounded-full border border-emerald-200"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full border border-green-700"></div>
                 <span className="text-muted-foreground">Disponibile</span>
               </div>
               <div className="flex items-center gap-2">
@@ -203,8 +203,27 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [packages, setPackages] = useState<Package[]>([]);
   const [location, setLocation] = useState<"online" | "studio" | null>(null);
+  const [studioLocation, setStudioLocation] = useState<string>("");
+  const [addresses, setAddresses] = useState<{ name: string }[]>([]);
   const availableSlotsRef = useRef<string[]>([]);
   const packagesRef = useRef<Package[]>([]);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const sc = await getSiteContent();
+        if (mounted) {
+          const addr = (sc?.contactAddresses as { name: string }[] | undefined) ?? [];
+          setAddresses(addr);
+          // Se esiste solo una sede, pre-selezionala
+          if (addr.length === 1) {
+            setStudioLocation(addr[0].name);
+          }
+        }
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, []);
   
   // NUOVO SISTEMA DIRETTO - SEMPLICE E AFFIDABILE
   const [directState, setDirectStateLocal] = useState(getDirectState());
@@ -340,7 +359,9 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             } else {
               // Per consulenze normali, controlla gli slot standard
               const onlinePool = availability.onlineSlots ?? [];
-              const studioPool = availability.inStudioSlots ?? [];
+              const studioPool = availability.studioSlots && studioLocation
+                ? (availability.studioSlots[studioLocation] ?? [])
+                : (availability.inStudioSlots ?? []);
               // Se l'utente non ha ancora scelto la sede, considera entrambe le liste; altrimenti usa solo quella selezionata
               const pool = location === null
                 ? [...onlinePool, ...studioPool]
@@ -365,7 +386,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     };
 
     generateAvailableDates();
-  }, [selectedPackage, isFreeConsultation, location]);
+  }, [selectedPackage, isFreeConsultation, location, studioLocation]);
 
   // Carica la disponibilità per la data selezionata
   useEffect(() => {
@@ -381,7 +402,9 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           } else {
             // Per consulenze normali, mostra slot in base alla sede
             const onlinePool = availability.onlineSlots ?? [];
-            const studioPool = availability.inStudioSlots ?? [];
+            const studioPool = availability.studioSlots && studioLocation
+              ? (availability.studioSlots[studioLocation] ?? [])
+              : (availability.inStudioSlots ?? []);
             const legacyPool = availability.slots ?? [];
             const pool = location === null
               ? ((onlinePool.length || studioPool.length) ? [...onlinePool, ...studioPool] : legacyPool)
@@ -396,7 +419,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     };
 
     loadAvailability();
-  }, [selectedDate, selectedPackage, isFreeConsultation, location]);
+  }, [selectedDate, selectedPackage, isFreeConsultation, location, studioLocation]);
 
   // RIMOSSO: Vecchio sistema di eventi sostituito da stato globale
 
@@ -429,6 +452,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           date: bookingData.date,
           slot: bookingData.slot,
           location: (isFreeConsultation || selectedPackage?.isPromotional === true) ? "online" : (location as "online" | "studio"),
+          studioLocation: location === "studio" ? (studioLocation || undefined) : undefined,
           status: bookingStatus,
           // preferenza canale rimossa
           notes: bookingData.notes,
@@ -625,6 +649,29 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             <p className="text-xs text-muted-foreground mt-1">Per consultazioni gratuite la sede è sempre Online.</p>
         </div>
       )}
+
+        {/* Selezione sede specifica quando "In studio" */}
+        {location === "studio" && (
+          <div>
+            <label className="block text-sm font-medium mb-2">Seleziona sede</label>
+            <select
+              value={studioLocation}
+              onChange={(e) => {
+                setStudioLocation(e.target.value);
+                setValue("slot", "");
+              }}
+              className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
+            >
+              <option value="">-- Seleziona sede --</option>
+              {addresses.map((addr, idx) => (
+                <option key={idx} value={addr.name}>{addr.name}</option>
+              ))}
+            </select>
+            {studioLocation === "" && (
+              <p className="text-xs text-red-600 mt-1">Seleziona una sede per visualizzare gli slot disponibili.</p>
+            )}
+          </div>
+        )}
 
         {/* Riepilogo pacchetto rimosso */}
 

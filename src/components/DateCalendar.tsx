@@ -41,7 +41,7 @@ export function DateCalendar({
     let classes = "w-10 h-10 flex items-center justify-center text-sm rounded-full cursor-pointer transition-all duration-200";
     if (isToday(date)) classes += " ring-2 ring-primary/50";
     if (isDateSelected(date)) classes += " bg-primary text-primary-foreground font-semibold";
-    else if (isDateAvailable(date)) classes += " bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-medium border border-emerald-200";
+    else if (isDateAvailable(date)) classes += " bg-green-300 text-green-950 hover:bg-green-400 font-bold border border-green-600";
     else classes += " text-muted-foreground/50 cursor-not-allowed";
     return classes;
   };

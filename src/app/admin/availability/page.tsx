@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { getAvailabilityByDate, upsertAvailabilityForDate } from "@/lib/datasource";
+import { getAvailabilityByDate, upsertAvailabilityForDate, getSiteContent } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import DatePicker from "react-datepicker";
@@ -133,6 +133,8 @@ export default function AdminAvailabilityPage() {
   const [gapBetweenConsultations, setGapBetweenConsultations] = useState(10); // Gap in minuti
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [location, setLocation] = useState<"online" | "studio">("online");
+  const [addresses, setAddresses] = useState<{ name: string }[]>([]);
+  const [selectedStudio, setSelectedStudio] = useState<string>("");
   const [newTime, setNewTime] = useState("");
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [viewMode, setViewMode] = useState("normal"); // "normal" or "promotional"
@@ -144,9 +146,26 @@ export default function AdminAvailabilityPage() {
     if (res) {
       setAvailability(res);
     } else {
-      setAvailability({ date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] });
+      setAvailability({ date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [], studioSlots: {} });
     }
   }, [date]);
+
+  // Carica sedi da contenuti
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const sc = await getSiteContent();
+        if (!mounted) return;
+        const addrs = (sc?.contactAddresses as { name: string }[] | undefined) ?? [];
+        setAddresses(addrs);
+        if (!selectedStudio && addrs[0]?.name) {
+          setSelectedStudio(addrs[0].name);
+        }
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, [selectedStudio]);
 
   const generate = () => {
     if (!selectedDate) return;
@@ -198,11 +217,19 @@ export default function AdminAvailabilityPage() {
       date: yyyyMmDd(selectedDate),
       onlineSlots: availability?.onlineSlots ?? availability?.slots ?? [],
       inStudioSlots: availability?.inStudioSlots ?? [],
-      freeConsultationSlots: availability?.freeConsultationSlots ?? []
+      freeConsultationSlots: availability?.freeConsultationSlots ?? [],
+      studioSlots: availability?.studioSlots ?? {}
     };
     if (viewMode === "normal") {
-      if (location === "online") next.onlineSlots = slots;
-      else next.inStudioSlots = slots;
+      if (location === "online") {
+        next.onlineSlots = slots;
+      } else {
+        if (!selectedStudio) {
+          toast.error("Seleziona una sede prima di generare gli slot in studio");
+          return;
+        }
+        next.studioSlots = { ...(availability?.studioSlots ?? {}), [selectedStudio]: slots };
+      }
     } else {
       next.freeConsultationSlots = freeConsultationSlots; // consultazioni gratuite (di base online)
     }
@@ -215,9 +242,10 @@ export default function AdminAvailabilityPage() {
         date,
         availability.onlineSlots ?? availability.slots ?? [],
         availability.freeConsultationSlots,
-        availability.inStudioSlots ?? []
+        availability.inStudioSlots ?? [],
+        availability.studioSlots ?? {}
       );
-      toast.success("Disponibilità salvata");
+    toast.success("Disponibilità salvata");
     }
   };
 
@@ -226,7 +254,10 @@ export default function AdminAvailabilityPage() {
     
     const currentSlots = viewMode === "promotional" 
       ? (availability.freeConsultationSlots || [])
-      : (location === "online" ? (availability.onlineSlots ?? availability.slots ?? []) : (availability.inStudioSlots ?? []));
+      : (location === "online" 
+          ? (availability.onlineSlots ?? availability.slots ?? []) 
+          : (selectedStudio ? (availability.studioSlots?.[selectedStudio] ?? []) : (availability.inStudioSlots ?? []))
+        );
     
     if (!currentSlots.includes(time)) {
       const updatedSlots = [...currentSlots, time].sort();
@@ -237,11 +268,21 @@ export default function AdminAvailabilityPage() {
           freeConsultationSlots: updatedSlots
         });
       } else {
-        setAvailability({
-          ...availability,
-          onlineSlots: location === "online" ? updatedSlots : (availability.onlineSlots ?? availability.slots ?? []),
-          inStudioSlots: location === "studio" ? updatedSlots : (availability.inStudioSlots ?? [])
-        });
+        if (location === "online") {
+          setAvailability({
+            ...availability,
+            onlineSlots: updatedSlots
+          });
+        } else {
+          if (!selectedStudio) {
+            toast.error("Seleziona una sede");
+            return;
+          }
+          setAvailability({
+            ...availability,
+            studioSlots: { ...(availability.studioSlots ?? {}), [selectedStudio]: updatedSlots }
+          });
+        }
       }
       toast.success(`Orario ${time} aggiunto`);
     } else {
@@ -254,7 +295,10 @@ export default function AdminAvailabilityPage() {
     
     const currentSlots = viewMode === "promotional" 
       ? (availability.freeConsultationSlots || [])
-      : (location === "online" ? (availability.onlineSlots ?? availability.slots ?? []) : (availability.inStudioSlots ?? []));
+      : (location === "online" 
+          ? (availability.onlineSlots ?? availability.slots ?? []) 
+          : (selectedStudio ? (availability.studioSlots?.[selectedStudio] ?? []) : (availability.inStudioSlots ?? []))
+        );
     
     const updatedSlots = currentSlots.filter(s => s !== slot);
     
@@ -264,11 +308,21 @@ export default function AdminAvailabilityPage() {
         freeConsultationSlots: updatedSlots
       });
     } else {
-      setAvailability({
-        ...availability,
-        onlineSlots: location === "online" ? updatedSlots : (availability.onlineSlots ?? availability.slots ?? []),
-        inStudioSlots: location === "studio" ? updatedSlots : (availability.inStudioSlots ?? [])
-      });
+      if (location === "online") {
+        setAvailability({
+          ...availability,
+          onlineSlots: updatedSlots
+        });
+      } else {
+        if (!selectedStudio) {
+          toast.error("Seleziona una sede");
+          return;
+        }
+        setAvailability({
+          ...availability,
+          studioSlots: { ...(availability.studioSlots ?? {}), [selectedStudio]: updatedSlots }
+        });
+      }
     }
     toast.success(`Orario ${slot} rimosso`);
   };
@@ -282,11 +336,21 @@ export default function AdminAvailabilityPage() {
         freeConsultationSlots: []
       });
     } else {
-      setAvailability({
-        ...availability,
-        onlineSlots: location === "online" ? [] : (availability.onlineSlots ?? availability.slots ?? []),
-        inStudioSlots: location === "studio" ? [] : (availability.inStudioSlots ?? [])
-      });
+      if (location === "online") {
+        setAvailability({
+          ...availability,
+          onlineSlots: []
+        });
+      } else {
+        if (!selectedStudio) {
+          toast.error("Seleziona una sede");
+          return;
+        }
+        setAvailability({
+          ...availability,
+          studioSlots: { ...(availability.studioSlots ?? {}), [selectedStudio]: [] }
+        });
+      }
     }
     toast.success("Tutti gli orari sono stati rimossi");
   };
@@ -377,6 +441,20 @@ export default function AdminAvailabilityPage() {
                 />
                 <p className="text-xs text-muted-foreground mt-1">Solo multipli di 5</p>
               </div>
+              {location === "studio" && (
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-foreground">🏢 Sede</label>
+                  <select
+                    value={selectedStudio}
+                    onChange={(e) => setSelectedStudio(e.target.value)}
+                    className="w-full p-2 border border-border rounded bg-background text-foreground"
+                  >
+                    {addresses.map((a, i) => (
+                      <option key={i} value={a.name}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </>
           )}
           
@@ -473,7 +551,7 @@ export default function AdminAvailabilityPage() {
                     ? `🎯 ${availability.freeConsultationSlots?.length || 0} slot consultazioni gratuite configurati`
                     : (location === "online"
                         ? `📋 ${(availability.onlineSlots ?? availability.slots ?? []).length} slot normali configurati (Online)`
-                        : `📋 ${(availability.inStudioSlots ?? []).length} slot normali configurati (In studio)`)
+                        : `📋 ${(availability.studioSlots?.[selectedStudio]?.length ?? 0)} slot normali configurati (Sede: ${selectedStudio || '—'})`)
                   }
                 </p>
         </div>
@@ -547,7 +625,7 @@ export default function AdminAvailabilityPage() {
                   ? (availability.freeConsultationSlots || [])
                   : (location === "online" 
                       ? (availability.onlineSlots ?? availability.slots ?? [])
-                      : (availability.inStudioSlots ?? []));
+                      : (selectedStudio ? (availability.studioSlots?.[selectedStudio] ?? []) : (availability.inStudioSlots ?? [])));
                 
                 return currentSlots.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">

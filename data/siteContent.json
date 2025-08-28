@@ -40,10 +40,10 @@
       }
     },
     {
-      "name": "Studio Secondario",
-      "address": "Corso Italia 45",
-      "city": "Milano",
-      "postalCode": "20122"
+      "name": "Studio Sec",
+      "address": "Via libellula",
+      "city": "Padova",
+      "postalCode": "23143"
     }
   ],
   "heroBackgroundImage": "/api/upload/content%2F1756217688176-WhatsApp_Image_2025-08-25_at_14.01.29__1_.jpeg",

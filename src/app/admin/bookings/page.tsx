@@ -531,7 +531,11 @@ export default function AdminBookingsPage() {
             {b.slot && ` • ⏰ ${b.slot}`}
           </div>
           <div className="text-sm text-muted-foreground">
-            📍 Sede: {b.isFreeConsultation ? "Online (gratuita)" : (b.location === "studio" ? "In studio" : "Online")}
+            {b.isFreeConsultation
+              ? "📍 Sede: Online (gratuita)"
+              : (b.location === "studio"
+                  ? `📍 Sede: In studio${b.studioLocation ? ` • ${b.studioLocation}` : ""}`
+                  : "📍 Sede: Online")}
           </div>
           <div className="text-sm text-muted-foreground">
             📦 {getPackageName(b.packageId)}
