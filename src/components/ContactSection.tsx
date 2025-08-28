@@ -147,12 +147,12 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
                           href={social.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-10 h-10 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors text-xl overflow-hidden"
+                          className="w-12 h-12 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors text-2xl overflow-hidden"
                           aria-label={social.platform}
                           title={social.platform}
                         >
                           {social.logoUrl ? (
-                            <img src={social.logoUrl} alt={social.platform} className="w-6 h-6 object-contain" />
+                            <img src={social.logoUrl} alt={social.platform} className="w-8 h-8 object-contain bg-white p-1 rounded" />
                           ) : (
                             <span>{social.icon || "🔗"}</span>
                           )}

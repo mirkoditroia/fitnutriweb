@@ -217,16 +217,33 @@ export default function AdminContentPage() {
                         if (!file) return;
                         const reader = new FileReader();
                         reader.onload = () => {
-                          const newSocials = [...(content.socialChannels ?? [])];
-                          newSocials[i].logoUrl = String(reader.result || "");
-                          setContent({ ...content, socialChannels: newSocials });
+                          const src = String(reader.result || "");
+                          const img = new Image();
+                          img.crossOrigin = "anonymous";
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width || 64;
+                            canvas.height = img.height || 64;
+                            const ctx = canvas.getContext('2d');
+                            if (ctx) {
+                              // Fondo bianco per rimuovere la trasparenza
+                              ctx.fillStyle = '#ffffff';
+                              ctx.fillRect(0, 0, canvas.width, canvas.height);
+                              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                              const dataUrl = canvas.toDataURL('image/png');
+                              const newSocials = [...(content.socialChannels ?? [])];
+                              newSocials[i].logoUrl = dataUrl;
+                              setContent({ ...content, socialChannels: newSocials });
+                            }
+                          };
+                          img.src = src;
                         };
                         reader.readAsDataURL(file);
                       }}
                       className="w-full text-sm"
                     />
                     {social.logoUrl && (
-                      <img src={social.logoUrl} alt="logo preview" className="mt-2 h-8 object-contain" />
+                      <img src={social.logoUrl} alt="logo preview" className="mt-2 h-10 object-contain bg-white rounded" />
                     )}
                   </div>
                 </div>
