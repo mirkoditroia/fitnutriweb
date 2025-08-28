@@ -19,6 +19,7 @@ interface ContactInfo {
     platform: string;
     url: string;
     icon: string;
+    logoUrl?: string;
   }>;
   // Nuovi campi per personalizzare la sezione studi
   studiosTitle?: string; // Titolo della sezione studi (default: "🏢 I Nostri Studi")
@@ -146,10 +147,15 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
                           href={social.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-4 py-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors text-sm font-medium text-foreground hover:text-primary"
+                          className="w-10 h-10 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors text-xl overflow-hidden"
+                          aria-label={social.platform}
                           title={social.platform}
                         >
-                          {social.platform}
+                          {social.logoUrl ? (
+                            <img src={social.logoUrl} alt={social.platform} className="w-6 h-6 object-contain" />
+                          ) : (
+                            <span>{social.icon || "🔗"}</span>
+                          )}
                         </a>
                       ))}
                     </div>

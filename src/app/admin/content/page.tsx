@@ -172,11 +172,11 @@ export default function AdminContentPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">📱 Canali Social</h3>
-              <Button type="button" onClick={() => setContent({ ...content, socialChannels: [...(content.socialChannels ?? []), { platform: "", url: "", icon: "" }] })}>+ Aggiungi Social</Button>
+              <Button type="button" onClick={() => setContent({ ...content, socialChannels: [...(content.socialChannels ?? []), { platform: "", url: "", icon: "", logoUrl: "" }] })}>+ Aggiungi Social</Button>
             </div>
             {(content.socialChannels ?? []).map((social, i) => (
               <div key={i} className="p-4 border border-border rounded-lg space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <Input 
                     label="Piattaforma" 
                     value={social.platform} 
@@ -207,6 +207,28 @@ export default function AdminContentPage() {
                     }} 
                     placeholder="📱, 💼, 🎯..."
                   />
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Logo (upload)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const newSocials = [...(content.socialChannels ?? [])];
+                          newSocials[i].logoUrl = String(reader.result || "");
+                          setContent({ ...content, socialChannels: newSocials });
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                      className="w-full text-sm"
+                    />
+                    {social.logoUrl && (
+                      <img src={social.logoUrl} alt="logo preview" className="mt-2 h-8 object-contain" />
+                    )}
+                  </div>
                 </div>
                 <Button 
                   type="button" 

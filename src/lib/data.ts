@@ -133,6 +133,7 @@ export interface SiteContent {
     platform: string;
     url: string;
     icon: string;
+    logoUrl?: string; // URL o dataURL del logo caricato
   }>;
   // Nuovi campi per personalizzare le sezioni contatti e studi
   contactSectionTitle?: string; // Titolo sezione contatti (default: "💬 Contatti Diretti")

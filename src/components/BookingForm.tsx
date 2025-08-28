@@ -401,8 +401,9 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   // RIMOSSO: Vecchio sistema di eventi sostituito da stato globale
 
   const onSubmit = async (data: FormValues) => {
-    if (requirePackage && !selectedPackage) {
-      alert("In Admin devi selezionare almeno un pacchetto.");
+    // Consenti esplicitamente l'invio anche senza pacchetto in Admin
+    if (requirePackage && !selectedPackage && !adminMode) {
+      alert("Seleziona un pacchetto oppure prosegui senza selezione.");
       return;
     }
 
@@ -641,7 +642,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               }}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             >
-              <option value="">-- Seleziona --</option>
+              <option value="">Nessun pacchetto</option>
               {packages.map(p => (
                 <option key={p.id} value={p.id}>{p.title}</option>
               ))}
