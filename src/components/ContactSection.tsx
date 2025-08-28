@@ -152,7 +152,7 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
                           title={social.platform}
                         >
                           {social.logoUrl ? (
-                            <img src={social.logoUrl} alt={social.platform} className="w-8 h-8 object-contain bg-white p-1 rounded" />
+                            <img src={social.logoUrl} alt={social.platform} className="w-12 h-12 object-contain bg-white p-1 rounded" />
                           ) : (
                             <span>{social.icon || "🔗"}</span>
                           )}
