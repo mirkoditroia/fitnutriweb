@@ -6,6 +6,10 @@ import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { DateCalendar as SharedDateCalendar } from "@/components/DateCalendar";
+import { BookingForm as ClientBookingForm } from "@/components/BookingForm";
+// Reuse booking form calendar UI
+// Minimal inline version inspired by BookingForm's DateCalendar for consistency could be added later
 
 // Helper function to get package name
 const getPackageNameHelper = (packageId: string | undefined, packages: Package[]) => {
@@ -86,11 +90,12 @@ export default function AdminBookingsPage() {
     packageId: "",
     date: "",
     slot: "",
-    channelPreference: "whatsapp" as "whatsapp" | "email",
+    location: "online" as "online" | "studio",
     notes: ""
   });
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [manualAvailableDates, setManualAvailableDates] = useState<string[]>([]);
   
   // Calendar state
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
@@ -187,12 +192,50 @@ export default function AdminBookingsPage() {
       const dateStr = format(date, "yyyy-MM-dd");
       setManualForm(prev => ({ ...prev, date: dateStr }));
       getAvailabilityByDate(dateStr).then(availability => {
-        setAvailableSlots(availability?.slots || []);
+        const pool = manualForm.location === "online"
+          ? (availability?.onlineSlots ?? availability?.slots ?? [])
+          : (availability?.inStudioSlots ?? []);
+        setAvailableSlots(pool);
       });
     } else {
       setAvailableSlots([]);
     }
   };
+
+  // Calcolo date disponibili per manuale (stessa logica del form)
+  useEffect(() => {
+    const generateDates = async () => {
+      const nextDays: string[] = Array.from({ length: 365 }, (_, i) => {
+        const d = new Date();
+        d.setHours(0,0,0,0);
+        d.setDate(d.getDate() + i);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      });
+
+      const selectedPkg = packages.find(p => p.id === manualForm.packageId);
+      const isPromotional = !!selectedPkg?.isPromotional;
+
+      const checks = await Promise.all(nextDays.map(async (dateStr) => {
+        try {
+          const availability = await getAvailabilityByDate(dateStr);
+          if (!availability) return null;
+          if (isPromotional) {
+            return (availability.freeConsultationSlots && availability.freeConsultationSlots.length > 0) ? dateStr : null;
+          }
+          const onlinePool = availability.onlineSlots ?? availability.slots ?? [];
+          const studioPool = availability.inStudioSlots ?? [];
+          const pool = manualForm.location === "online" ? onlinePool : studioPool;
+          return pool.length > 0 ? dateStr : null;
+        } catch {
+          return null;
+        }
+      }));
+
+      setManualAvailableDates(checks.filter((x): x is string => !!x));
+    };
+
+    generateDates();
+  }, [manualForm.packageId, manualForm.location, packages]);
 
   // Funzioni per la modifica e rischedulazione
   const handleEditBooking = (booking: Booking) => {
@@ -225,7 +268,10 @@ export default function AdminBookingsPage() {
       const dateStr = format(date, "yyyy-MM-dd");
       setEditForm(prev => ({ ...prev, date: dateStr }));
       getAvailabilityByDate(dateStr).then(availability => {
-        setEditAvailableSlots(availability?.slots || []);
+        const pool = (editingBooking?.location ?? "online") === "online"
+          ? (availability?.onlineSlots ?? availability?.slots ?? [])
+          : (availability?.inStudioSlots ?? []);
+        setEditAvailableSlots(pool);
       });
     } else {
       setEditAvailableSlots([]);
@@ -246,6 +292,7 @@ export default function AdminBookingsPage() {
         packageId: editForm.packageId || undefined,
         date: editForm.date,
         slot: editForm.slot || "",
+        location: editingBooking.location,
         status: editForm.status,
         notes: editForm.notes || undefined
       };
@@ -334,8 +381,8 @@ export default function AdminBookingsPage() {
         packageId: manualForm.packageId || undefined,
         date: manualForm.date,
         slot: manualForm.slot || "",
-        status: "pending" as const,
-        channelPreference: manualForm.channelPreference,
+        location: manualForm.location,
+        status: "confirmed" as const,
         notes: manualForm.notes || undefined
       };
 
@@ -350,7 +397,7 @@ export default function AdminBookingsPage() {
         packageId: "",
         date: "",
         slot: "",
-        channelPreference: "whatsapp",
+        location: "online",
         notes: ""
       });
       setSelectedDate(null);
@@ -482,6 +529,9 @@ export default function AdminBookingsPage() {
           <div className="text-sm text-muted-foreground">
             📅 {new Date(b.date).toLocaleDateString("it-IT")} 
             {b.slot && ` • ⏰ ${b.slot}`}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            📍 Sede: {b.isFreeConsultation ? "Online (gratuita)" : (b.location === "studio" ? "In studio" : "Online")}
           </div>
           <div className="text-sm text-muted-foreground">
             📦 {getPackageName(b.packageId)}
@@ -916,6 +966,9 @@ export default function AdminBookingsPage() {
                  📅 Esporta Calendario
                </Button>
              </div>
+            {/* Usa lo stesso form dei clienti; in admin nascondi il selettore pacchetto */}
+            <ClientBookingForm adminMode requirePackage hidePackageSelect />
+            {/*
             <form onSubmit={handleManualSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -962,13 +1015,15 @@ export default function AdminBookingsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-foreground">Data *</label>
-                  <DatePicker
-                    selected={selectedDate}
-                    onChange={handleManualDateChange}
-                    dateFormat="dd/MM/yyyy"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-                    minDate={new Date()}
-                    placeholderText="Seleziona una data"
+                  <SharedDateCalendar
+                    availableDates={manualAvailableDates}
+                    selectedDate={selectedDate ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}` : ""}
+                    onDateSelect={(dateStr) => {
+                      const [y,m,d] = dateStr.split('-').map(Number);
+                      const dObj = new Date(y, m-1, d);
+                      handleManualDateChange(dObj);
+                    }}
+                    showPromotionalBanner={false}
                   />
                 </div>
                 <div>
@@ -981,26 +1036,25 @@ export default function AdminBookingsPage() {
                     required
                   >
                     <option value="">Seleziona un orario disponibile</option>
-                    {availableSlots.map(slot => (
-                      <option key={slot} value={slot}>
-                        {new Date(slot).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
-                      </option>
-                    ))}
+                    {availableSlots.map(slot => {
+                      const label = /T\d{2}:\d{2}/.test(slot)
+                        ? (() => { try { const d = new Date(slot); return d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }); } catch { return slot; } })()
+                        : slot;
+                      return (
+                        <option key={slot} value={slot}>{label}</option>
+                      );
+                    })}
                   </select>
                   {selectedDate && availableSlots.length === 0 && (
                     <p className="text-xs text-destructive mt-1">Nessun orario disponibile per questa data</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Contatto preferito</label>
-                  <select
-                    value={manualForm.channelPreference}
-                    onChange={(e) => setManualForm(prev => ({ ...prev, channelPreference: e.target.value as "whatsapp" | "email" }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-                  >
-                    <option value="whatsapp">WhatsApp</option>
-                    <option value="email">Email</option>
-                  </select>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Sede</label>
+                  <div className="flex gap-2">
+                    <Button type="button" variant={manualForm.location === "online" ? "primary" : "outline"} onClick={() => setManualForm(prev => ({ ...prev, location: "online" }))}>🌐 Online</Button>
+                    <Button type="button" variant={manualForm.location === "studio" ? "primary" : "outline"} onClick={() => setManualForm(prev => ({ ...prev, location: "studio" }))}>🏢 In studio</Button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-foreground">Note</label>
@@ -1027,7 +1081,7 @@ export default function AdminBookingsPage() {
                       packageId: "",
                       date: "",
                       slot: "",
-                      channelPreference: "whatsapp",
+                      location: "online",
                       notes: ""
                     });
                     setSelectedDate(null);
@@ -1038,6 +1092,7 @@ export default function AdminBookingsPage() {
                 </Button>
               </div>
             </form>
+            */}
           </div>
         </div>
       )}

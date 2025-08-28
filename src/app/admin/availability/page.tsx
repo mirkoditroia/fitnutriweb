@@ -132,6 +132,7 @@ export default function AdminAvailabilityPage() {
   const [consultationDuration, setConsultationDuration] = useState(10); // Durata in minuti
   const [gapBetweenConsultations, setGapBetweenConsultations] = useState(10); // Gap in minuti
   const [availability, setAvailability] = useState<Availability | null>(null);
+  const [location, setLocation] = useState<"online" | "studio">("online");
   const [newTime, setNewTime] = useState("");
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [viewMode, setViewMode] = useState("normal"); // "normal" or "promotional"
@@ -143,7 +144,7 @@ export default function AdminAvailabilityPage() {
     if (res) {
       setAvailability(res);
     } else {
-      setAvailability({ date, slots: [], freeConsultationSlots: [] });
+      setAvailability({ date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] });
     }
   }, [date]);
 
@@ -193,18 +194,30 @@ export default function AdminAvailabilityPage() {
       }
     }
     
-    const next = {
+    const next: Availability = {
       date: yyyyMmDd(selectedDate),
-      slots: viewMode === "normal" ? slots : (availability?.slots || []),
-      freeConsultationSlots: viewMode === "promotional" ? freeConsultationSlots : (availability?.freeConsultationSlots || [])
-    } as Availability;
+      onlineSlots: availability?.onlineSlots ?? availability?.slots ?? [],
+      inStudioSlots: availability?.inStudioSlots ?? [],
+      freeConsultationSlots: availability?.freeConsultationSlots ?? []
+    };
+    if (viewMode === "normal") {
+      if (location === "online") next.onlineSlots = slots;
+      else next.inStudioSlots = slots;
+    } else {
+      next.freeConsultationSlots = freeConsultationSlots; // consultazioni gratuite (di base online)
+    }
     setAvailability(next);
   };
 
   const save = async () => {
     if (availability) {
-      await upsertAvailabilityForDate(date, availability.slots, availability.freeConsultationSlots);
-    toast.success("Disponibilità salvata");
+      await upsertAvailabilityForDate(
+        date,
+        availability.onlineSlots ?? availability.slots ?? [],
+        availability.freeConsultationSlots,
+        availability.inStudioSlots ?? []
+      );
+      toast.success("Disponibilità salvata");
     }
   };
 
@@ -213,7 +226,7 @@ export default function AdminAvailabilityPage() {
     
     const currentSlots = viewMode === "promotional" 
       ? (availability.freeConsultationSlots || [])
-      : (availability.slots || []);
+      : (location === "online" ? (availability.onlineSlots ?? availability.slots ?? []) : (availability.inStudioSlots ?? []));
     
     if (!currentSlots.includes(time)) {
       const updatedSlots = [...currentSlots, time].sort();
@@ -226,7 +239,8 @@ export default function AdminAvailabilityPage() {
       } else {
         setAvailability({
           ...availability,
-          slots: updatedSlots
+          onlineSlots: location === "online" ? updatedSlots : (availability.onlineSlots ?? availability.slots ?? []),
+          inStudioSlots: location === "studio" ? updatedSlots : (availability.inStudioSlots ?? [])
         });
       }
       toast.success(`Orario ${time} aggiunto`);
@@ -240,7 +254,7 @@ export default function AdminAvailabilityPage() {
     
     const currentSlots = viewMode === "promotional" 
       ? (availability.freeConsultationSlots || [])
-      : (availability.slots || []);
+      : (location === "online" ? (availability.onlineSlots ?? availability.slots ?? []) : (availability.inStudioSlots ?? []));
     
     const updatedSlots = currentSlots.filter(s => s !== slot);
     
@@ -252,7 +266,8 @@ export default function AdminAvailabilityPage() {
     } else {
       setAvailability({
         ...availability,
-        slots: updatedSlots
+        onlineSlots: location === "online" ? updatedSlots : (availability.onlineSlots ?? availability.slots ?? []),
+        inStudioSlots: location === "studio" ? updatedSlots : (availability.inStudioSlots ?? [])
       });
     }
     toast.success(`Orario ${slot} rimosso`);
@@ -269,7 +284,8 @@ export default function AdminAvailabilityPage() {
     } else {
       setAvailability({
         ...availability,
-        slots: []
+        onlineSlots: location === "online" ? [] : (availability.onlineSlots ?? availability.slots ?? []),
+        inStudioSlots: location === "studio" ? [] : (availability.inStudioSlots ?? [])
       });
     }
     toast.success("Tutti gli orari sono stati rimossi");
@@ -302,6 +318,25 @@ export default function AdminAvailabilityPage() {
           >
             🎯 Slot Consultazioni Gratuite
           </Button>
+          {viewMode === "normal" && (
+            <div className="ml-auto flex items-center gap-3">
+              <span className="text-sm text-foreground">Sede:</span>
+              <Button
+                variant={location === "online" ? "primary" : "outline"}
+                onClick={() => setLocation("online")}
+                className="px-4 py-2"
+              >
+                🌐 Online
+              </Button>
+              <Button
+                variant={location === "studio" ? "primary" : "outline"}
+                onClick={() => setLocation("studio")}
+                className="px-4 py-2"
+              >
+                🏢 In studio
+              </Button>
+            </div>
+          )}
         </div>
         
         {/* Controlli specifici per modalità */}
@@ -436,7 +471,9 @@ export default function AdminAvailabilityPage() {
                 <p className="text-sm text-muted-foreground mt-1">
                   {viewMode === "promotional" 
                     ? `🎯 ${availability.freeConsultationSlots?.length || 0} slot consultazioni gratuite configurati`
-                    : `📋 ${availability.slots?.length || 0} slot normali configurati`
+                    : (location === "online"
+                        ? `📋 ${(availability.onlineSlots ?? availability.slots ?? []).length} slot normali configurati (Online)`
+                        : `📋 ${(availability.inStudioSlots ?? []).length} slot normali configurati (In studio)`)
                   }
                 </p>
         </div>
@@ -508,7 +545,9 @@ export default function AdminAvailabilityPage() {
               {(() => {
                 const currentSlots = viewMode === "promotional" 
                   ? (availability.freeConsultationSlots || [])
-                  : (availability.slots || []);
+                  : (location === "online" 
+                      ? (availability.onlineSlots ?? availability.slots ?? [])
+                      : (availability.inStudioSlots ?? []));
                 
                 return currentSlots.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">

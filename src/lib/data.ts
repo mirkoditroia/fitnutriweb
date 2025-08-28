@@ -92,9 +92,10 @@ export type Booking = {
   name: string;
   email: string;
   phone?: string;
-  channelPreference: "whatsapp" | "email";
+  channelPreference?: "whatsapp" | "email";
   date: string;
   slot: string;
+  location?: "online" | "studio"; // sede appuntamento
   packageId?: string;
   priority?: boolean;
   status: "pending" | "confirmed" | "cancelled";
@@ -150,8 +151,13 @@ export interface SiteContent {
 
 export type Availability = {
   date: string;
-  slots: string[];
-  freeConsultationSlots?: string[]; // Slot dedicati ai 10 minuti consultivi
+  // Slot separati per sede
+  onlineSlots?: string[];
+  inStudioSlots?: string[];
+  // Retrocompatibilità: slots aggregati (preferire i campi sopra)
+  slots?: string[];
+  // Slot dedicati ai 10 minuti consultivi (sempre online per default)
+  freeConsultationSlots?: string[];
 };
 
 // Helpers (lazy & typed)
@@ -290,7 +296,11 @@ export async function createBooking(b: Booking): Promise<string> {
   
   // Controlla che lo slot sia effettivamente disponibile
   const availability = await getAvailabilityByDate(b.date);
-  if (!availability || !availability.slots.includes(b.slot)) {
+  const location: "online" | "studio" = b.isFreeConsultation ? "online" : (b.location || "online");
+  const pool = location === "online"
+    ? (availability?.onlineSlots ?? availability?.slots ?? [])
+    : (availability?.inStudioSlots ?? []);
+  if (!availability || !pool.includes(b.slot)) {
     throw new Error("L'orario selezionato non è più disponibile");
   }
   
@@ -302,15 +312,21 @@ export async function createBooking(b: Booking): Promise<string> {
     packageId: b.packageId ?? null,
     date: b.date,
     slot: b.slot ?? null,
-    status: b.status,
+    location: location,
+    status: b.status || "confirmed",
     priority: !!b.priority,
     channelPreference: b.channelPreference ?? null,
     createdAt: serverTimestamp(),
   });
   
   // Rimuovi lo slot occupato dalla disponibilità
-  availability.slots = availability.slots.filter(slot => slot !== b.slot);
-  await upsertAvailabilityForDate(b.date, availability.slots);
+  if (location === "online") {
+    const next = (availability.onlineSlots ?? availability.slots ?? []).filter((slot) => slot !== b.slot);
+    await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? []);
+  } else {
+    const nextStudio = (availability.inStudioSlots ?? []).filter((slot) => slot !== b.slot);
+    await upsertAvailabilityForDate(b.date, availability.onlineSlots ?? availability.slots ?? [], availability.freeConsultationSlots, nextStudio);
+  }
   
   // If booking is confirmed, create or update client automatically
   if (b.status === "confirmed") {
@@ -372,7 +388,11 @@ export async function updateBooking(booking: Booking): Promise<void> {
   // Se si sta cambiando lo slot, controlla che sia disponibile
   if (existingBooking.slot !== booking.slot && booking.slot) {
     const availability = await getAvailabilityByDate(booking.date);
-    if (!availability || !availability.slots.includes(booking.slot)) {
+    const location: "online" | "studio" = booking.isFreeConsultation ? "online" : (booking.location || "online");
+    const pool = location === "online"
+      ? (availability?.onlineSlots ?? availability?.slots ?? [])
+      : (availability?.inStudioSlots ?? []);
+    if (!availability || !pool.includes(booking.slot)) {
       throw new Error("Il nuovo orario selezionato non è più disponibile");
     }
   }
@@ -380,7 +400,11 @@ export async function updateBooking(booking: Booking): Promise<void> {
   // Se si sta cambiando la data, controlla che lo slot sia disponibile nella nuova data
   if (existingBooking.date !== booking.date && booking.slot) {
     const newDateAvailability = await getAvailabilityByDate(booking.date);
-    if (!newDateAvailability || !newDateAvailability.slots.includes(booking.slot)) {
+    const location: "online" | "studio" = booking.isFreeConsultation ? "online" : (booking.location || "online");
+    const pool = location === "online"
+      ? (newDateAvailability?.onlineSlots ?? newDateAvailability?.slots ?? [])
+      : (newDateAvailability?.inStudioSlots ?? []);
+    if (!newDateAvailability || !pool.includes(booking.slot)) {
       throw new Error("L'orario selezionato non è disponibile per la nuova data");
     }
   }
@@ -395,6 +419,7 @@ export async function updateBooking(booking: Booking): Promise<void> {
     packageId: booking.packageId ?? null,
     date: booking.date,
     slot: booking.slot ?? null,
+    location: booking.isFreeConsultation ? "online" : (booking.location ?? null),
     status: booking.status,
     priority: !!booking.priority,
     channelPreference: booking.channelPreference ?? null,
@@ -451,13 +476,24 @@ export async function updateBooking(booking: Booking): Promise<void> {
       const availSnap = await getDoc(availDoc);
       
       if (availSnap.exists()) {
-        const currentSlots = availSnap.data().slots || [];
-        // Controlla che lo slot sia ancora disponibile prima di rimuoverlo
-        if (currentSlots.includes(booking.slot)) {
-        const updatedSlots = currentSlots.filter((slot: string) => slot !== booking.slot);
-        await setDoc(availDoc, { date: dateStr, slots: updatedSlots }, { merge: true });
+        const data = availSnap.data();
+        const location: "online" | "studio" = booking.isFreeConsultation ? "online" : (booking.location || "online");
+        if (location === "online") {
+          const online = (data.onlineSlots || data.slots || []) as string[];
+          if (online.includes(booking.slot)) {
+            const updated = online.filter((s) => s !== booking.slot);
+            await setDoc(availDoc, { date: dateStr, onlineSlots: updated }, { merge: true });
+          } else {
+            console.warn(`Slot ${booking.slot} non più disponibile (online) per la data ${dateStr}`);
+          }
         } else {
-          console.warn(`Slot ${booking.slot} non più disponibile per la data ${dateStr}`);
+          const studio = (data.inStudioSlots || []) as string[];
+          if (studio.includes(booking.slot)) {
+            const updated = studio.filter((s) => s !== booking.slot);
+            await setDoc(availDoc, { date: dateStr, inStudioSlots: updated }, { merge: true });
+          } else {
+            console.warn(`Slot ${booking.slot} non più disponibile (studio) per la data ${dateStr}`);
+          }
         }
       }
       
@@ -468,10 +504,20 @@ export async function updateBooking(booking: Booking): Promise<void> {
         const prevAvailSnap = await getDoc(prevAvailDoc);
         
         if (prevAvailSnap.exists()) {
-          const prevSlots = prevAvailSnap.data().slots || [];
-          if (!prevSlots.includes(existingBooking.slot)) {
-            const updatedPrevSlots = [...prevSlots, existingBooking.slot];
-            await setDoc(prevAvailDoc, { date: prevDateStr, slots: updatedPrevSlots }, { merge: true });
+          const prevData = prevAvailSnap.data();
+          const prevLocation: "online" | "studio" = existingBooking.isFreeConsultation ? "online" : (existingBooking.location || "online");
+          if (prevLocation === "online") {
+            const prevOnline = (prevData.onlineSlots || prevData.slots || []) as string[];
+            if (!prevOnline.includes(existingBooking.slot)) {
+              const updatedPrev = [...prevOnline, existingBooking.slot];
+              await setDoc(prevAvailDoc, { date: prevDateStr, onlineSlots: updatedPrev }, { merge: true });
+            }
+          } else {
+            const prevStudio = (prevData.inStudioSlots || []) as string[];
+            if (!prevStudio.includes(existingBooking.slot)) {
+              const updatedPrev = [...prevStudio, existingBooking.slot];
+              await setDoc(prevAvailDoc, { date: prevDateStr, inStudioSlots: updatedPrev }, { merge: true });
+            }
           }
         }
       }
@@ -483,10 +529,20 @@ export async function updateBooking(booking: Booking): Promise<void> {
         const prevAvailSnap = await getDoc(prevAvailDoc);
         
         if (prevAvailSnap.exists()) {
-          const prevSlots = prevAvailSnap.data().slots || [];
-          if (!prevSlots.includes(existingBooking.slot)) {
-            const updatedPrevSlots = [...prevSlots, existingBooking.slot];
-            await setDoc(prevAvailDoc, { date: prevDateStr, slots: updatedPrevSlots }, { merge: true });
+          const prevData = prevAvailSnap.data();
+          const prevLocation: "online" | "studio" = existingBooking.isFreeConsultation ? "online" : (existingBooking.location || "online");
+          if (prevLocation === "online") {
+            const prevOnline = (prevData.onlineSlots || prevData.slots || []) as string[];
+            if (!prevOnline.includes(existingBooking.slot)) {
+              const updatedPrev = [...prevOnline, existingBooking.slot];
+              await setDoc(prevAvailDoc, { date: prevDateStr, onlineSlots: updatedPrev }, { merge: true });
+            }
+          } else {
+            const prevStudio = (prevData.inStudioSlots || []) as string[];
+            if (!prevStudio.includes(existingBooking.slot)) {
+              const updatedPrev = [...prevStudio, existingBooking.slot];
+              await setDoc(prevAvailDoc, { date: prevDateStr, inStudioSlots: updatedPrev }, { merge: true });
+            }
           }
         }
       }
@@ -782,18 +838,28 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
   if (!snap.exists()) return null;
   const data = snap.data() as DocumentData;
   return { 
-    date, 
-    slots: Array.isArray(data.slots) ? data.slots : [],
+    date,
+    onlineSlots: Array.isArray(data.onlineSlots) ? data.onlineSlots : (Array.isArray(data.slots) ? data.slots : []),
+    inStudioSlots: Array.isArray(data.inStudioSlots) ? data.inStudioSlots : [],
+    slots: Array.isArray(data.slots) ? data.slots : undefined,
     freeConsultationSlots: Array.isArray(data.freeConsultationSlots) ? data.freeConsultationSlots : []
   };
 }
 
-export async function upsertAvailabilityForDate(date: string, slots: string[], freeConsultationSlots?: string[]): Promise<void> {
+export async function upsertAvailabilityForDate(
+  date: string,
+  onlineSlots: string[],
+  freeConsultationSlots?: string[],
+  inStudioSlots?: string[]
+): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
-  const payload: Record<string, unknown> = { date, slots };
+  const payload: Record<string, unknown> = { date, onlineSlots };
   // Evita di inviare campi undefined a Firestore
   if (Array.isArray(freeConsultationSlots)) {
     payload.freeConsultationSlots = freeConsultationSlots;
+  }
+  if (Array.isArray(inStudioSlots)) {
+    payload.inStudioSlots = inStudioSlots;
   }
   await setDoc(col.availability(db as Firestore, date), payload, { merge: true });
 }

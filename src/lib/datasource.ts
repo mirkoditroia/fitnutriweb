@@ -117,7 +117,11 @@ export async function createBooking(b: Booking): Promise<string> {
   
   // Controlla che lo slot sia effettivamente disponibile
   const availability = await getAvailabilityByDate(b.date);
-  if (!availability || !availability.slots.includes(b.slot)) {
+  const location: "online" | "studio" = b.isFreeConsultation ? "online" : (b.location || "online");
+  const pool = location === "online"
+    ? (availability?.onlineSlots ?? availability?.slots ?? [])
+    : (availability?.inStudioSlots ?? []);
+  if (!availability || !pool.includes(b.slot)) {
     throw new Error("L'orario selezionato non è più disponibile");
   }
   
@@ -130,8 +134,13 @@ export async function createBooking(b: Booking): Promise<string> {
     await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify(next) });
     
     // Rimuovi lo slot occupato dalla disponibilità
-    availability.slots = availability.slots.filter(slot => slot !== b.slot);
-    await upsertAvailabilityForDate(b.date, availability.slots);
+    if (location === "online") {
+      const next = (availability.onlineSlots ?? availability.slots ?? []).filter((slot) => slot !== b.slot);
+      await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? []);
+    } else {
+      const nextStudio = (availability.inStudioSlots ?? []).filter((slot) => slot !== b.slot);
+      await upsertAvailabilityForDate(b.date, availability.onlineSlots ?? availability.slots ?? [], availability.freeConsultationSlots, nextStudio);
+    }
     
     return id;
   } catch {
@@ -169,7 +178,11 @@ export async function updateBooking(booking: Booking): Promise<void> {
     // Se si sta cambiando lo slot, controlla che sia disponibile
     if (existingBooking && existingBooking.slot !== booking.slot && booking.slot) {
       const availability = await getAvailabilityByDate(booking.date);
-      if (!availability || !availability.slots.includes(booking.slot)) {
+      const location: "online" | "studio" = booking.isFreeConsultation ? "online" : (booking.location || "online");
+      const pool = location === "online"
+        ? (availability?.onlineSlots ?? availability?.slots ?? [])
+        : (availability?.inStudioSlots ?? []);
+      if (!availability || !pool.includes(booking.slot)) {
         throw new Error("Il nuovo orario selezionato non è più disponibile");
       }
     }
@@ -177,7 +190,11 @@ export async function updateBooking(booking: Booking): Promise<void> {
     // Se si sta cambiando la data, controlla che lo slot sia disponibile nella nuova data
     if (existingBooking && existingBooking.date !== booking.date && booking.slot) {
       const newDateAvailability = await getAvailabilityByDate(booking.date);
-      if (!newDateAvailability || !newDateAvailability.slots.includes(booking.slot)) {
+      const location: "online" | "studio" = booking.isFreeConsultation ? "online" : (booking.location || "online");
+      const pool = location === "online"
+        ? (newDateAvailability?.onlineSlots ?? newDateAvailability?.slots ?? [])
+        : (newDateAvailability?.inStudioSlots ?? []);
+      if (!newDateAvailability || !pool.includes(booking.slot)) {
         throw new Error("L'orario selezionato non è disponibile per la nuova data");
       }
     }
@@ -192,33 +209,69 @@ export async function updateBooking(booking: Booking): Promise<void> {
       try {
         const dateStr = booking.date.split('T')[0]; // Extract YYYY-MM-DD from date
         const availRes = await fetch("/api/localdb/availability", { cache: "no-store" });
-        const availability = availRes.ok ? ((await availRes.json()) as Record<string, string[]>) : {};
-        
+        const availability = availRes.ok ? ((await availRes.json()) as Record<string, { slots: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[] }>) : {};
+        const location: "online" | "studio" = booking.isFreeConsultation ? "online" : (booking.location || "online");
         if (availability[dateStr]) {
-          // Controlla che lo slot sia ancora disponibile prima di rimuoverlo
-          if (availability[dateStr].includes(booking.slot)) {
-            availability[dateStr] = availability[dateStr].filter(slot => slot !== booking.slot);
-            await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+          if (location === "online") {
+            const online = availability[dateStr].onlineSlots ?? availability[dateStr].slots ?? [];
+            if (online.includes(booking.slot)) {
+              const updated = online.filter((s) => s !== booking.slot);
+              availability[dateStr].onlineSlots = updated;
+              await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+            } else {
+              console.warn(`Slot ${booking.slot} non più disponibile (online) per la data ${dateStr}`);
+            }
           } else {
-            console.warn(`Slot ${booking.slot} non più disponibile per la data ${dateStr}`);
+            const studio = availability[dateStr].inStudioSlots ?? [];
+            if (studio.includes(booking.slot)) {
+              const updated = studio.filter((s) => s !== booking.slot);
+              availability[dateStr].inStudioSlots = updated;
+              await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+            } else {
+              console.warn(`Slot ${booking.slot} non più disponibile (studio) per la data ${dateStr}`);
+            }
           }
         }
         
         // Se si è cambiato lo slot, ripristina quello precedente
         if (existingBooking && existingBooking.slot && existingBooking.slot !== booking.slot) {
           const prevDateStr = existingBooking.date.split('T')[0];
-          if (availability[prevDateStr] && !availability[prevDateStr].includes(existingBooking.slot)) {
-            availability[prevDateStr] = [...availability[prevDateStr], existingBooking.slot];
-            await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+          if (availability[prevDateStr]) {
+            const prevLocation: "online" | "studio" = existingBooking.isFreeConsultation ? "online" : (existingBooking.location || "online");
+            if (prevLocation === "online") {
+              const prevOnline = availability[prevDateStr].onlineSlots ?? availability[prevDateStr].slots ?? [];
+              if (!prevOnline.includes(existingBooking.slot)) {
+                availability[prevDateStr].onlineSlots = [...prevOnline, existingBooking.slot];
+                await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+              }
+            } else {
+              const prevStudio = availability[prevDateStr].inStudioSlots ?? [];
+              if (!prevStudio.includes(existingBooking.slot)) {
+                availability[prevDateStr].inStudioSlots = [...prevStudio, existingBooking.slot];
+                await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+              }
+            }
           }
         }
         
         // Se si è cambiata la data, ripristina lo slot nella data precedente
         if (existingBooking && existingBooking.date !== booking.date && existingBooking.slot) {
           const prevDateStr = existingBooking.date.split('T')[0];
-          if (availability[prevDateStr] && !availability[prevDateStr].includes(existingBooking.slot)) {
-            availability[prevDateStr] = [...availability[prevDateStr], existingBooking.slot];
-            await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+          if (availability[prevDateStr]) {
+            const prevLocation: "online" | "studio" = existingBooking.isFreeConsultation ? "online" : (existingBooking.location || "online");
+            if (prevLocation === "online") {
+              const prevOnline = availability[prevDateStr].onlineSlots ?? availability[prevDateStr].slots ?? [];
+              if (!prevOnline.includes(existingBooking.slot)) {
+                availability[prevDateStr].onlineSlots = [...prevOnline, existingBooking.slot];
+                await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+              }
+            } else {
+              const prevStudio = availability[prevDateStr].inStudioSlots ?? [];
+              if (!prevStudio.includes(existingBooking.slot)) {
+                availability[prevDateStr].inStudioSlots = [...prevStudio, existingBooking.slot];
+                await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(availability) });
+              }
+            }
           }
         }
       } catch (error) {
@@ -465,27 +518,29 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
   if (mode === "demo") return fetchDemo<Availability>(`/demo/availability/${date}.json`, { date, slots: [] });
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
-    const all = res.ok ? ((await res.json()) as Record<string, { slots: string[]; freeConsultationSlots?: string[] }>) : {};
+    const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[] }>) : {};
     const dateData = all[date];
     if (dateData) {
       return { 
         date, 
-        slots: dateData.slots || [], 
-        freeConsultationSlots: dateData.freeConsultationSlots || [] 
+        onlineSlots: dateData.onlineSlots ?? dateData.slots ?? [],
+        inStudioSlots: dateData.inStudioSlots ?? [],
+        slots: dateData.slots,
+        freeConsultationSlots: dateData.freeConsultationSlots ?? [] 
       };
     }
-    return { date, slots: [], freeConsultationSlots: [] };
-  } catch { return { date, slots: [], freeConsultationSlots: [] }; }
+    return { date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] } as Availability;
+  } catch { return { date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] } as Availability; }
 }
 
-export async function upsertAvailabilityForDate(date: string, slots: string[], freeConsultationSlots?: string[]): Promise<void> {
+export async function upsertAvailabilityForDate(date: string, onlineSlots: string[], freeConsultationSlots?: string[], inStudioSlots?: string[]): Promise<void> {
   const mode = getDataMode();
-  if (mode === "firebase") return fb_upsertAvailabilityForDate(date, slots, freeConsultationSlots);
+  if (mode === "firebase") return fb_upsertAvailabilityForDate(date, onlineSlots, freeConsultationSlots, inStudioSlots);
   if (mode === "demo") throw new Error("Preprod demo read-only");
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
-    const all = res.ok ? ((await res.json()) as Record<string, { slots: string[]; freeConsultationSlots?: string[] }>) : {};
-    all[date] = { slots, freeConsultationSlots: freeConsultationSlots || [] };
+    const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[] }>) : {};
+    all[date] = { onlineSlots, inStudioSlots: inStudioSlots || [], freeConsultationSlots: freeConsultationSlots || [] };
     await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(all) });
   } catch {}
 }

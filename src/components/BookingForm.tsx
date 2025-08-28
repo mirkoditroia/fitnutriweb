@@ -10,6 +10,7 @@ import { getAvailabilityByDate } from "@/lib/datasource";
 import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday } from "date-fns";
 import { it } from "date-fns/locale";
 import { type Package } from "@/lib/data";
+import { DateCalendar as SharedDateCalendar } from "@/components/DateCalendar";
 import { getDirectState } from "@/lib/directState";
 import { getPackages } from "@/lib/datasource";
 
@@ -18,11 +19,12 @@ const schema = z.object({
   name: z.string().min(2, "Nome troppo corto"),
   email: z.string().email("Email non valida"),
   phone: z.string().optional(),
-  channelPreference: z.enum(["whatsapp", "email"]),
+  // rimosso campo preferenza canale
   date: z.string().min(1, "Seleziona una data"),
   slot: z.string().min(1, "Seleziona un orario disponibile"),
+  location: z.enum(["online", "studio"]).optional(),
   packageId: z.string().optional(),
-  priority: z.boolean().optional(),
+  // priority rimossa
   notes: z.string().optional(), // Note del cliente (sezione "Parlami di te")
 });
 
@@ -193,13 +195,14 @@ function DateCalendar({
   );
 }
 
-export function BookingForm() {
+export function BookingForm({ adminMode = false, requirePackage = false, hidePackageSelect = false }: { adminMode?: boolean; requirePackage?: boolean; hidePackageSelect?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [packages, setPackages] = useState<Package[]>([]);
+  const [location, setLocation] = useState<"online" | "studio" | null>(null);
   const availableSlotsRef = useRef<string[]>([]);
   const packagesRef = useRef<Package[]>([]);
   
@@ -234,7 +237,7 @@ export function BookingForm() {
       slot: "",
       notes: "",
       packageId: directState.selectedPackageId || "",
-      channelPreference: "whatsapp",
+      // preferenza canale rimossa
     },
   });
 
@@ -336,7 +339,13 @@ export function BookingForm() {
               }
             } else {
               // Per consulenze normali, controlla gli slot standard
-              if (availability.slots && availability.slots.length > 0) {
+              const onlinePool = availability.onlineSlots ?? [];
+              const studioPool = availability.inStudioSlots ?? [];
+              // Se l'utente non ha ancora scelto la sede, considera entrambe le liste; altrimenti usa solo quella selezionata
+              const pool = location === null
+                ? [...onlinePool, ...studioPool]
+                : (location === "online" ? onlinePool : studioPool);
+              if (pool && pool.length > 0) {
                 return date;
               }
             }
@@ -356,7 +365,7 @@ export function BookingForm() {
     };
 
     generateAvailableDates();
-  }, [selectedPackage, isFreeConsultation]);
+  }, [selectedPackage, isFreeConsultation, location]);
 
   // Carica la disponibilità per la data selezionata
   useEffect(() => {
@@ -370,8 +379,14 @@ export function BookingForm() {
             // Per consultazioni gratuite, mostra solo slot promozionali
             setAvailableSlots(availability.freeConsultationSlots || []);
           } else {
-            // Per consulenze normali, mostra slot standard
-            setAvailableSlots(availability.slots || []);
+            // Per consulenze normali, mostra slot in base alla sede
+            const onlinePool = availability.onlineSlots ?? [];
+            const studioPool = availability.inStudioSlots ?? [];
+            const legacyPool = availability.slots ?? [];
+            const pool = location === null
+              ? ((onlinePool.length || studioPool.length) ? [...onlinePool, ...studioPool] : legacyPool)
+              : (location === "online" ? onlinePool : studioPool);
+            setAvailableSlots(pool);
           }
         }
       } catch (error) {
@@ -381,11 +396,15 @@ export function BookingForm() {
     };
 
     loadAvailability();
-  }, [selectedDate, selectedPackage, isFreeConsultation]);
+  }, [selectedDate, selectedPackage, isFreeConsultation, location]);
 
   // RIMOSSO: Vecchio sistema di eventi sostituito da stato globale
 
   const onSubmit = async (data: FormValues) => {
+    if (requirePackage && !selectedPackage) {
+      alert("In Admin devi selezionare almeno un pacchetto.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -399,6 +418,7 @@ export function BookingForm() {
       // In produzione (Firebase) usa la funzione datasource ufficiale
       try {
         const { createBooking } = await import("@/lib/datasource");
+        const bookingStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
         // Tipi stretti coerenti con `Booking`
         await createBooking({
           name: bookingData.name,
@@ -407,9 +427,9 @@ export function BookingForm() {
           packageId: selectedPackage?.id,
           date: bookingData.date,
           slot: bookingData.slot,
-        status: "pending",
-          priority: bookingData.priority || false,
-          channelPreference: bookingData.channelPreference,
+          location: (isFreeConsultation || selectedPackage?.isPromotional === true) ? "online" : (location as "online" | "studio"),
+          status: bookingStatus,
+          // preferenza canale rimossa
           notes: bookingData.notes,
           isFreeConsultation,
         });
@@ -458,171 +478,7 @@ export function BookingForm() {
   console.log("BookingForm: RENDER - selectedPackage:", selectedPackage);
   console.log("BookingForm: RENDER - packages:", packages);
   console.log("BookingForm: RENDER - packages.length:", packages.length);
-
-  // Se non c'è un pacchetto selezionato, mostra solo il form base
-  if (!selectedPackage) {
-    console.log("BookingForm: RENDER - Nessun pacchetto selezionato, mostrando form base");
-    return (
-      <div className="space-y-6">
-        {/* Messaggio informativo */}
-        <div className="bg-muted/20 border border-border rounded-lg p-4">
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Puoi prenotare anche senza selezionare un pacchetto: scegli una data e un orario dagli slot disponibili.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              In alternativa, invia la richiesta senza selezione e ti consiglieremo il pacchetto più adatto.
-            </p>
-          </div>
-        </div>
-
-        {/* Form di prenotazione base con lo stesso calendario/slot (slot normali) */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Nome */}
-          <div>
-            <Input
-              label="Nome completo *"
-              {...register("name")}
-              placeholder="Il tuo nome"
-            />
-            {errors.name && (
-              <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div>
-            <Input
-              label="Email *"
-              type="email"
-              {...register("email")}
-              placeholder="la-tua-email@esempio.com"
-            />
-            {errors.email && (
-              <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
-            )}
-          </div>
-
-          {/* Telefono */}
-          <div>
-            <Input
-              label="Telefono (opzionale)"
-              {...register("phone")}
-              placeholder="+39 123 456 7890"
-            />
-          </div>
-
-          {/* Preferenza canale */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Preferisco essere contattato via:
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="whatsapp"
-                  {...register("channelPreference")}
-                  className="text-primary"
-                />
-                <span>WhatsApp</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="email"
-                  {...register("channelPreference")}
-                  className="text-primary"
-                />
-                <span>Email</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Data con calendario e orari: usa slot normali */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Data *</label>
-            <DateCalendar
-              availableDates={availableDates}
-              selectedDate={selectedDate}
-              onDateSelect={(date) => {
-                setSelectedDate(date);
-                setValue("date", date);
-                setValue("slot", "");
-              }}
-              showPromotionalBanner={false}
-            />
-            {errors.date && (
-              <p className="text-destructive text-sm mt-1">{errors.date.message}</p>
-            )}
-          </div>
-
-          {/* Slot orari per la data selezionata (normali) */}
-          {selectedDate && availableSlots.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Orario disponibile *</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {availableSlots.map((slot) => (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => setValue("slot", slot)}
-                    className={`p-3 border rounded-lg text-sm transition-colors ${
-                      watch("slot") === slot
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    {slot}
-                  </button>
-                ))}
-              </div>
-              {errors.slot && (
-                <p className="text-destructive text-sm mt-1">{errors.slot.message}</p>
-              )}
-            </div>
-          )}
-
-          {/* Priorità */}
-          <div>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                {...register("priority")}
-                className="text-primary"
-              />
-              <span className="text-sm">Richiesta prioritaria</span>
-            </label>
-          </div>
-
-          {/* Sezione "Parlami di te" */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Parlami di te
-            </label>
-            <textarea
-              {...register("notes")}
-              placeholder="Raccontaci i tuoi obiettivi, esperienze precedenti, preferenze alimentari, eventuali limitazioni o qualsiasi altra informazione che ritieni importante per la tua consulenza..."
-              className="w-full p-3 border border-border rounded-lg bg-background text-foreground min-h-[120px] resize-y"
-              rows={5}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Queste informazioni ci aiuteranno a preparare una consulenza più personalizzata per te
-            </p>
-          </div>
-
-          {/* Submit attivo per richiesta generica */}
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting ? "Invio in corso..." : "Invia richiesta"}
-          </Button>
-        </form>
-      </div>
-    );
-  }
+  // Mantieni struttura invariata anche senza pacchetto selezionato
 
   return (
     <div className="space-y-6">
@@ -676,12 +532,13 @@ export function BookingForm() {
         {/* Selettore Pacchetto */}
       <div>
           <label className="block text-sm font-medium mb-2">
-            Pacchetto selezionato
+            Pacchetto
           </label>
           <select
             value={selectedPackage?.id || ""}
             onChange={(e) => {
-              const newPackage = packages.find(p => p.id === e.target.value);
+              const val = e.target.value;
+              const newPackage = packages.find(p => p.id === val);
               handlePackageChange(newPackage || null);
             }}
             className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
@@ -744,44 +601,56 @@ export function BookingForm() {
           />
         </div>
 
-        {/* Preferenza canale */}
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Preferisco essere contattato via:
-          </label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                value="whatsapp"
-                {...register("channelPreference")}
-                className="text-primary"
-              />
-              <span>WhatsApp</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                value="email"
-                {...register("channelPreference")}
-                className="text-primary"
-              />
-              <span>Email</span>
-            </label>
-          </div>
-      </div>
+        {/* Sede appuntamento - PRIMA della data */}
+        {!(showPromotionalBanner || isFreeConsultation) && (
+          <div>
+            <label className="block text-sm font-medium mb-2">Sede appuntamento</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setLocation("online")}
+                className={`px-4 py-2 border rounded-lg text-sm ${location === "online" ? "bg-primary text-primary-foreground border-primary" : "border-border"}`}
+              >
+                🌐 Online
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocation("studio")}
+                className={`px-4 py-2 border rounded-lg text-sm ${location === "studio" ? "bg-primary text-primary-foreground border-primary" : "border-border"}`}
+              >
+                🏢 In studio
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Per consultazioni gratuite la sede è sempre Online.</p>
+        </div>
+      )}
 
-        {/* Pacchetto selezionato - sempre visibile */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Pacchetto selezionato</label>
-          <div className="w-full p-3 border border-border rounded-lg bg-muted/30 text-sm">
-            {selectedPackage ? selectedPackage.title : "Nessun pacchetto selezionato"}
-          </div>
-      </div>
+        {/* Riepilogo pacchetto rimosso */}
 
-        {/* Data con calendario interattivo */}
-        {selectedPackage && (
+        {/* Selettore Pacchetto (opzionale per admin) */}
+        {adminMode && requirePackage && !hidePackageSelect && (
       <div>
+            <label className="block text-sm font-medium mb-2">Seleziona pacchetto</label>
+            <select
+              value={watch("packageId")}
+              onChange={(e) => {
+                const id = e.target.value;
+                setValue("packageId", id);
+                const found = packages.find(p => p.id === id) || null;
+                setSelectedPackage(found);
+              }}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            >
+              <option value="">-- Seleziona --</option>
+              {packages.map(p => (
+                <option key={p.id} value={p.id}>{p.title}</option>
+              ))}
+        </select>
+      </div>
+        )}
+
+        {/* Data con calendario interattivo (sempre visibile) */}
+        <div>
             <label className="block text-sm font-medium mb-2">
               Data * {showPromotionalBanner && <span className="text-green-600">(Solo date con disponibilità)</span>}
             </label>
@@ -806,11 +675,14 @@ export function BookingForm() {
                 }
               </p>
             )}
-      </div>
-        )}
+        </div>
+
+        {/* preferenza canale rimossa */}
+
+        
 
         {/* Slot orari */}
-        {selectedPackage && selectedDate && availableSlots.length > 0 && (
+        {selectedDate && availableSlots.length > 0 && (
       <div>
             <label className="block text-sm font-medium mb-2">
               Orario disponibile * {showPromotionalBanner && <span className="text-green-600">(Slot promozionali)</span>}
@@ -851,17 +723,7 @@ export function BookingForm() {
       </div>
         )}
 
-        {/* Priorità */}
-        <div>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              {...register("priority")}
-              className="text-primary"
-            />
-            <span className="text-sm">Richiesta prioritaria</span>
-          </label>
-        </div>
+        {/* priorità rimossa */}
 
         {/* Sezione "Parlami di te" */}
         <div>
