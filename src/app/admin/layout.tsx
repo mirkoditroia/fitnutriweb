@@ -48,6 +48,12 @@ export default function AdminLayout({
                 >
                   Disponibilità
                 </Link>
+                <Link 
+                  href="/admin/calendar" 
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  📅 Calendario
+                </Link>
               </nav>
             </div>
             <div className="flex gap-3">

@@ -497,6 +497,120 @@ export default function AdminContentPage() {
           </div>
         </section>
 
+        {/* Google Calendar Integration */}
+        <section className="space-y-3">
+          <h2 className="font-semibold">Google Calendar</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="calendarEnabled"
+                checked={content.googleCalendar?.isEnabled ?? false}
+                onChange={(e) => setContent({
+                  ...content,
+                  googleCalendar: {
+                    ...content.googleCalendar,
+                    isEnabled: e.target.checked
+                  }
+                })}
+                className="text-primary"
+              />
+              <label htmlFor="calendarEnabled" className="font-medium">
+                Abilita sincronizzazione Google Calendar
+              </label>
+            </div>
+
+            {content.googleCalendar?.isEnabled && (
+              <div className="space-y-4 p-4 border border-border rounded-lg bg-background/50">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    label="Calendar ID"
+                    value={content.googleCalendar?.calendarId ?? ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      googleCalendar: {
+                        ...content.googleCalendar,
+                        calendarId: e.target.value
+                      }
+                    })}
+                    placeholder="ID del calendario Google"
+                  />
+                  
+                  <Input
+                    label="Timezone"
+                    value={content.googleCalendar?.timezone ?? ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      googleCalendar: {
+                        ...content.googleCalendar,
+                        timezone: e.target.value
+                      }
+                    })}
+                    placeholder="Europe/Rome"
+                  />
+                  
+                  <Input
+                    label="Service Account Email"
+                    value={content.googleCalendar?.serviceAccountEmail ?? ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      googleCalendar: {
+                        ...content.googleCalendar,
+                        serviceAccountEmail: e.target.value
+                      }
+                    })}
+                    placeholder="email@project.iam.gserviceaccount.com"
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/calendar');
+                        const result = await response.json();
+                        if (result.success) {
+                          toast.success('Connessione Google Calendar riuscita!');
+                        } else {
+                          toast.error(`Errore connessione: ${result.message}`);
+                        }
+                      } catch (error) {
+                        toast.error('Errore nel test della connessione');
+                      }
+                    }}
+                  >
+                    Test Connessione
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      // Apri il calendario in una nuova tab
+                      const calendarId = content.googleCalendar?.calendarId;
+                      if (calendarId) {
+                        window.open(`https://calendar.google.com/calendar/embed?src=${encodeURIComponent(calendarId)}`, '_blank');
+                      }
+                    }}
+                  >
+                    Apri Calendario
+                  </Button>
+                </div>
+                
+                <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                  <p><strong>Info:</strong> Ogni prenotazione verrà automaticamente sincronizzata con Google Calendar.</p>
+                  <p>• Eventi confermati: colore blu</p>
+                  <p>• Consultazioni gratuite: colore arancione</p>
+                  <p>• Promemoria automatici: 24h prima e 30 minuti prima</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Popup 10 Minuti Consultivi Gratuiti */}
         <section className="space-y-3">
           <h2 className="font-semibold">Popup</h2>

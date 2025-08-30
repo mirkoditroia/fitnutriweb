@@ -525,6 +525,12 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     contactSectionSubtitle: "",
     studiosSectionTitle: "🏢 I Nostri Studi",
     studiosSectionSubtitle: "",
+    googleCalendar: {
+      isEnabled: false,
+      calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
+      timezone: "Europe/Rome",
+      serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+    }
   });
   if (typeof window === "undefined") return null;
   try {
@@ -552,6 +558,12 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     contactSectionSubtitle: "",
     studiosSectionTitle: "🏢 I Nostri Studi",
     studiosSectionSubtitle: "",
+    googleCalendar: {
+      isEnabled: false,
+      calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
+      timezone: "Europe/Rome",
+      serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+    }
   };
 }
 

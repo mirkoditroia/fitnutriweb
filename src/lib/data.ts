@@ -14,6 +14,7 @@ import {
   type DocumentData,
   updateDoc,
 } from "firebase/firestore";
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from "./googleCalendar";
 import { db } from "@/lib/firebase";
 import type { Firestore } from "firebase/firestore";
 
@@ -103,6 +104,7 @@ export type Booking = {
   createdAt?: string;
   isFreeConsultation?: boolean; // Flag per i 10 minuti consultivi
   notes?: string; // Note del cliente (sezione "Parlami di te")
+  googleCalendarEventId?: string; // ID dell'evento Google Calendar
 };
 
 export interface SiteContent {
@@ -164,6 +166,13 @@ export interface SiteContent {
     description?: string;
     ctaText?: string;
     isEnabled?: boolean;
+  };
+  // Google Calendar integration
+  googleCalendar?: {
+    isEnabled?: boolean;
+    calendarId?: string;
+    timezone?: string;
+    serviceAccountEmail?: string;
   };
 }
 
@@ -323,6 +332,19 @@ export async function createBooking(b: Booking): Promise<string> {
     throw new Error("L'orario selezionato non è più disponibile");
   }
   
+  // Get package title for calendar event
+  let packageTitle: string | undefined;
+  if (b.packageId) {
+    try {
+      const packageDoc = await getDoc(doc(db as Firestore, "packages", b.packageId));
+      if (packageDoc.exists()) {
+        packageTitle = packageDoc.data().title;
+      }
+    } catch (error) {
+      console.error("Error getting package title for calendar event:", error);
+    }
+  }
+
   const added = await addDoc(col.bookings(db as Firestore), {
     clientId: b.clientId ?? null,
     name: b.name,
@@ -402,6 +424,21 @@ export async function createBooking(b: Booking): Promise<string> {
     }
   }
   
+  // Create Google Calendar event
+  try {
+    const calendarEventId = await createCalendarEvent(b, packageTitle);
+    if (calendarEventId) {
+      // Update booking with calendar event ID
+      await updateDoc(doc(db as Firestore, "bookings", added.id), {
+        googleCalendarEventId: calendarEventId
+      });
+      console.log("Google Calendar event created and linked to booking:", calendarEventId);
+    }
+  } catch (error) {
+    console.error("Error creating Google Calendar event:", error);
+    // Don't fail the booking creation if calendar fails
+  }
+
   return added.id;
 }
 
@@ -459,6 +496,34 @@ export async function updateBooking(booking: Booking): Promise<void> {
   };
   await setDoc(doc(db as Firestore, "bookings", id), updateData, { merge: true });
   
+  // Update Google Calendar event if it exists
+  if (existingBooking.googleCalendarEventId) {
+    try {
+      // Get package title for calendar event
+      let packageTitle: string | undefined;
+      if (booking.packageId) {
+        try {
+          const packageDoc = await getDoc(doc(db as Firestore, "packages", booking.packageId));
+          if (packageDoc.exists()) {
+            packageTitle = packageDoc.data().title;
+          }
+        } catch (error) {
+          console.error("Error getting package title for calendar event update:", error);
+        }
+      }
+
+      const success = await updateCalendarEvent(existingBooking.googleCalendarEventId, booking, packageTitle);
+      if (success) {
+        console.log("Google Calendar event updated:", existingBooking.googleCalendarEventId);
+      } else {
+        console.error("Failed to update Google Calendar event:", existingBooking.googleCalendarEventId);
+      }
+    } catch (error) {
+      console.error("Error updating Google Calendar event:", error);
+      // Don't fail the booking update if calendar fails
+    }
+  }
+
   // If booking is confirmed, create or update client automatically
   if (booking.status === "confirmed") {
     try {
@@ -595,6 +660,21 @@ export async function deleteBooking(bookingId: string): Promise<void> {
     const bookingDoc = await getDoc(doc(db as Firestore, "bookings", bookingId));
     if (bookingDoc.exists()) {
       bookingData = toBooking(bookingId, bookingDoc.data());
+      
+      // Delete Google Calendar event if it exists
+      if (bookingData.googleCalendarEventId) {
+        try {
+          const success = await deleteCalendarEvent(bookingData.googleCalendarEventId);
+          if (success) {
+            console.log("Google Calendar event deleted:", bookingData.googleCalendarEventId);
+          } else {
+            console.error("Failed to delete Google Calendar event:", bookingData.googleCalendarEventId);
+          }
+        } catch (error) {
+          console.error("Error deleting Google Calendar event:", error);
+          // Don't fail the booking deletion if calendar fails
+        }
+      }
       
       // Create inactive client from rejected booking
       const existingClient = await getClientByEmail(bookingData.email);
@@ -864,6 +944,12 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         subtitle: data.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente",
         description: data.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
         ctaText: data.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"
+      },
+      googleCalendar: {
+        isEnabled: data.googleCalendar?.isEnabled || false,
+        calendarId: data.googleCalendar?.calendarId || "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
+        timezone: data.googleCalendar?.timezone || "Europe/Rome",
+        serviceAccountEmail: data.googleCalendar?.serviceAccountEmail || "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
       },
     };
     

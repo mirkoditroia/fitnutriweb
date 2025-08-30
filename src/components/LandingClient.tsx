@@ -94,6 +94,11 @@ export default function LandingClient() {
         subtitle: "Valuta i tuoi obiettivi gratuitamente",
         description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
         ctaText: "Prenota Ora - È Gratis!"
+      },
+      googleCalendar: {
+        calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
+        timezone: "Europe/Rome",
+        serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
       }
     };
   }
@@ -154,6 +159,11 @@ export default function LandingClient() {
       subtitle: "Valuta i tuoi obiettivi gratuitamente",
       description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
       ctaText: "Prenota Ora - È Gratis!"
+    },
+    googleCalendar: {
+      calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
+      timezone: "Europe/Rome",
+      serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
     }
   };
   const effectivePackages = finalPackages;
