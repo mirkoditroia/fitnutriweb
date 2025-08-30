@@ -128,7 +128,7 @@ export default function AdminContentPage() {
                 <input
                   type="number"
                   className={`w-full rounded-md border px-3 py-2 text-sm bg-white text-black`}
-                  value={content.navbarLogoHeight ?? 24}
+                  value={content.navbarLogoHeight ?? 40}
                   onChange={(e) => setContent({ ...content, navbarLogoHeight: Number(e.target.value || 0) })}
                 />
                 <div className="mt-2 flex items-center gap-2">

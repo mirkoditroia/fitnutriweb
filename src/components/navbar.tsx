@@ -34,12 +34,12 @@ export function Navbar() {
       const cfg: BrandCfg = {
         mode: c?.navbarLogoMode === 'image' ? 'image' : 'text',
         imageUrl: c?.navbarLogoImageUrl || undefined,
-        height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 24,
+        height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 40,
         autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
         text: c?.navbarLogoText || 'GZnutrition',
         color: c?.navbarLogoTextColor || undefined,
         weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
-        size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 18,
+        size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
       };
       setBrand(cfg);
     }).catch(() => {});
