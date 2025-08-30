@@ -17,7 +17,8 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [lightBg, setLightBg] = useState(false);
-  const [brand, setBrand] = useState<{ mode: "image"|"text"; imageUrl?: string; height?: number; autoBg?: boolean; text?: string; color?: string; weight?: number; size?: number } | null>(null);
+  type BrandCfg = { mode: "image"|"text"; imageUrl?: string; height?: number; autoBg?: boolean; text?: string; color?: string; weight?: number; size?: number };
+  const [brand, setBrand] = useState<BrandCfg | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,16 +31,17 @@ export function Navbar() {
   // Load branding info
   useEffect(() => {
     getSiteContent().then((c) => {
-      setBrand({
-        mode: (c?.navbarLogoMode as any) || "text",
+      const cfg: BrandCfg = {
+        mode: c?.navbarLogoMode === 'image' ? 'image' : 'text',
         imageUrl: c?.navbarLogoImageUrl || undefined,
-        height: (c?.navbarLogoHeight as any) || 24,
-        autoBg: c?.navbarLogoAutoRemoveBg || false,
-        text: c?.navbarLogoText || "GZnutrition",
+        height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 24,
+        autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
+        text: c?.navbarLogoText || 'GZnutrition',
         color: c?.navbarLogoTextColor || undefined,
-        weight: (c?.navbarLogoTextWeight as any) || 700,
-        size: (c?.navbarLogoTextSize as any) || 18,
-      });
+        weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
+        size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 18,
+      };
+      setBrand(cfg);
     }).catch(() => {});
   }, []);
 

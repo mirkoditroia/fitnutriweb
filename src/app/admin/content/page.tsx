@@ -51,7 +51,7 @@ export default function AdminContentPage() {
               <select
                 className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
                 value={content.themeMode ?? "dark"}
-                onChange={(e) => setContent({ ...content, themeMode: e.target.value as any })}
+                onChange={(e) => setContent({ ...content, themeMode: (e.target.value as 'light' | 'dark') })}
               >
                 <option value="light">Light (navbar scura)</option>
                 <option value="dark">Dark (navbar chiara)</option>
@@ -97,7 +97,7 @@ export default function AdminContentPage() {
               <select
                 className={`w-full rounded-md border px-3 py-2 text-sm bg-white text-black`}
                 value={content.navbarLogoMode ?? "text"}
-                onChange={(e) => setContent({ ...content, navbarLogoMode: e.target.value as any })}
+                onChange={(e) => setContent({ ...content, navbarLogoMode: (e.target.value as 'image' | 'text') })}
               >
                 <option value="image">Immagine (upload)</option>
                 <option value="text">Testo</option>
