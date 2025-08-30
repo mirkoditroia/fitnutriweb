@@ -100,17 +100,17 @@ function DateCalendar({
     <div className="relative">
       {/* Input trigger */}
       <div 
-        className="w-full p-3 border border-border rounded-lg bg-background text-foreground cursor-pointer hover:border-primary/50 transition-colors"
+        className="w-full p-3 border border-border rounded-lg bg-background text-black cursor-pointer hover:border-primary/50 transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center justify-between">
-          <span className={selectedDate ? "text-foreground" : "text-muted-foreground"}>
+          <span className={selectedDate ? "text-black" : "text-gray-600"}>
             {selectedDate 
               ? format(new Date(selectedDate), "EEEE d MMMM yyyy", { locale: it })
               : "Seleziona una data"
             }
           </span>
-          <span className="text-muted-foreground">📅</span>
+          <span className="text-gray-600">📅</span>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ function DateCalendar({
             >
               ←
             </button>
-            <h3 className="font-semibold text-foreground">
+            <h3 className="font-semibold text-black">
               {format(currentMonth, "MMMM yyyy", { locale: it })}
             </h3>
             <button
@@ -139,7 +139,7 @@ function DateCalendar({
           {/* Giorni della settimana */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map(day => (
-              <div key={day} className="w-10 h-10 flex items-center justify-center text-xs font-medium text-muted-foreground">
+              <div key={day} className="w-10 h-10 flex items-center justify-center text-xs font-medium text-black">
                 {day}
               </div>
             ))}
@@ -518,10 +518,10 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               <span className="text-lg">{showPromotionalBanner ? '🎯' : '📦'}</span>
             </div>
             <div className="flex-1">
-              <h3 className={`font-semibold ${showPromotionalBanner ? 'text-green-800' : 'text-foreground'}`}>
+              <h3 className={`font-semibold ${showPromotionalBanner ? 'text-green-800' : 'text-black'}`}>
                 {selectedPackage.title}
               </h3>
-              <p className={`text-sm ${showPromotionalBanner ? 'text-green-700' : 'text-muted-foreground'}`}>
+              <p className={`text-sm ${showPromotionalBanner ? 'text-green-700' : 'text-black'}`}>
                 {selectedPackage.description}
               </p>
               {!showPromotionalBanner && (
@@ -531,7 +531,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                       <span className="text-lg font-bold text-primary">
                         € {selectedPackage.discountedPrice}
                       </span>
-                      <span className="text-sm text-foreground/60 line-through">
+                      <span className="text-sm text-gray-600 line-through">
                         € {selectedPackage.basePrice}
                       </span>
                       {selectedPackage.discountPercentage && (
@@ -545,7 +545,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                       € {selectedPackage.price}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-black mt-1">
                     {selectedPackage.paymentText || "pagabile mensilmente"}
                   </p>
                 </div>
@@ -559,7 +559,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Selettore Pacchetto */}
       <div className="form-surface p-4">
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2 text-black">
             Pacchetto
           </label>
           <select
@@ -569,7 +569,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               const newPackage = packages.find(p => p.id === val);
               handlePackageChange(newPackage || null);
             }}
-            className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
+            className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm text-black focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
           >
             <option value="">Seleziona un pacchetto</option>
             {packages.map((pkg) => {
@@ -590,7 +590,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               );
             })}
         </select>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-black mt-1">
             Puoi cambiare pacchetto in qualsiasi momento
           </p>
         </div>
@@ -635,7 +635,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {/* Sede appuntamento - PRIMA della data */}
         {!(showPromotionalBanner || isFreeConsultation) && (
           <div className="form-surface p-4">
-            <label className="block text-sm font-medium mb-2">Sede appuntamento</label>
+            <label className="block text-sm font-medium mb-2 text-black">Sede appuntamento</label>
             <div className="flex gap-3">
               <button
                 type="button"
@@ -652,21 +652,21 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                 🏢 In studio
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Per consultazioni gratuite la sede è sempre Online.</p>
+            <p className="text-xs text-black mt-1">Per consultazioni gratuite la sede è sempre Online.</p>
         </div>
       )}
 
         {/* Selezione sede specifica quando "In studio" */}
         {location === "studio" && (
           <div className="form-surface p-4">
-            <label className="block text-sm font-medium mb-2">Seleziona sede</label>
+            <label className="block text-sm font-medium mb-2 text-black">Seleziona sede</label>
             <select
               value={studioLocation}
               onChange={(e) => {
                 setStudioLocation(e.target.value);
                 setValue("slot", "");
               }}
-              className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
+              className="w-full p-3 border border-border rounded-lg bg-background text-black"
             >
               <option value="">-- Seleziona sede --</option>
               {addresses.map((addr, idx) => (
@@ -684,7 +684,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {/* Selettore Pacchetto (opzionale per admin) */}
         {adminMode && requirePackage && !hidePackageSelect && (
           <div className="form-surface p-4">
-            <label className="block text-sm font-medium mb-2">Seleziona pacchetto</label>
+            <label className="block text-sm font-medium mb-2 text-black">Seleziona pacchetto</label>
             <select
               value={watch("packageId")}
               onChange={(e) => {
@@ -693,7 +693,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                 const found = packages.find(p => p.id === id) || null;
                 setSelectedPackage(found);
               }}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
             >
               <option value="">Nessun pacchetto</option>
               {packages.map(p => (
@@ -705,7 +705,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
         {/* Data con calendario interattivo (sempre visibile) */}
         <div className="form-surface p-4">
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-black">
               Data * {showPromotionalBanner && <span className="text-green-600">(Solo date con disponibilità)</span>}
             </label>
             <DateCalendar
@@ -722,7 +722,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               <p className="text-destructive text-sm mt-1">{errors.date.message}</p>
             )}
             {availableDates.length === 0 && (
-              <p className="text-muted-foreground text-sm mt-1">
+              <p className="text-black text-sm mt-1">
                 {showPromotionalBanner 
                   ? "Nessuna data disponibile per consultazioni gratuite" 
                   : "Nessuna data disponibile per consulenze"
@@ -738,7 +738,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {/* Slot orari */}
         {selectedDate && availableSlots.length > 0 && (
           <div className="form-surface p-4">
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-black">
               Orario disponibile * {showPromotionalBanner && <span className="text-green-600">(Slot promozionali)</span>}
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -781,16 +781,16 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
         {/* Sezione "Parlami di te" */}
         <div className="form-surface p-4">
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2 text-black">
             Parlami di te
       </label>
           <textarea
             {...register("notes")}
             placeholder="Raccontaci i tuoi obiettivi, esperienze precedenti, preferenze alimentari, eventuali limitazioni o qualsiasi altra informazione che ritieni importante per la tua consulenza..."
-            className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm text-foreground min-h-[120px] resize-y focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
+            className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm text-black min-h-[120px] resize-y focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
             rows={5}
           />
-          <p className="text-[12px] leading-5 text-muted-foreground mt-2">
+          <p className="text-[12px] leading-5 text-black mt-2">
             Queste informazioni ci aiuteranno a preparare una consulenza più personalizzata per te
           </p>
         </div>
@@ -813,7 +813,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
         {/* Informazioni aggiuntive per consultazione gratuita */}
         {selectedPackage && showPromotionalBanner && (
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="text-center text-sm text-black">
             <p>* La consultazione gratuita dura 10 minuti</p>
             <p>* Solo per nuovi clienti</p>
             <p>* Valutazione obiettivi e piano personalizzato</p>
