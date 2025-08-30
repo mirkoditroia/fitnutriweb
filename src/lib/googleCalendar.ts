@@ -134,7 +134,8 @@ export async function testCalendarConnection(): Promise<{ success: boolean; mess
   eventsCount: number;
 } }> {
   try {
-    const response = await fetch('/api/calendar', {
+    // Use Firebase Function instead of local API route
+    const response = await fetch('https://testcalendarconnection-4ks3j6nupa-uc.a.run.app', {
       method: 'GET',
     });
 

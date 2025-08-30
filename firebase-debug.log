@@ -1,0 +1,115 @@
+[debug] [2025-08-30T18:19:46.227Z] ----------------------------------------------------------------------
+[debug] [2025-08-30T18:19:46.230Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\okrim\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2025-08-30T18:19:46.230Z] CLI Version:   14.15.1
+[debug] [2025-08-30T18:19:46.231Z] Platform:      win32
+[debug] [2025-08-30T18:19:46.231Z] Node Version:  v20.14.0
+[debug] [2025-08-30T18:19:46.231Z] Time:          Sat Aug 30 2025 20:19:46 GMT+0200 (Ora legale dell’Europa centrale)
+[debug] [2025-08-30T18:19:46.231Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-30T18:19:46.437Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-30T18:19:46.438Z] > authorizing via signed-in user (mirkod95@gmail.com)
+[debug] [2025-08-30T18:19:46.438Z] [iam] checking project gznutrition-d5d13 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-08-30T18:19:46.439Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:46.439Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:46.440Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13:testIamPermissions [none]
+[debug] [2025-08-30T18:19:46.440Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13:testIamPermissions x-goog-quota-user=projects/gznutrition-d5d13
+[debug] [2025-08-30T18:19:46.441Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-08-30T18:19:47.375Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13:testIamPermissions 200
+[debug] [2025-08-30T18:19:47.375Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-08-30T18:19:47.375Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:47.375Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:47.376Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/gznutrition-d5d13/serviceAccounts/gznutrition-d5d13@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-08-30T18:19:47.376Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/gznutrition-d5d13/serviceAccounts/gznutrition-d5d13@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-08-30T18:19:48.214Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/gznutrition-d5d13/serviceAccounts/gznutrition-d5d13@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-08-30T18:19:48.214Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/gznutrition-d5d13/serviceAccounts/gznutrition-d5d13@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'gznutrition-d5d13'...
+[info] 
+[info] i  deploying functions 
+[debug] [2025-08-30T18:19:48.218Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:48.218Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:48.218Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13 [none]
+[debug] [2025-08-30T18:19:48.439Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13 200
+[debug] [2025-08-30T18:19:48.439Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13 {"projectNumber":"658719519730","projectId":"gznutrition-d5d13","lifecycleState":"ACTIVE","name":"gznutrition","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-08-23T16:30:14.862173Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2025-08-30T18:19:48.443Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:48.443Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:48.443Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/gznutrition-d5d13/adminSdkConfig [none]
+[debug] [2025-08-30T18:19:48.971Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/gznutrition-d5d13/adminSdkConfig 200
+[debug] [2025-08-30T18:19:48.971Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/gznutrition-d5d13/adminSdkConfig {"projectId":"gznutrition-d5d13","databaseURL":"https://gznutrition-d5d13-default-rtdb.europe-west1.firebasedatabase.app","storageBucket":"gznutrition-d5d13.firebasestorage.app"}
+[debug] [2025-08-30T18:19:48.971Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:48.972Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:48.972Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs [none]
+[debug] [2025-08-30T18:19:49.874Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs 200
+[debug] [2025-08-30T18:19:49.874Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs {"configs":[{"name":"projects/gznutrition-d5d13/configs/google"},{"name":"projects/gznutrition-d5d13/configs/gcal"}]}
+[debug] [2025-08-30T18:19:49.874Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:49.874Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:49.875Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:49.875Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:49.875Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables [none]
+[debug] [2025-08-30T18:19:49.875Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables [none]
+[debug] [2025-08-30T18:19:50.316Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables 200
+[debug] [2025-08-30T18:19:50.317Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables {"variables":[{"name":"projects/gznutrition-d5d13/configs/gcal/variables/calendar_id","updateTime":"2025-08-30T18:04:35.829033318Z"},{"name":"projects/gznutrition-d5d13/configs/gcal/variables/enabled","updateTime":"2025-08-30T18:04:24.076927540Z"},{"name":"projects/gznutrition-d5d13/configs/gcal/variables/timezone","updateTime":"2025-08-30T18:05:01.347415493Z"}]}
+[debug] [2025-08-30T18:19:50.317Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.317Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.317Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.317Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.317Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.317Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.317Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/calendar_id [none]
+[debug] [2025-08-30T18:19:50.318Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/enabled [none]
+[debug] [2025-08-30T18:19:50.319Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/timezone [none]
+[debug] [2025-08-30T18:19:50.671Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/timezone 200
+[debug] [2025-08-30T18:19:50.671Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/timezone {"name":"projects/gznutrition-d5d13/configs/gcal/variables/timezone","updateTime":"2025-08-30T18:05:01.347415493Z","text":"Europe/Rome"}
+[debug] [2025-08-30T18:19:50.672Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables 200
+[debug] [2025-08-30T18:19:50.672Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables {"variables":[{"name":"projects/gznutrition-d5d13/configs/google/variables/client_email","updateTime":"2025-08-30T18:05:15.446141211Z"},{"name":"projects/gznutrition-d5d13/configs/google/variables/private_key","updateTime":"2025-08-30T18:05:51.207442028Z"}]}
+[debug] [2025-08-30T18:19:50.672Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.672Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.672Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.672Z] Checked if tokens are valid: true, expires at: 1756579098281
+[debug] [2025-08-30T18:19:50.673Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables/client_email [none]
+[debug] [2025-08-30T18:19:50.673Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables/private_key [none]
+[debug] [2025-08-30T18:19:50.675Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/enabled 200
+[debug] [2025-08-30T18:19:50.675Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/enabled {"name":"projects/gznutrition-d5d13/configs/gcal/variables/enabled","updateTime":"2025-08-30T18:04:24.076927540Z","text":"true"}
+[debug] [2025-08-30T18:19:50.949Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables/client_email 200
+[debug] [2025-08-30T18:19:50.949Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables/client_email {"name":"projects/gznutrition-d5d13/configs/google/variables/client_email","updateTime":"2025-08-30T18:05:15.446141211Z","text":"zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"}
+[debug] [2025-08-30T18:19:50.953Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables/private_key 200
+[debug] [2025-08-30T18:19:50.953Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/google/variables/private_key {"name":"projects/gznutrition-d5d13/configs/google/variables/private_key","updateTime":"2025-08-30T18:05:51.207442028Z","text":"-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCUTLRg38ATseW2\\nEIVj4oIHc1EKiwagXrGZfJFUOAEe+7+Y0ziQzS4Az62X0asQ7Z2TiyrD+nOwsUUD\\n/m4UZIntYe4oqvaj+5y4ttnyr0YwQP0CUoCi6Xvymj34K2Llk4fieLSJalQzcse2\\nx0sjQmTCHz3yilfBQnvj7esAmhywYCkNOV7mV+vtO6dCIkVFNg3szb7cEJZroFLN\\nTE2u8a9t1xYKb6qSkrcG/ktUMrTuV4F7RrBrAwMIcJWRcDmCLAGkx26XTdyxG7Ln\\n30OZwiUkiPD062Dhl/eq6Qx77MJnuMVxaikERML/ffrRkH309f8+++6n8MRPbOfJ\\ng9kbIzutAgMBAAECggEAPN1cXLQIX6zwM/CE5pFUv50PAk476n7i0jVDajbQEvjM\\n0nrCKP/k5RVXUEuPs5NqTF9eLm/wonCm/DQk1r7KswAx4EQGlRfT4yW8vrM8Edri\\nXF0jCXndUp0GWP/ph4KszwCuTAW1SCZQHE6gInkB5IAxCwXHbXyNX2dKv4UAyEwX\\nGHNR8H1FX/4BwqTirR+2JR4wzu+0+psmlHHFyptOPQIAWbrGCzqmQewT2b6ZfBhy\\nnUdUFsfYwlA3Hzo+TIRQDNi9Tm4tNf/PIeRYlZlwitlhXgRsBkl732N68nRWc47x\\nRUh4b5j+Qv0th8dlpegrXS32bzZPXgFZ7He3RRhcWwKBgQDJHTUNqXAfYVGKcalu\\nRGncxa7YuI4m2oR//lYS0JupWjU5GoOlWIRNbG2aMmwtzHWzs3a3jomW0lE3wZuc\\naC/5hWdNr3mFQ0DDrEDXAWHoDd7QFgUhy4IByfq3jog4n+F3r7ppIDM6TiV8oVzo\\nO/8S0wlZUTsTzkxxBv5Jch5HVwKBgQC8xaBP42KzhHkM6LKeRL6z9uphqW6EKPOS\\nW+jZx81aL4RAFbEA/JW/k2BPsTruS/Ieqe6xBDhw2YfZ9wLUuYb1rkBLoOeEpn/E\\nz5vBNkq8q10dVMR8r+F9BAOpi1W17ddTC9YA57IEO0aHOv2LZwxV6CUC52AHuvaY\\nut0MsK4GmwKBgGa8w+hpwTxWk7gcnkgVLNs6JTrS9NNGV9+mxsOvy4U07vFv6QZj\\ndJq0pDzcO0UeKJaXPDNC3misog7QmbTJyJA4JPCbjoGUPJZ4/VqYezJ3O3ajeRWt\\nh4lwa+KvLkl261Af9iNT7rd/SkkjiXmdhI1SP3lgNMTGY2huASL16B/bAoGANdNo\\nHb9pgmSQm6SyYbyaX/hU5poIQDjpEt+QKqD1JfUMkbVdrjlXfbPJL5AKjK4tEJ9F\\nx0W7zjnIqdbsALoSCHWyMZ5kxYcwQW8tK0+OyfNW7qkgCamg8yO046AuRVzXG//w\\n+nsWYGyCdMbWSuyMMOarvwM4d5vQ+sW1iAvM42cCgYBacCLf97V3ZCl4xTfmoUlW\\nWoYCtbvHCm8g7eVXe/DMThFhmpIfKOdB8euJWXEu0fW0bx6j6Nld2xF6SCBV7JxW\\nA05jNVQB0O12hNFrFzKjCgyBTQkey9ZJp52/K9A2HmmBwQAPkaNtLDFD9Nq0dIU\\neT2MCmLPo98SykSgkndxiw==\\n-----END PRIVATE KEY-----"}
+[debug] [2025-08-30T18:19:51.114Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/calendar_id 200
+[debug] [2025-08-30T18:19:51.114Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/gznutrition-d5d13/configs/gcal/variables/calendar_id {"name":"projects/gznutrition-d5d13/configs/gcal/variables/calendar_id","updateTime":"2025-08-30T18:04:35.829033318Z","text":"9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com"}
+[debug] [2025-08-30T18:19:51.116Z] Validating nodejs source
+[warn] !  functions: Runtime Node.js 18 was deprecated on 2025-04-30 and will be decommissioned on 2025-10-30, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy 
+[debug] [2025-08-30T18:19:52.192Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.4.0",
+    "googleapis": "^159.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}
+[debug] [2025-08-30T18:19:52.192Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2025-08-30T18:19:52.194Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-08-30T18:19:52.200Z] Found firebase-functions binary at 'C:\Users\okrim\OneDrive\Documenti\GZnutrition-website\gznutrition\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8830
+
+[debug] [2025-08-30T18:19:54.307Z] Got response from /__/functions.yaml {"endpoints":{"testCalendarConnection":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":10,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"httpsTrigger":{},"entryPoint":"testCalendarConnection"},"calendarOperations":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":10,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"httpsTrigger":{},"entryPoint":"calendarOperations"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
