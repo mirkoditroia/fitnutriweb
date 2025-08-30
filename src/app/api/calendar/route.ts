@@ -180,6 +180,14 @@ export async function GET() {
       });
     }
 
+    // Check if credentials are configured
+    if (!CALENDAR_CONFIG.serviceAccountEmail || !CALENDAR_CONFIG.privateKey) {
+      return NextResponse.json({
+        success: false,
+        message: 'Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY environment variables.'
+      }, { status: 400 });
+    }
+
     const calendar = getCalendarClient();
     
     // Test by getting calendar info
@@ -201,16 +209,33 @@ export async function GET() {
         id: calendarInfo.data.id,
         summary: calendarInfo.data.summary,
         timeZone: calendarInfo.data.timeZone,
-
         eventsCount: events.data.items?.length || 0
       }
     });
   } catch (error: unknown) {
     console.error('Google Calendar connection test failed:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Connection test failed';
+    
+    let errorMessage = 'Connection test failed';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Missing Google Service Account credentials')) {
+        errorMessage = error.message;
+        statusCode = 400;
+      } else if (error.message.includes('invalid_grant') || error.message.includes('unauthorized_client')) {
+        errorMessage = 'Invalid Google Service Account credentials. Please check your GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY.';
+        statusCode = 401;
+      } else if (error.message.includes('notFound')) {
+        errorMessage = 'Calendar not found. Please check your GCAL_CALENDAR_ID.';
+        statusCode = 404;
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     return NextResponse.json({
       success: false,
       message: errorMessage
-    }, { status: 500 });
+    }, { status: statusCode });
   }
 }
