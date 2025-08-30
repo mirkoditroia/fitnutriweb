@@ -9,7 +9,7 @@ import { LandingImages } from "@/components/LandingImages";
 import { ContactSection } from "@/components/ContactSection";
 import { FreeConsultationPopup } from "@/components/FreeConsultationPopup";
 import { type SiteContent } from "@/lib/data";
-import { resolveThemeVars } from "@/lib/theme";
+import { resolveThemeVars, type ThemeVars } from "@/lib/theme";
 import { getPackages, getSiteContent } from "@/lib/datasource";
 // Rimosso sistema globale - ora usa approccio diretto
 
@@ -169,14 +169,14 @@ export default function LandingClient() {
 
   const theme = resolveThemeVars({
     palette: effectiveContent.themePalette,
-    customPrimary: (effectiveContent as any).themeCustomPrimary,
-    customAccent: (effectiveContent as any).themeCustomAccent,
-    customBackground: (effectiveContent as any).themeCustomBackground,
-    customForeground: (effectiveContent as any).themeCustomForeground,
+    customPrimary: (effectiveContent as Partial<SiteContent>).themeCustomPrimary,
+    customAccent: (effectiveContent as Partial<SiteContent>).themeCustomAccent,
+    customBackground: (effectiveContent as Partial<SiteContent>).themeCustomBackground,
+    customForeground: (effectiveContent as Partial<SiteContent>).themeCustomForeground,
   });
 
   return (
-    <main className="min-h-dvh bg-background text-foreground pt-16" style={theme as any}>
+    <main className="min-h-dvh bg-background text-foreground pt-16" style={theme as React.CSSProperties}>
       {/* Popup 10 Minuti Consultivi Gratuiti */}
       {(effectiveContent.freeConsultationPopup && (effectiveContent.freeConsultationPopup.isEnabled === true || String(effectiveContent.freeConsultationPopup.isEnabled) === "true")) && (
         <FreeConsultationPopup

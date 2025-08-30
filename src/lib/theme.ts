@@ -122,7 +122,7 @@ export function resolveThemeVars(opts?: {
 }
 
 export function varsToStyle(vars: ThemeVars): React.CSSProperties {
-  // @ts-ignore React is available in Next runtime
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return vars as unknown as React.CSSProperties;
 }
 

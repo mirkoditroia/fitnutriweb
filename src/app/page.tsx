@@ -43,7 +43,7 @@ export default async function Home() {
   });
 
   return (
-    <main className="min-h-dvh bg-background text-foreground pt-16" style={theme as any}>
+    <main className="min-h-dvh bg-background text-foreground pt-16" style={theme as React.CSSProperties}>
       {/* Popup Promozionale - se abilitato da contenuti */}
       {c.freeConsultationPopup && (c.freeConsultationPopup.isEnabled === true || String(c.freeConsultationPopup.isEnabled) === "true") && (
         <FreeConsultationPopup

@@ -121,7 +121,7 @@ export default function AdminContentPage() {
                   />
                   <UploadButton folder="brand" onUploaded={(url) => setContent({ ...content, navbarLogoImageUrl: url })} />
                 </div>
-                <p className="text-xs text-foreground/60 mt-1">PNG con trasparenza consigliato. Se lo sfondo è bianco prova l'opzione “Rimuovi BG”.</p>
+                <p className="text-xs text-foreground/60 mt-1">PNG con trasparenza consigliato. Se lo sfondo è bianco prova l&apos;opzione “Rimuovi BG”.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Altezza (px)</label>
