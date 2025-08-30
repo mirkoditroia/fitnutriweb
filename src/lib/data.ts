@@ -877,7 +877,9 @@ export async function getSiteContent(): Promise<SiteContent | null> {
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
-  await setDoc(col.content(db as Firestore), content, { merge: true });
+  // Firestore non accetta valori undefined: rimuoviamoli in modo sicuro
+  const sanitized = JSON.parse(JSON.stringify(content));
+  await setDoc(col.content(db as Firestore), sanitized, { merge: true });
 }
 
 // Availability
