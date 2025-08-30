@@ -352,7 +352,7 @@ export default function AdminClientsPage() {
                 <select
                   value={client.gender || ""}
                   onChange={(e) => setSelectedClient({ ...client, gender: e.target.value as "male" | "female" | "other" | "prefer_not_to_say" })}
-                  className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background"
+                  className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background text-black"
                 >
                   <option value="">Seleziona...</option>
                   <option value="male">Maschio</option>
@@ -366,7 +366,7 @@ export default function AdminClientsPage() {
                 <select
                   value={client.status || "prospect"}
                   onChange={(e) => setSelectedClient({ ...client, status: e.target.value as "active" | "inactive" | "prospect" })}
-                  className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background"
+                  className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background text-black"
                 >
                   <option value="prospect">Prospetto</option>
                   <option value="active">Attivo</option>

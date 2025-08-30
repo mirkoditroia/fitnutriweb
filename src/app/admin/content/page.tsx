@@ -49,7 +49,7 @@ export default function AdminContentPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Modalità (navbar)</label>
               <select
-                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-black"
                 value={content.themeMode ?? "dark"}
                 onChange={(e) => setContent({ ...content, themeMode: (e.target.value as 'light' | 'dark') })}
               >
@@ -60,7 +60,7 @@ export default function AdminContentPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Palette</label>
               <select
-                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-black"
                 value={content.themePalette ?? "gz-green"}
                 onChange={(e) => setContent({ ...content, themePalette: e.target.value })}
               >
@@ -240,7 +240,7 @@ export default function AdminContentPage() {
                 <Input label="Key" value={im.key} onChange={(e) => updateImg(i, "key", e.target.value)} />
                 <div>
                   <label className="block text-sm font-medium mb-1">URL immagine</label>
-                  <input className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" value={im.url} onChange={(e) => updateImg(i, "url", e.target.value)} />
+                  <input className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-black" value={im.url} onChange={(e) => updateImg(i, "url", e.target.value)} />
                 </div>
                 <div className="flex gap-2">
                   <UploadButton folder="content" onUploaded={(url) => updateImg(i, "url", url)} />

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { listBookings, updateBooking, deleteBooking, getPackages, createBooking, getAvailabilityByDate, createClientFromPendingBooking, type Booking, type Package } from "@/lib/datasource";
+import { listBookings, updateBooking, deleteBooking, getPackages, createBooking, getAvailabilityByDate, createClientFromPendingBooking, getSiteContent, type Booking, type Package } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { DateCalendar as SharedDateCalendar } from "@/components/DateCalendar";
 import { BookingForm as ClientBookingForm } from "@/components/BookingForm";
+import { useRouter } from "next/navigation";
 // Reuse booking form calendar UI
 // Minimal inline version inspired by BookingForm's DateCalendar for consistency could be added later
 
@@ -77,10 +78,12 @@ const downloadFile = (content: string, filename: string) => {
 type ViewMode = "requests" | "manual" | "calendar";
 
 export default function AdminBookingsPage() {
+  const router = useRouter();
   const [items, setItems] = useState<Booking[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("requests");
+  const [calendarId, setCalendarId] = useState<string>("");
   
   // Manual booking form state
   const [manualForm, setManualForm] = useState({
@@ -139,6 +142,32 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Carica il Calendar ID per Google Calendar
+  useEffect(() => {
+    getSiteContent().then(content => {
+      const id = content?.googleCalendar?.calendarId || "";
+      setCalendarId(id);
+    }).catch(error => {
+      console.error("Errore nel caricamento del Calendar ID:", error);
+    });
+  }, []);
+
+  // Funzioni per Google Calendar
+  const openCalendar = () => {
+    if (!calendarId) {
+      toast.error("Calendar ID mancante. Configura Google Calendar nelle impostazioni.");
+      return;
+    }
+    window.open(
+      `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(calendarId)}`,
+      "_blank"
+    );
+  };
+
+  const openCalendarSettings = () => {
+    router.push("/admin/calendar");
+  };
 
   const getPackageName = (packageId?: string) => {
     if (!packageId) return "Nessun pacchetto";
@@ -637,7 +666,37 @@ export default function AdminBookingsPage() {
         </div>
       </div>
       
-             {/* Navigation Tabs */}
+      {/* Barra accesso Google Calendar - sempre visibile anche su mobile */}
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-3 border-b border-border/40 mt-6">
+        <div className="flex items-center justify-between gap-2 px-2 sm:px-4">
+          <div className="text-xs sm:text-sm text-foreground/60 truncate flex-1">
+            <span className="hidden sm:inline">Google Calendar: </span>
+            <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+              {calendarId || "Non configurato"}
+            </span>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <Button 
+              size="sm" 
+              onClick={openCalendar} 
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
+              disabled={!calendarId}
+            >
+              📅 Apri Calendario
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={openCalendarSettings}
+              className="text-xs px-3 py-1"
+            >
+              ⚙️ Impostazioni
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Navigation Tabs */}
        <div className="flex items-center justify-between mt-6 border-b border-foreground/20">
          <div className="flex gap-2">
            <button
@@ -844,7 +903,7 @@ export default function AdminBookingsPage() {
                     type="text"
                     value={editForm.name}
                     onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                     required
                   />
                 </div>
@@ -854,7 +913,7 @@ export default function AdminBookingsPage() {
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                     required
                   />
                 </div>
@@ -864,7 +923,7 @@ export default function AdminBookingsPage() {
                     type="text"
                     value={editForm.phone}
                     onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                   />
                 </div>
                 <div>
@@ -872,7 +931,7 @@ export default function AdminBookingsPage() {
                   <select
                     value={editForm.packageId}
                     onChange={(e) => setEditForm(prev => ({ ...prev, packageId: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                   >
                     <option value="">Nessun pacchetto</option>
                     {packages.map(pkg => (
@@ -886,7 +945,7 @@ export default function AdminBookingsPage() {
                     selected={editSelectedDate}
                     onChange={handleEditDateChange}
                     dateFormat="dd/MM/yyyy"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                     minDate={new Date()}
                     placeholderText="Seleziona una data"
                   />
@@ -896,7 +955,7 @@ export default function AdminBookingsPage() {
                   <select
                     value={editForm.slot}
                     onChange={(e) => setEditForm(prev => ({ ...prev, slot: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                     disabled={!editSelectedDate || editAvailableSlots.length === 0}
                     required
                   >
@@ -916,7 +975,7 @@ export default function AdminBookingsPage() {
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value as "pending" | "confirmed" | "cancelled" }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                   >
                     <option value="pending">In attesa</option>
                     <option value="confirmed">Confermata</option>
@@ -928,7 +987,7 @@ export default function AdminBookingsPage() {
                   <textarea
                     value={editForm.notes}
                     onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                     rows={3}
                   />
                 </div>
@@ -1060,7 +1119,7 @@ export default function AdminBookingsPage() {
                   <textarea
                     value={manualForm.notes}
                     onChange={(e) => setManualForm(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
                     rows={3}
                   />
                 </div>
@@ -1304,6 +1363,18 @@ export default function AdminBookingsPage() {
           </div>
         </div>
       )}
+      
+      {/* FAB per accesso rapido al calendario su mobile */}
+      <div className="fixed bottom-6 right-6 z-50 sm:hidden">
+        <Button
+          onClick={openCalendar}
+          className="w-14 h-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white"
+          disabled={!calendarId}
+          title="Apri Google Calendar"
+        >
+          📅
+        </Button>
+      </div>
     </>
   );
 }

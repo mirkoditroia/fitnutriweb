@@ -114,14 +114,14 @@ export default function AdminPackagesPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-foreground pt-4">Gestione Pacchetti</h1>
+      <h1 className="text-2xl font-bold text-white pt-4">Gestione Pacchetti</h1>
       <div className="mt-4 flex justify-end"><Button onClick={add}>Aggiungi Nuovo Pacchetto</Button></div>
       <div className="mt-4 grid gap-6">
         {items.map((p, i) => (
           <div key={p.id ?? i} className="bg-card border border-border rounded-lg p-6 shadow-sm">
             {/* Header del pacchetto */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Pacchetto {i + 1}</h3>
+               <h3 className="text-lg font-semibold text-white">Pacchetto {i + 1}</h3>u
               <div className="flex gap-2">
                 <Button onClick={() => save(i)} variant="outline">Salva</Button>
                 <Button onClick={() => save(i)}>Salva e Pubblica</Button>
@@ -138,7 +138,7 @@ export default function AdminPackagesPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Colonna sinistra - Informazioni base */}
               <div className="space-y-4">
-                <h4 className="font-medium text-foreground border-b pb-2">Informazioni Base</h4>
+                <h4 className="font-medium text-white border-b pb-2">Informazioni Base</h4>
                 
                 <Input 
                   label="Titolo *" 
@@ -147,9 +147,9 @@ export default function AdminPackagesPage() {
                 />
                 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Descrizione *</label>
+                  <label className="block text-sm font-medium mb-1 text-white">Descrizione *</label>
                   <textarea 
-                    className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" 
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-black" 
                     rows={3} 
                     value={p.description} 
                     onChange={(e) => setItems(upd(items, i, { description: e.target.value }))} 
@@ -166,11 +166,11 @@ export default function AdminPackagesPage() {
 
               {/* Colonna destra - Prezzi e opzioni */}
               <div className="space-y-4">
-                <h4 className="font-medium text-foreground border-b pb-2">Prezzi e Opzioni</h4>
+                <h4 className="font-medium text-white border-b pb-2">Prezzi e Opzioni</h4>
                 
                 {/* Sistema di sconti */}
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className="flex items-center gap-2 text-sm text-white">
                     <input 
                       type="checkbox" 
                       checked={!!p.hasDiscount} 
@@ -221,15 +221,15 @@ export default function AdminPackagesPage() {
                 />
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className="flex items-center gap-2 text-sm text-white">
                     <input type="checkbox" checked={!!p.isActive} onChange={(e) => setItems(upd(items, i, { isActive: e.target.checked }))} /> 
                     Attivo
                   </label>
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className="flex items-center gap-2 text-sm text-white">
                     <input type="checkbox" checked={!!p.featured} onChange={(e) => setItems(upd(items, i, { featured: e.target.checked }))} /> 
                     Featured (in evidenza - apparirà per primo nella lista)
                   </label>
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className="flex items-center gap-2 text-sm text-white">
                     <input type="checkbox" checked={!!p.isPromotional} onChange={(e) => setItems(upd(items, i, { isPromotional: e.target.checked }))} /> 
                     Promozionale
                   </label>
@@ -239,7 +239,7 @@ export default function AdminPackagesPage() {
 
             {/* Sezione Dettagli Completa */}
             <div className="mt-6 border-t pt-6">
-              <h4 className="font-medium text-foreground mb-4">Dettagli del Pacchetto</h4>
+              <h4 className="font-medium text-white mb-4">Dettagli del Pacchetto</h4>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Colonna sinistra - Dettagli temporali e numerici */}
@@ -260,9 +260,9 @@ export default function AdminPackagesPage() {
                   />
                   
                   <div>
-                    <label className="block text-sm font-medium mb-1">Note Aggiuntive</label>
+                    <label className="block text-sm font-medium mb-1 text-white">Note Aggiuntive</label>
                     <textarea 
-                      className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" 
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-black" 
                       rows={3} 
                       value={p.details?.notes ?? ""} 
                       onChange={(e) => updateDetails(i, "notes", e.target.value)} 
@@ -275,7 +275,7 @@ export default function AdminPackagesPage() {
                 <div className="space-y-4">
                   {/* Caratteristiche */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Caratteristiche/Benefici</label>
+                    <label className="block text-sm font-medium mb-2 text-white">Caratteristiche/Benefici</label>
                     <div className="space-y-2">
                       {(p.details?.features || []).map((feature, idx) => (
                         <div key={idx} className="flex gap-2">
@@ -311,7 +311,7 @@ export default function AdminPackagesPage() {
 
                   {/* Cosa è incluso */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Cosa è Incluso</label>
+                    <label className="block text-sm font-medium mb-2 text-white">Cosa è Incluso</label>
                     <div className="space-y-2">
                       {(p.details?.includes || []).map((item, idx) => (
                         <div key={idx} className="flex gap-2">
@@ -347,7 +347,7 @@ export default function AdminPackagesPage() {
 
                   {/* Requisiti */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Requisiti</label>
+                    <label className="block text-sm font-medium mb-2 text-white">Requisiti</label>
                     <div className="space-y-2">
                       {(p.details?.requirements || []).map((req, idx) => (
                         <div key={idx} className="flex gap-2">

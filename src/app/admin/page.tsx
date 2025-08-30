@@ -29,15 +29,55 @@ export default function AdminPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <h2 className="font-semibold">Contenuti Landing</h2>
+            <h2 className="font-semibold">Prenotazioni & Clienti</h2>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-foreground/70">
-              Modifica hero (titolo, sottotitolo, CTA), immagini di sezione e microcopy FAQ.
+              Visualizza prenotazioni con stato, schede cliente e statistiche rapide.
             </p>
             <div className="mt-4 flex gap-3">
-              <Link href="/admin/content" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium">
-                ✏️ Editor Contenuti
+              <Link href="/admin/bookings" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium">
+                📋 Prenotazioni
+              </Link>
+              <Link href="/admin/clients" className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium">
+                👥 Clienti
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold">Google Calendar</h2>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-foreground/70">
+              Accedi direttamente al calendario Google e gestisci l'integrazione per sincronizzare le prenotazioni.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <Link 
+                href="https://calendar.google.com/calendar/u/0/r?cid=9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com" 
+                target="_blank"
+                className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-base font-semibold"
+              >
+                📅 Apri Google Calendar
+              </Link>
+              <Link href="/admin/calendar" className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-medium">
+                ⚙️ Configurazione
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold">Disponibilità</h2>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-foreground/70">Configura gli slot agenda.</p>
+            <div className="mt-4 flex gap-3">
+              <Link href="/admin/availability" className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors font-medium">
+                ⏰ Configura Slot
               </Link>
             </div>
           </CardContent>
@@ -61,32 +101,15 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <h2 className="font-semibold">Disponibilità</h2>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-foreground/70">Configura gli slot agenda.</p>
-            <div className="mt-4 flex gap-3">
-              <Link href="/admin/availability" className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors font-medium">
-                ⏰ Configura Slot
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h2 className="font-semibold">Prenotazioni & Clienti</h2>
+            <h2 className="font-semibold">Contenuti Landing</h2>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-foreground/70">
-              Visualizza prenotazioni con stato, schede cliente e statistiche rapide.
+              Modifica hero (titolo, sottotitolo, CTA), immagini di sezione e microcopy FAQ.
             </p>
             <div className="mt-4 flex gap-3">
-              <Link href="/admin/bookings" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium">
-                📋 Prenotazioni
-              </Link>
-              <Link href="/admin/clients" className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium">
-                👥 Clienti
+              <Link href="/admin/content" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium">
+                ✏️ Editor Contenuti
               </Link>
             </div>
           </CardContent>

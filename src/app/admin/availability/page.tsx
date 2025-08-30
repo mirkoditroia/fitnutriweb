@@ -407,13 +407,13 @@ export default function AdminAvailabilityPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2 text-foreground">📅 Data</label>
-            <DatePicker
-              selected={selectedDate}
-              onChange={(d) => d && setSelectedDate(d)}
-              dateFormat="dd/MM/yyyy"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              minDate={new Date()}
-            />
+                          <DatePicker
+                selected={selectedDate}
+                onChange={(d) => d && setSelectedDate(d)}
+                dateFormat="dd/MM/yyyy"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                minDate={new Date()}
+              />
           </div>
           
           {viewMode === "normal" && (
@@ -437,7 +437,7 @@ export default function AdminAvailabilityPage() {
                   step="5"
                   value={interval}
                   onChange={(e) => setInterval(Number(e.target.value))}
-                  className="w-full p-2 border border-border rounded bg-background text-foreground"
+                  className="w-full p-2 border border-border rounded bg-background text-black"
                 />
                 <p className="text-xs text-muted-foreground mt-1">Solo multipli di 5</p>
               </div>
@@ -447,7 +447,7 @@ export default function AdminAvailabilityPage() {
                   <select
                     value={selectedStudio}
                     onChange={(e) => setSelectedStudio(e.target.value)}
-                    className="w-full p-2 border border-border rounded bg-background text-foreground"
+                    className="w-full p-2 border border-border rounded bg-background text-black"
                   >
                     {addresses.map((a, i) => (
                       <option key={i} value={a.name}>{a.name}</option>
@@ -483,7 +483,7 @@ export default function AdminAvailabilityPage() {
                     step="5"
                     value={consultationDuration}
                     onChange={(e) => setConsultationDuration(Number(e.target.value))}
-                    className="w-full p-2 border border-border rounded bg-background text-foreground"
+                    className="w-full p-2 border border-border rounded bg-background text-black"
                   />
                   <p className="text-xs text-muted-foreground mt-1">Solo multipli di 5</p>
                 </div>
@@ -496,7 +496,7 @@ export default function AdminAvailabilityPage() {
                     step="5"
                     value={gapBetweenConsultations}
                     onChange={(e) => setGapBetweenConsultations(Number(e.target.value))}
-                    className="w-full p-2 border border-border rounded bg-background text-foreground"
+                    className="w-full p-2 border border-border rounded bg-background text-black"
                   />
                   <p className="text-xs text-muted-foreground mt-1">Solo multipli di 5</p>
                 </div>
