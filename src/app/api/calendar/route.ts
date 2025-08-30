@@ -7,7 +7,8 @@ const CALENDAR_CONFIG = {
   calendarId: process.env.GCAL_CALENDAR_ID || '9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com',
   timezone: process.env.GCAL_TIMEZONE || 'Europe/Rome',
   serviceAccountEmail: process.env.GOOGLE_CLIENT_EMAIL,
-  privateKey: process.env.GOOGLE_PRIVATE_KEY
+  privateKey: process.env.GOOGLE_PRIVATE_KEY,
+  privateKeyB64: process.env.GOOGLE_PRIVATE_KEY_B64
 };
 
 // Initialize Google Calendar client
@@ -16,30 +17,56 @@ function getCalendarClient() {
     throw new Error('Google Calendar integration is not enabled');
   }
 
-  if (!CALENDAR_CONFIG.serviceAccountEmail || !CALENDAR_CONFIG.privateKey) {
-    throw new Error('Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY environment variables.');
+  if (!CALENDAR_CONFIG.serviceAccountEmail || (!CALENDAR_CONFIG.privateKey && !CALENDAR_CONFIG.privateKeyB64)) {
+    throw new Error('Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY (or GOOGLE_PRIVATE_KEY_B64).');
   }
 
   // Clean and format the private key properly
-  let cleanPrivateKey = CALENDAR_CONFIG.privateKey;
-  
-  // Remove quotes if present
-  if (cleanPrivateKey.startsWith('"') && cleanPrivateKey.endsWith('"')) {
-    cleanPrivateKey = cleanPrivateKey.slice(1, -1);
+  let cleanPrivateKey = CALENDAR_CONFIG.privateKey || '';
+
+  // If base64 provided, prefer decoding it
+  if (CALENDAR_CONFIG.privateKeyB64 && !cleanPrivateKey) {
+    try {
+      const decoded = Buffer.from(CALENDAR_CONFIG.privateKeyB64, 'base64').toString('utf8');
+      cleanPrivateKey = decoded;
+    } catch {
+      // ignore, will try other paths
+    }
+  }
+
+  // If still not a PEM, try to base64-decode the provided string (Render sometimes strips newlines)
+  if (cleanPrivateKey && !cleanPrivateKey.includes('BEGIN PRIVATE KEY')) {
+    try {
+      const decoded = Buffer.from(cleanPrivateKey, 'base64').toString('utf8');
+      if (decoded.includes('BEGIN PRIVATE KEY')) {
+        cleanPrivateKey = decoded;
+      }
+    } catch {
+      // continue with string normalization
+    }
   }
   
-  // Handle newline characters properly - multiple approaches
-  cleanPrivateKey = cleanPrivateKey.replace(/\\n/g, '\n');
-  cleanPrivateKey = cleanPrivateKey.replace(/\\\\n/g, '\n');
-  
+  if (cleanPrivateKey) {
+    // Remove wrapping quotes if present
+    if (cleanPrivateKey.startsWith('"') && cleanPrivateKey.endsWith('"')) {
+      cleanPrivateKey = cleanPrivateKey.slice(1, -1);
+    }
+    // Replace escaped newlines
+    cleanPrivateKey = cleanPrivateKey.replace(/\\\\n/g, '\n');
+    cleanPrivateKey = cleanPrivateKey.replace(/\\n/g, '\n');
+    if (cleanPrivateKey.includes('\\n')) {
+      cleanPrivateKey = cleanPrivateKey.split(String.raw`\n`).join('\n');
+    }
+  }
+
   // Ensure proper PEM format
-  if (!cleanPrivateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+  if (!cleanPrivateKey || !cleanPrivateKey.includes('-----BEGIN PRIVATE KEY-----')) {
     throw new Error('Invalid private key format. Must be in PEM format.');
   }
 
   try {
     const auth = new google.auth.JWT({
-      email: CALENDAR_CONFIG.serviceAccountEmail,
+      email: CALENDAR_CONFIG.serviceAccountEmail!,
       key: cleanPrivateKey,
       scopes: ['https://www.googleapis.com/auth/calendar']
     });
@@ -136,10 +163,10 @@ export async function GET() {
     }
 
     // Check if credentials are configured
-    if (!CALENDAR_CONFIG.serviceAccountEmail || !CALENDAR_CONFIG.privateKey) {
+    if (!CALENDAR_CONFIG.serviceAccountEmail || (!CALENDAR_CONFIG.privateKey && !CALENDAR_CONFIG.privateKeyB64)) {
       return NextResponse.json({
         success: false,
-        message: 'Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY environment variables.'
+        message: 'Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY (or GOOGLE_PRIVATE_KEY_B64).'
       }, { status: 400 });
     }
 
