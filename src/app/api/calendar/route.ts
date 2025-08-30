@@ -16,13 +16,39 @@ function getCalendarClient() {
     throw new Error('Google Calendar integration is not enabled');
   }
 
-  const auth = new google.auth.JWT({
-    email: CALENDAR_CONFIG.serviceAccountEmail,
-    key: CALENDAR_CONFIG.privateKey.replace(/\\n/g, '\n'),
-    scopes: ['https://www.googleapis.com/auth/calendar']
-  });
+  if (!CALENDAR_CONFIG.serviceAccountEmail || !CALENDAR_CONFIG.privateKey) {
+    throw new Error('Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY environment variables.');
+  }
 
-  return google.calendar({ version: 'v3', auth });
+  // Clean and format the private key properly
+  let cleanPrivateKey = CALENDAR_CONFIG.privateKey;
+  
+  // Remove quotes if present
+  if (cleanPrivateKey.startsWith('"') && cleanPrivateKey.endsWith('"')) {
+    cleanPrivateKey = cleanPrivateKey.slice(1, -1);
+  }
+  
+  // Handle newline characters properly - multiple approaches
+  cleanPrivateKey = cleanPrivateKey.replace(/\\n/g, '\n');
+  cleanPrivateKey = cleanPrivateKey.replace(/\\\\n/g, '\n');
+  
+  // Ensure proper PEM format
+  if (!cleanPrivateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    throw new Error('Invalid private key format. Must be in PEM format.');
+  }
+
+  try {
+    const auth = new google.auth.JWT({
+      email: CALENDAR_CONFIG.serviceAccountEmail,
+      key: cleanPrivateKey,
+      scopes: ['https://www.googleapis.com/auth/calendar']
+    });
+
+    return google.calendar({ version: 'v3', auth });
+  } catch (error) {
+    console.error('Error creating JWT auth:', error);
+    throw new Error(`Failed to create Google Calendar authentication: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 // Convert time slot to start/end times
@@ -180,14 +206,6 @@ export async function GET() {
       });
     }
 
-    // Check if credentials are configured
-    if (!CALENDAR_CONFIG.serviceAccountEmail || !CALENDAR_CONFIG.privateKey) {
-      return NextResponse.json({
-        success: false,
-        message: 'Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY environment variables.'
-      }, { status: 400 });
-    }
-
     const calendar = getCalendarClient();
     
     // Test by getting calendar info
@@ -209,39 +227,16 @@ export async function GET() {
         id: calendarInfo.data.id,
         summary: calendarInfo.data.summary,
         timeZone: calendarInfo.data.timeZone,
+
         eventsCount: events.data.items?.length || 0
       }
     });
   } catch (error: unknown) {
     console.error('Google Calendar connection test failed:', error);
-    
-    let errorMessage = 'Connection test failed';
-    let statusCode = 500;
-    
-    if (error instanceof Error) {
-      if (error.message.includes('Missing Google Service Account credentials')) {
-        errorMessage = error.message;
-        statusCode = 400;
-      } else if (error.message.includes('Invalid private key format')) {
-        errorMessage = 'Invalid private key format. Please check your GOOGLE_PRIVATE_KEY format.';
-        statusCode = 400;
-      } else if (error.message.includes('Failed to create Google Calendar authentication')) {
-        errorMessage = 'Authentication failed. Please check your credentials.';
-        statusCode = 401;
-      } else if (error.message.includes('invalid_grant') || error.message.includes('unauthorized_client')) {
-        errorMessage = 'Invalid Google Service Account credentials. Please check your GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY.';
-        statusCode = 401;
-      } else if (error.message.includes('notFound')) {
-        errorMessage = 'Calendar not found. Please check your GCAL_CALENDAR_ID.';
-        statusCode = 404;
-      } else {
-        errorMessage = error.message;
-      }
-    }
-    
+    const errorMessage = error instanceof Error ? error.message : 'Connection test failed';
     return NextResponse.json({
       success: false,
       message: errorMessage
-    }, { status: statusCode });
+    }, { status: 500 });
   }
 }
