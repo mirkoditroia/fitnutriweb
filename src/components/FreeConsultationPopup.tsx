@@ -60,19 +60,19 @@ export function FreeConsultationPopup({
   if (!isEnabled || !isOpen || hasSeen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/70 backdrop-blur-md"
         onClick={handleClose}
       />
       
       {/* Popup */}
-      <div className="relative bg-card border border-border rounded-xl p-8 max-w-md w-full shadow-2xl animate-in fade-in-0 zoom-in-95 duration-300">
+      <div className="relative max-w-lg w-full rounded-2xl p-8 shadow-2xl ring-1 ring-foreground/20 bg-white text-black">
         {/* Pulsante chiudi */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-4 right-4 text-black/60 hover:text-black transition-colors"
           aria-label="Chiudi popup"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,35 +83,35 @@ export function FreeConsultationPopup({
         {/* Contenuto */}
         <div className="text-center space-y-4">
           {/* Icona */}
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto ring-1 ring-green-200">
             <span className="text-3xl">🎯</span>
           </div>
 
           {/* Titolo */}
-          <h2 className="text-2xl font-bold text-foreground">
+          <h2 className="text-2xl font-extrabold tracking-tight">
             {title}
           </h2>
 
           {/* Sottotitolo */}
-          <p className="text-lg font-medium text-primary">
+          <p className="text-lg font-semibold text-green-700">
             {subtitle}
           </p>
 
           {/* Descrizione */}
-          <p className="text-muted-foreground leading-relaxed">
+          <p className="text-black/70 leading-relaxed">
             {description}
           </p>
 
           {/* CTA */}
           <button
             onClick={handleCTAClick}
-            className="w-full bg-primary text-primary-foreground font-semibold py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors"
+            className="w-full bg-primary text-primary-foreground font-semibold py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors shadow focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.25)]"
           >
             {ctaText}
           </button>
 
           {/* Testo informativo */}
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-black/60">
             * Solo per nuovi clienti
           </p>
         </div>
