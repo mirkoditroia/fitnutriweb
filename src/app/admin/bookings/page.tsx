@@ -415,12 +415,9 @@ export default function AdminBookingsPage() {
     if (viewMode === "calendar" && items.length > 0) {
       const loadDayBookings = async (date: Date) => {
         const dateStr = format(date, "yyyy-MM-dd");
-        const dayBookings = items.filter(booking => 
-          booking.date.startsWith(dateStr)
-        );
+        const dayBookings = items.filter(booking => booking.date.startsWith(dateStr));
         setDayBookings(dayBookings);
       };
-      
       loadDayBookings(calendarDate);
     }
   }, [calendarDate, items, viewMode]);
@@ -429,13 +426,11 @@ export default function AdminBookingsPage() {
   const generateTimeSlots = () => {
     const slots: string[] = [];
     const baseDate = new Date(calendarDate);
-    
     for (let hour = 9; hour <= 18; hour++) {
       const slotDate = new Date(baseDate);
       slotDate.setHours(hour, 0, 0, 0);
-      slots.push(slotDate.toISOString());
+      slots.push(`${format(slotDate, "yyyy-MM-dd")}T${format(slotDate, "HH:mm")}:00`);
     }
-    
     return slots;
   };
 
@@ -1176,13 +1171,16 @@ export default function AdminBookingsPage() {
                     {generateTimeSlots().map(timeSlot => {
                       const bookingsAtTime = dayBookings.filter(booking => {
                         if (!booking.slot) return false;
-                        const bookingTime = new Date(booking.slot);
+                        // costruiamo un Date con la data selezionata e l'HH:mm del booking
+                        const [bh, bm] = booking.slot.split(":").map(Number);
+                        const bDate = new Date(calendarDate);
+                        bDate.setHours(bh || 0, bm || 0, 0, 0);
                         const slotTime = new Date(timeSlot);
-                        return Math.abs(bookingTime.getTime() - slotTime.getTime()) < 30 * 60 * 1000; // 30 min tolerance
+                        return Math.abs(bDate.getTime() - slotTime.getTime()) < 30 * 60 * 1000;
                       });
                       
                       const bookingsWithoutSlot = dayBookings.filter(booking => 
-                        !booking.slot && timeSlot === getDefaultTimeSlot()
+                        !booking.slot && timeSlot.endsWith("09:00:00")
                       );
                       
                       const allBookings = [...bookingsAtTime, ...bookingsWithoutSlot];

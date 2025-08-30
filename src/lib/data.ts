@@ -426,13 +426,15 @@ export async function createBooking(b: Booking): Promise<string> {
   
   // Create Google Calendar event
   try {
-    const calendarEventId = await createCalendarEvent(b, packageTitle);
-    if (calendarEventId) {
-      // Update booking with calendar event ID
-      await updateDoc(doc(db as Firestore, "bookings", added.id), {
-        googleCalendarEventId: calendarEventId
-      });
-      console.log("Google Calendar event created and linked to booking:", calendarEventId);
+    if (b.status === "confirmed") {
+      const calendarEventId = await createCalendarEvent(b, packageTitle);
+      if (calendarEventId) {
+        // Update booking with calendar event ID
+        await updateDoc(doc(db as Firestore, "bookings", added.id), {
+          googleCalendarEventId: calendarEventId
+        });
+        console.log("Google Calendar event created and linked to booking:", calendarEventId);
+      }
     }
   } catch (error) {
     console.error("Error creating Google Calendar event:", error);
@@ -512,9 +514,12 @@ export async function updateBooking(booking: Booking): Promise<void> {
         }
       }
 
-      const success = await updateCalendarEvent(existingBooking.googleCalendarEventId, booking, packageTitle);
+      const success = booking.status === "confirmed"
+        ? await updateCalendarEvent(existingBooking.googleCalendarEventId, booking, packageTitle)
+        : await deleteCalendarEvent(existingBooking.googleCalendarEventId)
+      ;
       if (success) {
-        console.log("Google Calendar event updated:", existingBooking.googleCalendarEventId);
+        console.log(booking.status === "confirmed" ? "Google Calendar event updated:" : "Google Calendar event deleted (booking not confirmed):", existingBooking.googleCalendarEventId);
       } else {
         console.error("Failed to update Google Calendar event:", existingBooking.googleCalendarEventId);
       }
@@ -536,10 +541,12 @@ export async function updateBooking(booking: Booking): Promise<void> {
           console.error("Error getting package title for calendar event create:", error);
         }
       }
-      const newEventId = await createCalendarEvent(booking, packageTitle);
-      if (newEventId) {
-        await setDoc(doc(db as Firestore, "bookings", booking.id), { googleCalendarEventId: newEventId }, { merge: true });
-        console.log("Google Calendar event created for existing booking:", newEventId);
+      if (booking.status === "confirmed") {
+        const newEventId = await createCalendarEvent(booking, packageTitle);
+        if (newEventId) {
+          await setDoc(doc(db as Firestore, "bookings", booking.id), { googleCalendarEventId: newEventId }, { merge: true });
+          console.log("Google Calendar event created for existing booking:", newEventId);
+        }
       }
     } catch (error) {
       console.error("Error creating Google Calendar event on update:", error);
@@ -744,12 +751,30 @@ export async function deleteBooking(bookingId: string): Promise<void> {
       const dateStr = bookingData.date.split('T')[0];
       const availDoc = col.availability(db as Firestore, dateStr);
       const availSnap = await getDoc(availDoc);
-      
       if (availSnap.exists()) {
-        const currentSlots = availSnap.data().slots || [];
-        if (!currentSlots.includes(bookingData.slot)) {
-          const updatedSlots = [...currentSlots, bookingData.slot];
-          await setDoc(availDoc, { date: dateStr, slots: updatedSlots }, { merge: true });
+        const data = availSnap.data();
+        const location: "online" | "studio" = bookingData.isFreeConsultation ? "online" : (bookingData.location || "online");
+        if (location === "online") {
+          const online = (data.onlineSlots || data.slots || []) as string[];
+          if (!online.includes(bookingData.slot)) {
+            const updated = [...online, bookingData.slot].sort();
+            await setDoc(availDoc, { date: dateStr, onlineSlots: updated }, { merge: true });
+          }
+        } else {
+          if (bookingData.studioLocation) {
+            const studioMap = (data.studioSlots || {}) as Record<string, string[]>;
+            const studio = studioMap[bookingData.studioLocation] || [];
+            if (!studio.includes(bookingData.slot)) {
+              studioMap[bookingData.studioLocation] = [...studio, bookingData.slot].sort();
+              await setDoc(availDoc, { date: dateStr, studioSlots: studioMap }, { merge: true });
+            }
+          } else {
+            const inStudio = (data.inStudioSlots || []) as string[];
+            if (!inStudio.includes(bookingData.slot)) {
+              const updated = [...inStudio, bookingData.slot].sort();
+              await setDoc(availDoc, { date: dateStr, inStudioSlots: updated }, { merge: true });
+            }
+          }
         }
       }
     } catch (error) {
