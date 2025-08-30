@@ -150,7 +150,7 @@ async function findEventByBookingId(calendar: ReturnType<typeof google.calendar>
   try {
     const res = await calendar.events.list({
       calendarId: CALENDAR_CONFIG.calendarId,
-      privateExtendedProperty: `bookingId=${bookingId}`,
+      privateExtendedProperty: [`bookingId=${bookingId}`],
       singleEvents: true,
       maxResults: 1,
       orderBy: 'startTime'
