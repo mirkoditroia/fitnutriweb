@@ -9,6 +9,7 @@
 
 const { onRequest } = require('firebase-functions/v2/https');
 const { setGlobalOptions } = require('firebase-functions/v2');
+const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 setGlobalOptions({ maxInstances: 10 });
@@ -18,16 +19,16 @@ admin.initializeApp();
 // Google Calendar API function
 exports.testCalendarConnection = onRequest(async (req, res) => {
   try {
-    const config = process.env;
+    const config = functions.config();
     
-    if (!config.GCAL_ENABLED || config.GCAL_ENABLED !== 'true') {
+    if (!config.gcal || !config.gcal.enabled) {
       return res.status(400).json({
         success: false,
         message: 'Google Calendar integration is disabled'
       });
     }
 
-    if (!config.GOOGLE_CLIENT_EMAIL || !config.GOOGLE_PRIVATE_KEY) {
+    if (!config.google || !config.google.client_email || !config.google.private_key) {
       return res.status(400).json({
         success: false,
         message: 'Missing Google Service Account credentials'
@@ -39,11 +40,11 @@ exports.testCalendarConnection = onRequest(async (req, res) => {
       success: true,
       message: 'Firebase Functions configured correctly',
       config: {
-        enabled: config.GCAL_ENABLED,
-        calendarId: config.GCAL_CALENDAR_ID,
-        timezone: config.GCAL_TIMEZONE,
-        serviceAccountEmail: config.GOOGLE_CLIENT_EMAIL ? 'Present' : 'Missing',
-        privateKey: config.GOOGLE_PRIVATE_KEY ? 'Present' : 'Missing'
+        enabled: config.gcal.enabled,
+        calendarId: config.gcal.calendar_id,
+        timezone: config.gcal.timezone,
+        serviceAccountEmail: config.google.client_email ? 'Present' : 'Missing',
+        privateKey: config.google.private_key ? 'Present' : 'Missing'
       }
     });
   } catch (error) {
