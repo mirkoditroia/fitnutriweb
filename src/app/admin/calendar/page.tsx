@@ -45,7 +45,7 @@ export default function AdminCalendarPage() {
       } else {
         toast.error(`Errore connessione: ${result.message}`);
       }
-    } catch (error) {
+    } catch {
       toast.error('Errore nel test della connessione');
     } finally {
       setTestingConnection(false);
