@@ -36,7 +36,7 @@ export async function createCalendarEvent(booking: {
     const result = await response.json();
     if (result.success) {
       console.log('Google Calendar event created:', result.eventId);
-      return result.eventId;
+      return result.eventId as string;
     } else {
       console.error('Failed to create calendar event:', result.message);
       return null;
@@ -80,7 +80,7 @@ export async function updateCalendarEvent(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return false;
     }
 
     const result = await response.json();
@@ -95,6 +95,36 @@ export async function updateCalendarEvent(
     console.error('Error updating Google Calendar event:', error);
     return false;
   }
+}
+
+// Robust helper: ensure event exists and matches current booking
+export async function ensureCalendarEvent(
+  existingEventId: string | undefined,
+  booking: {
+    name: string;
+    email: string;
+    phone?: string;
+    date: string;
+    slot: string;
+    location?: 'online' | 'studio';
+    studioLocation?: string;
+    packageId?: string;
+    status: 'pending' | 'confirmed' | 'cancelled';
+    isFreeConsultation?: boolean;
+    notes?: string;
+  },
+  packageTitle?: string
+): Promise<string | null> {
+  // If we have an event id, try update first
+  if (existingEventId) {
+    const ok = await updateCalendarEvent(existingEventId, booking, packageTitle);
+    if (ok) return existingEventId;
+    // If update failed (possibly 404), try to recreate a fresh event
+    const created = await createCalendarEvent(booking, packageTitle);
+    return created;
+  }
+  // No event id: create one
+  return await createCalendarEvent(booking, packageTitle);
 }
 
 // Delete Google Calendar event

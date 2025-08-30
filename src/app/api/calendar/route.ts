@@ -31,9 +31,9 @@ function buildEventFromBooking(booking: {
   const startIso = `${booking.date}T${booking.slot}:00`;
 
   // compute end by adding minutes to start
-  const [h, m] = booking.slot.split(":").map(Number);
+  const [bh, bm] = booking.slot.split(":").map(Number);
   const startDate = new Date(booking.date);
-  startDate.setHours(h, m, 0, 0);
+  startDate.setHours(bh || 0, bm || 0, 0, 0);
   const durationMinutes = booking.isFreeConsultation ? 10 : 60;
   const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
   const endIso = `${endDate.getFullYear()}-${pad(endDate.getMonth()+1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
@@ -51,6 +51,7 @@ function buildEventFromBooking(booking: {
     `Luogo: ${booking.location || (booking.isFreeConsultation ? 'online' : 'online')}`,
     booking.studioLocation ? `Studio: ${booking.studioLocation}` : undefined,
     booking.notes ? `Note: ${booking.notes}` : undefined,
+    booking.id ? `BookingID: ${booking.id}` : undefined,
   ].filter(Boolean) as string[];
 
   return {
@@ -64,6 +65,7 @@ function buildEventFromBooking(booking: {
       dateTime: endIso,
       timeZone: CALENDAR_CONFIG.timezone,
     },
+    extendedProperties: booking.id ? { private: { bookingId: booking.id } } : undefined,
   } as const;
 }
 
@@ -134,7 +136,34 @@ function getCalendarClient() {
   }
 }
 
-// POST - Create or update calendar event
+async function getEventById(calendar: ReturnType<typeof google.calendar>, eventId: string) {
+  try {
+    const ev = await calendar.events.get({ calendarId: CALENDAR_CONFIG.calendarId, eventId });
+    return ev.data;
+  } catch (e: any) {
+    if (e?.code === 404) return null;
+    throw e;
+  }
+}
+
+async function findEventByBookingId(calendar: ReturnType<typeof google.calendar>, bookingId: string) {
+  try {
+    const res = await calendar.events.list({
+      calendarId: CALENDAR_CONFIG.calendarId,
+      privateExtendedProperty: `bookingId=${bookingId}`,
+      singleEvents: true,
+      maxResults: 1,
+      orderBy: 'startTime'
+    });
+    const items = res.data.items || [];
+    return items.length ? items[0] : null;
+  } catch (e) {
+    console.error('Error searching event by bookingId', e);
+    return null;
+  }
+}
+
+// POST - Create, update or repair calendar event
 export async function POST(request: NextRequest) {
   try {
     const { action, booking, packageTitle, eventId, eventData } = await request.json();
@@ -146,41 +175,58 @@ export async function POST(request: NextRequest) {
         calendarId: CALENDAR_CONFIG.calendarId,
         requestBody
       });
-
-      return NextResponse.json({
-        success: true,
-        eventId: event.data.id,
-        message: 'Event created successfully'
-      });
+      return NextResponse.json({ success: true, eventId: event.data.id, message: 'Event created successfully' });
     }
 
     if (action === 'update') {
       const body = booking ? buildEventFromBooking(booking, packageTitle) : (eventData ?? {});
-      const event = await calendar.events.update({
-        calendarId: CALENDAR_CONFIG.calendarId,
-        eventId: eventId,
-        requestBody: body
-      });
-
-      return NextResponse.json({
-        success: true,
-        eventId: event.data.id,
-        message: 'Event updated successfully'
-      });
+      try {
+        const event = await calendar.events.update({ calendarId: CALENDAR_CONFIG.calendarId, eventId, requestBody: body });
+        return NextResponse.json({ success: true, eventId: event.data.id, message: 'Event updated successfully' });
+      } catch (e: any) {
+        // If event not found, create it instead (self-heal)
+        if (e?.code === 404 && booking) {
+          const created = await calendar.events.insert({ calendarId: CALENDAR_CONFIG.calendarId, requestBody: body });
+          return NextResponse.json({ success: true, eventId: created.data.id, message: 'Event recreated successfully' });
+        }
+        throw e;
+      }
     }
 
-    return NextResponse.json({
-      success: false,
-      message: 'Invalid action specified'
-    }, { status: 400 });
+    if (action === 'repair' && booking) {
+      // Ensure eventual consistency
+      // 1) For confirmed bookings: event must exist and be up-to-date
+      // 2) For non-confirmed: event must not exist
+      const body = buildEventFromBooking(booking, packageTitle);
+      let existing = booking.googleCalendarEventId ? await getEventById(calendar, booking.googleCalendarEventId) : null;
+      if (!existing && booking.id) {
+        existing = await findEventByBookingId(calendar, booking.id);
+      }
+
+      if (booking.status === 'confirmed') {
+        if (existing) {
+          const updated = await calendar.events.update({ calendarId: CALENDAR_CONFIG.calendarId, eventId: existing.id!, requestBody: body });
+          return NextResponse.json({ success: true, eventId: updated.data.id, message: 'Event verified/updated' });
+        } else {
+          const created = await calendar.events.insert({ calendarId: CALENDAR_CONFIG.calendarId, requestBody: body });
+          return NextResponse.json({ success: true, eventId: created.data.id, message: 'Event created during repair' });
+        }
+      } else {
+        // pending/cancelled -> ensure deletion
+        if (existing?.id) {
+          try { await calendar.events.delete({ calendarId: CALENDAR_CONFIG.calendarId, eventId: existing.id }); } catch (e: any) { if (e?.code !== 404) throw e; }
+          return NextResponse.json({ success: true, message: 'Event removed during repair', shouldClearEventId: true });
+        }
+        return NextResponse.json({ success: true, message: 'No event to remove', shouldClearEventId: !!booking.googleCalendarEventId });
+      }
+    }
+
+    return NextResponse.json({ success: false, message: 'Invalid action specified' }, { status: 400 });
 
   } catch (error: unknown) {
     console.error('Google Calendar operation failed:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({
-      success: false,
-      message: errorMessage
-    }, { status: 500 });
+    return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
   }
 }
 
@@ -189,24 +235,16 @@ export async function DELETE(request: NextRequest) {
   try {
     const { eventId } = await request.json();
     const calendar = getCalendarClient();
-
-    await calendar.events.delete({
-      calendarId: CALENDAR_CONFIG.calendarId,
-      eventId: eventId
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Event deleted successfully'
-    });
-
+    try {
+      await calendar.events.delete({ calendarId: CALENDAR_CONFIG.calendarId, eventId });
+    } catch (e: any) {
+      if (e?.code !== 404) throw e; // already deleted is ok
+    }
+    return NextResponse.json({ success: true, message: 'Event deleted successfully' });
   } catch (error: unknown) {
     console.error('Google Calendar deletion failed:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({
-      success: false,
-      message: errorMessage
-    }, { status: 500 });
+    return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
   }
 }
 
@@ -214,50 +252,21 @@ export async function DELETE(request: NextRequest) {
 export async function GET() {
   try {
     if (!CALENDAR_CONFIG.enabled) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Google Calendar integration is disabled' 
-      });
+      return NextResponse.json({ success: false, message: 'Google Calendar integration is disabled' });
     }
 
-    // Check if credentials are configured
     if (!CALENDAR_CONFIG.serviceAccountEmail || (!CALENDAR_CONFIG.privateKey && !CALENDAR_CONFIG.privateKeyB64)) {
-      return NextResponse.json({
-        success: false,
-        message: 'Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY (or GOOGLE_PRIVATE_KEY_B64).'
-      }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Missing Google Service Account credentials. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY (or GOOGLE_PRIVATE_KEY_B64).' }, { status: 400 });
     }
 
     const calendar = getCalendarClient();
-    
-    // Test by getting calendar info
-    const calendarInfo = await calendar.calendars.get({
-      calendarId: CALENDAR_CONFIG.calendarId
-    });
+    const calendarInfo = await calendar.calendars.get({ calendarId: CALENDAR_CONFIG.calendarId });
+    const events = await calendar.events.list({ calendarId: CALENDAR_CONFIG.calendarId, maxResults: 1, timeMin: new Date().toISOString() });
 
-    // Test by listing events (limit 1)
-    const events = await calendar.events.list({
-      calendarId: CALENDAR_CONFIG.calendarId,
-      maxResults: 1,
-      timeMin: new Date().toISOString(),
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Connection successful',
-      calendarInfo: {
-        id: calendarInfo.data.id,
-        summary: calendarInfo.data.summary,
-        timeZone: calendarInfo.data.timeZone,
-        eventsCount: events.data.items?.length || 0
-      }
-    });
+    return NextResponse.json({ success: true, message: 'Connection successful', calendarInfo: { id: calendarInfo.data.id, summary: calendarInfo.data.summary, timeZone: calendarInfo.data.timeZone, eventsCount: events.data.items?.length || 0 } });
   } catch (error: unknown) {
     console.error('Google Calendar connection test failed:', error);
     const errorMessage = error instanceof Error ? error.message : 'Connection test failed';
-    return NextResponse.json({
-      success: false,
-      message: errorMessage
-    }, { status: 500 });
+    return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
   }
 }

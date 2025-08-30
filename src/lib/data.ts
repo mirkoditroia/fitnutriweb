@@ -14,7 +14,7 @@ import {
   type DocumentData,
   updateDoc,
 } from "firebase/firestore";
-import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from "./googleCalendar";
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
 import { db } from "@/lib/firebase";
 import type { Firestore } from "firebase/firestore";
 
@@ -427,7 +427,7 @@ export async function createBooking(b: Booking): Promise<string> {
   // Create Google Calendar event
   try {
     if (b.status === "confirmed") {
-      const calendarEventId = await createCalendarEvent(b, packageTitle);
+      const calendarEventId = await ensureCalendarEvent(undefined, b, packageTitle);
       if (calendarEventId) {
         // Update booking with calendar event ID
         await updateDoc(doc(db as Firestore, "bookings", added.id), {
@@ -515,9 +515,8 @@ export async function updateBooking(booking: Booking): Promise<void> {
       }
 
       const success = booking.status === "confirmed"
-        ? await updateCalendarEvent(existingBooking.googleCalendarEventId, booking, packageTitle)
-        : await deleteCalendarEvent(existingBooking.googleCalendarEventId)
-      ;
+        ? !!(await ensureCalendarEvent(existingBooking.googleCalendarEventId, booking, packageTitle))
+        : await deleteCalendarEvent(existingBooking.googleCalendarEventId);
       if (success) {
         console.log(booking.status === "confirmed" ? "Google Calendar event updated:" : "Google Calendar event deleted (booking not confirmed):", existingBooking.googleCalendarEventId);
       } else {
@@ -542,7 +541,7 @@ export async function updateBooking(booking: Booking): Promise<void> {
         }
       }
       if (booking.status === "confirmed") {
-        const newEventId = await createCalendarEvent(booking, packageTitle);
+        const newEventId = await ensureCalendarEvent(undefined, booking, packageTitle);
         if (newEventId) {
           await setDoc(doc(db as Firestore, "bookings", booking.id), { googleCalendarEventId: newEventId }, { merge: true });
           console.log("Google Calendar event created for existing booking:", newEventId);
@@ -1084,6 +1083,7 @@ function toBooking(id: string, data: DocumentData): Booking {
     priority: !!data.priority,
     channelPreference: data.channelPreference ?? undefined,
     createdAt: tsToIso(data.createdAt),
+    googleCalendarEventId: data.googleCalendarEventId ?? undefined,
   };
 }
 
