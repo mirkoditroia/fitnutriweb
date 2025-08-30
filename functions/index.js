@@ -1,0 +1,55 @@
+/**
+ * Import function triggers from their respective submodules:
+ *
+ * const {onCall} = require("firebase-functions/v2/https");
+ * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
+ *
+ * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ */
+
+const { onRequest } = require('firebase-functions/v2/https');
+const { setGlobalOptions } = require('firebase-functions/v2');
+const admin = require('firebase-admin');
+
+setGlobalOptions({ maxInstances: 10 });
+
+admin.initializeApp();
+
+// Google Calendar API function
+exports.testCalendarConnection = onRequest(async (req, res) => {
+  try {
+    const config = process.env;
+    
+    if (!config.GCAL_ENABLED || config.GCAL_ENABLED !== 'true') {
+      return res.status(400).json({
+        success: false,
+        message: 'Google Calendar integration is disabled'
+      });
+    }
+
+    if (!config.GOOGLE_CLIENT_EMAIL || !config.GOOGLE_PRIVATE_KEY) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing Google Service Account credentials'
+      });
+    }
+
+    // Test connection logic would go here
+    res.json({
+      success: true,
+      message: 'Firebase Functions configured correctly',
+      config: {
+        enabled: config.GCAL_ENABLED,
+        calendarId: config.GCAL_CALENDAR_ID,
+        timezone: config.GCAL_TIMEZONE,
+        serviceAccountEmail: config.GOOGLE_CLIENT_EMAIL ? 'Present' : 'Missing',
+        privateKey: config.GOOGLE_PRIVATE_KEY ? 'Present' : 'Missing'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
