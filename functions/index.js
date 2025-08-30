@@ -17,6 +17,24 @@ setGlobalOptions({ maxInstances: 10 });
 
 admin.initializeApp();
 
+// CORS helper function
+function setCorsHeaders(res) {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+// Handle preflight requests
+function handleCors(req, res) {
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res);
+    res.status(204).send('');
+    return true;
+  }
+  setCorsHeaders(res);
+  return false;
+}
+
 // Google Calendar configuration
 function getCalendarConfig() {
   const config = functions.config();
@@ -81,6 +99,9 @@ function getCalendarClient() {
 
 // Test Google Calendar connection
 exports.testCalendarConnection = onRequest(async (req, res) => {
+  // Handle CORS
+  if (handleCors(req, res)) return;
+  
   try {
     const config = getCalendarConfig();
     const calendar = getCalendarClient();
@@ -135,6 +156,9 @@ exports.testCalendarConnection = onRequest(async (req, res) => {
 
 // Google Calendar operations (create, update, delete)
 exports.calendarOperations = onRequest(async (req, res) => {
+  // Handle CORS
+  if (handleCors(req, res)) return;
+  
   try {
     const { action, eventData, eventId } = req.body;
     const calendar = getCalendarClient();
