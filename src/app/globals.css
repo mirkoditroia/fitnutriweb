@@ -151,15 +151,15 @@ html {
 
 @layer utilities {
   .hero-bg-enter {
-    animation: hero-image-enter 900ms both;
+    animation: hero-image-enter 1600ms both;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform, opacity, filter;
     transform: translateZ(0);
   }
 
   .hero-overlay-enter {
-    animation: hero-overlay-fade 900ms both;
-    animation-delay: 120ms;
+    animation: hero-overlay-fade 1600ms both;
+    animation-delay: 200ms;
   }
 }
 

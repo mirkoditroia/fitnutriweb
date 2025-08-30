@@ -31,7 +31,7 @@ export default function LandingClient() {
           heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
         heroSubtitle: "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
           heroCta: "Prenota ora",
-          heroBackgroundImage: "",
+          heroBackgroundImage: "/hero-demo.svg",
           images: [],
       };
       const finalPackages = Array.isArray(p) ? p : [];
@@ -56,7 +56,7 @@ export default function LandingClient() {
       heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
       heroSubtitle: "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
       heroCta: "Prenota ora",
-      heroBackgroundImage: "",
+      heroBackgroundImage: "/hero-demo.svg",
       heroBadgeText: "Performance • Estetica • Energia",
       heroBadgeColor: "bg-primary text-primary-foreground",
       aboutTitle: "Chi Sono",
@@ -111,7 +111,7 @@ export default function LandingClient() {
     heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
     heroSubtitle: "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
     heroCta: "Prenota ora",
-    heroBackgroundImage: "",
+    heroBackgroundImage: "/hero-demo.svg",
     heroBadgeText: "Performance • Estetica • Energia",
     heroBadgeColor: "bg-primary text-primary-foreground",
     aboutTitle: "Chi Sono",
@@ -188,14 +188,21 @@ export default function LandingClient() {
         </div>
       )}
       
-      <Hero 
-        title={effectiveContent.heroTitle} 
-        subtitle={effectiveContent.heroSubtitle} 
-        ctaLabel={effectiveContent.heroCta} 
-        backgroundImage={effectiveContent.heroBackgroundImage}
-        badgeText={effectiveContent.heroBadgeText}
-        badgeColor={effectiveContent.heroBadgeColor}
-      />
+      {(() => {
+        const heroBg = (effectiveContent.heroBackgroundImage && String(effectiveContent.heroBackgroundImage).trim() !== "")
+          ? effectiveContent.heroBackgroundImage
+          : "/hero-demo.svg";
+        return (
+          <Hero 
+            title={effectiveContent.heroTitle} 
+            subtitle={effectiveContent.heroSubtitle} 
+            ctaLabel={effectiveContent.heroCta} 
+            backgroundImage={heroBg}
+            badgeText={effectiveContent.heroBadgeText}
+            badgeColor={effectiveContent.heroBadgeColor}
+          />
+        );
+      })()}
       <AboutSection title={effectiveContent.aboutTitle} body={effectiveContent.aboutBody} imageUrl={effectiveContent.aboutImageUrl} />
       {effectiveContent.images && effectiveContent.images.length > 0 && (
         <LandingImages images={effectiveContent.images} />

@@ -8,13 +8,14 @@ type Props = {
 };
 
 export function Hero({ title, subtitle, ctaLabel, backgroundImage, badgeText = "Performance • Estetica • Energia", badgeColor = "bg-primary text-primary-foreground" }: Props) {
+  const bg = backgroundImage && String(backgroundImage).trim() !== "" ? backgroundImage : "/hero-demo.svg";
   return (
-    <section className={`relative py-16 sm:py-20 ${backgroundImage ? 'min-h-[80vh] flex items-center' : ''}`}>
+    <section className={`relative py-16 sm:py-20 ${bg ? 'min-h-[80vh] flex items-center' : ''}`}>
       {/* Background Image */}
-      {backgroundImage && (
+      {bg && (
         <div className="absolute inset-0 z-0">
           <img 
-            src={backgroundImage} 
+            src={bg} 
             alt="Hero background" 
             className="w-full h-full object-cover hero-bg-enter"
           />
