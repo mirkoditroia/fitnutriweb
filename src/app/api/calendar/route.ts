@@ -11,6 +11,55 @@ const CALENDAR_CONFIG = {
   privateKeyB64: process.env.GOOGLE_PRIVATE_KEY_B64
 };
 
+// Build Google Calendar event from booking
+function buildEventFromBooking(booking: {
+  id?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  date: string; // YYYY-MM-DD
+  slot: string; // HH:mm
+  location?: 'online' | 'studio';
+  studioLocation?: string;
+  packageId?: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  isFreeConsultation?: boolean;
+  notes?: string;
+}, packageTitle?: string) {
+  const startIso = `${booking.date}T${booking.slot}:00`;
+  const eventTitleBase = booking.isFreeConsultation
+    ? 'Consultazione gratuita'
+    : (packageTitle || 'Appuntamento');
+  const summary = `${eventTitleBase} - ${booking.name}`;
+  const durationMinutes = booking.isFreeConsultation ? 10 : 60;
+  const endDate = new Date(`${startIso}:00Z`.replace('Z', ''));
+  // Add minutes in local TZ by constructing via Date then ISO again
+  const end = new Date(new Date(startIso).getTime() + durationMinutes * 60000);
+
+  const descriptionLines = [
+    `Nome: ${booking.name}`,
+    `Email: ${booking.email}`,
+    booking.phone ? `Telefono: ${booking.phone}` : undefined,
+    `Stato: ${booking.status}`,
+    `Luogo: ${booking.location || (booking.isFreeConsultation ? 'online' : 'online')}`,
+    booking.studioLocation ? `Studio: ${booking.studioLocation}` : undefined,
+    booking.notes ? `Note: ${booking.notes}` : undefined,
+  ].filter(Boolean) as string[];
+
+  return {
+    summary,
+    description: descriptionLines.join('\n'),
+    start: {
+      dateTime: startIso,
+      timeZone: CALENDAR_CONFIG.timezone,
+    },
+    end: {
+      dateTime: `${end.toISOString().slice(0,16)}`,
+      timeZone: CALENDAR_CONFIG.timezone,
+    },
+  } as const;
+}
+
 // Initialize Google Calendar client
 function getCalendarClient() {
   if (!CALENDAR_CONFIG.enabled) {
@@ -81,13 +130,14 @@ function getCalendarClient() {
 // POST - Create or update calendar event
 export async function POST(request: NextRequest) {
   try {
-    const { action, eventData } = await request.json();
+    const { action, booking, packageTitle, eventId, eventData } = await request.json();
     const calendar = getCalendarClient();
 
     if (action === 'create') {
+      const requestBody = booking ? buildEventFromBooking(booking, packageTitle) : (eventData ?? {});
       const event = await calendar.events.insert({
         calendarId: CALENDAR_CONFIG.calendarId,
-        requestBody: eventData
+        requestBody
       });
 
       return NextResponse.json({
@@ -98,10 +148,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'update') {
+      const body = booking ? buildEventFromBooking(booking, packageTitle) : (eventData ?? {});
       const event = await calendar.events.update({
         calendarId: CALENDAR_CONFIG.calendarId,
-        eventId: eventData.id,
-        requestBody: eventData
+        eventId: eventId,
+        requestBody: body
       });
 
       return NextResponse.json({

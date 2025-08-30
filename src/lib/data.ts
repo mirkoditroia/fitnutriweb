@@ -522,6 +522,28 @@ export async function updateBooking(booking: Booking): Promise<void> {
       console.error("Error updating Google Calendar event:", error);
       // Don't fail the booking update if calendar fails
     }
+  } else {
+    // If no event was linked yet (e.g., bookings created before calendar fix), create it now
+    try {
+      let packageTitle: string | undefined;
+      if (booking.packageId) {
+        try {
+          const packageDoc = await getDoc(doc(db as Firestore, "packages", booking.packageId));
+          if (packageDoc.exists()) {
+            packageTitle = packageDoc.data().title;
+          }
+        } catch (error) {
+          console.error("Error getting package title for calendar event create:", error);
+        }
+      }
+      const newEventId = await createCalendarEvent(booking, packageTitle);
+      if (newEventId) {
+        await setDoc(doc(db as Firestore, "bookings", booking.id), { googleCalendarEventId: newEventId }, { merge: true });
+        console.log("Google Calendar event created for existing booking:", newEventId);
+      }
+    } catch (error) {
+      console.error("Error creating Google Calendar event on update:", error);
+    }
   }
 
   // If booking is confirmed, create or update client automatically
