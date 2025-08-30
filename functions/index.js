@@ -42,11 +42,25 @@ function getCalendarClient() {
   const config = getCalendarConfig();
   
   let cleanPrivateKey = config.privateKey;
+  
+  // Fix for DECODER routines::unsupported error
+  // Based on Stack Overflow solution: https://stackoverflow.com/questions/74131595/error-error1e08010cdecoder-routinesunsupported-with-google-auth-library
+  
+  // Remove quotes if present
   if (cleanPrivateKey.startsWith('"') && cleanPrivateKey.endsWith('"')) {
     cleanPrivateKey = cleanPrivateKey.slice(1, -1);
   }
-  cleanPrivateKey = cleanPrivateKey.replace(/\\n/g, '\n');
+  
+  // Replace \\n with \n (double backslash to single)
   cleanPrivateKey = cleanPrivateKey.replace(/\\\\n/g, '\n');
+  
+  // Replace \n with actual newlines
+  cleanPrivateKey = cleanPrivateKey.replace(/\\n/g, '\n');
+  
+  // Alternative method: split and join
+  if (cleanPrivateKey.includes('\\n')) {
+    cleanPrivateKey = cleanPrivateKey.split(String.raw`\n`).join('\n');
+  }
 
   if (!cleanPrivateKey.includes('-----BEGIN PRIVATE KEY-----')) {
     throw new Error('Invalid private key format. Must be in PEM format.');
