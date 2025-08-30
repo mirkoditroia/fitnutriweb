@@ -13,7 +13,12 @@ export default function AdminCalendarPage() {
   const [connectionStatus, setConnectionStatus] = useState<{
     success: boolean;
     message: string;
-    calendarInfo?: any;
+    calendarInfo?: {
+      id: string;
+      summary: string;
+      timeZone: string;
+      eventsCount: number;
+    };
   } | null>(null);
 
   useEffect(() => {
