@@ -112,6 +112,22 @@ export interface SiteContent {
   heroBackgroundImage: string;
   heroBadgeText?: string; // Testo del badge (default: "Performance • Estetica • Energia")
   heroBadgeColor?: string; // Colore del badge (default: "bg-primary text-primary-foreground")
+  // Tema / Palette
+  themePalette?: string; // es: "gz-green", "emerald", "teal", "indigo", "rose", "amber", "slate", "custom"
+  themeCustomPrimary?: string; // es: "#0B5E0B"
+  themeCustomAccent?: string;  // es: "#FF6B6B"
+  themeCustomBackground?: string; // es: "#F7F9FB"
+  themeCustomForeground?: string; // es: "#0E0F12"
+  themeMode?: "light" | "dark"; // Forza navbar e contrasto generale
+  // Navbar logo customization
+  navbarLogoMode?: "image" | "text";
+  navbarLogoImageUrl?: string;
+  navbarLogoHeight?: number; // px
+  navbarLogoAutoRemoveBg?: boolean; // tenta di rimuovere il bianco con blend
+  navbarLogoText?: string;
+  navbarLogoTextColor?: string; // hex
+  navbarLogoTextWeight?: number; // 400..800
+  navbarLogoTextSize?: number; // px
   aboutTitle?: string;
   aboutBody?: string;
   aboutImageUrl?: string;
@@ -721,6 +737,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         heroBackgroundImage: "",
         heroBadgeText: "Performance • Estetica • Energia",
         heroBadgeColor: "bg-primary text-primary-foreground",
+        themePalette: "gz-dark",
+        themeMode: "dark",
         aboutTitle: "Chi Sono",
         aboutBody: "Sono Gabriele Zambonin, nutrizionista e personal trainer. Ti guido con un metodo scientifico e pratico per raggiungere forma fisica, energia e benessere reale.",
         aboutImageUrl: "",
@@ -793,6 +811,12 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       heroBackgroundImage: data.heroBackgroundImage || "",
       heroBadgeText: data.heroBadgeText || "Performance • Estetica • Energia",
       heroBadgeColor: data.heroBadgeColor || "bg-primary text-primary-foreground",
+      themeMode: (data as any).themeMode || undefined,
+      themePalette: (data as any).themePalette || "gz-green",
+      themeCustomPrimary: (data as any).themeCustomPrimary || undefined,
+      themeCustomAccent: (data as any).themeCustomAccent || undefined,
+      themeCustomBackground: (data as any).themeCustomBackground || undefined,
+      themeCustomForeground: (data as any).themeCustomForeground || undefined,
       aboutTitle: data.aboutTitle || "Chi Sono",
       aboutBody: data.aboutBody || "Sono Gabriele Zambonin, nutrizionista e personal trainer. Ti guido con un metodo scientifico e pratico per raggiungere forma fisica, energia e benessere reale.",
       aboutImageUrl: data.aboutImageUrl || "",

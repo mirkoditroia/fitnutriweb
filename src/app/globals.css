@@ -8,17 +8,17 @@
   --foreground: #0E0F12; /* Dark */
 
   /* Brand tokens */
-  --primary: #00D084; /* Neon wellness */
-  --primary-rgb: 0, 208, 132;
-  --accent: #FF6B6B;
-  --accent-rgb: 255, 107, 107;
+  --primary: #0B5E0B; /* Main green */
+  --primary-rgb: 11, 94, 11;
+  --accent: #00D084; /* secondary green accent for dark */
+  --accent-rgb: 0, 208, 132;
   --dark: #0E0F12;
   --light: #F7F9FB;
 
   /* Derived tokens for Tailwind v3 arbitrary colors */
-  --border: color-mix(in oklab, var(--foreground) 12%, transparent);
-  --muted-bg: color-mix(in oklab, var(--foreground) 5%, transparent);
-  --muted-fg: color-mix(in oklab, var(--foreground) 70%, var(--background));
+  --border: color-mix(in oklab, var(--foreground) 18%, transparent);
+  --muted-bg: color-mix(in oklab, var(--foreground) 8%, transparent);
+  --muted-fg: color-mix(in oklab, var(--foreground) 82%, var(--background));
   --chip-bg: color-mix(in oklab, var(--primary) 15%, transparent);
 }
 
@@ -36,6 +36,33 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Inputs and form fields - clear borders on light bg */
+input, textarea, select {
+  border-color: color-mix(in oklab, var(--foreground) 14%, transparent);
+}
+
+/* Stronger closure and contrast for form groups on white bg */
+.form-surface {
+  background: color-mix(in oklab, var(--background) 98%, black 2%);
+  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  border-radius: 12px;
+}
+
+.section-surface {
+  background: color-mix(in oklab, var(--background) 96%, black 4%);
+  border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+.card, .section-surface {
+  background: color-mix(in oklab, var(--background) 96%, black 4%);
+  border: 1px solid var(--border);
+}
+
+/* Section separators for light bg */
+.section-divider {
+  border-top: 1px solid var(--border);
 }
 
 /* Accessible focus ring */
@@ -105,10 +132,10 @@ html {
     @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] text-center;
   }
   .btn-primary {
-    @apply btn bg-[color:var(--primary)] text-[color:var(--dark)] hover:opacity-90;
+    @apply btn bg-[color:var(--primary)] text-white hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgba(var(--primary-rgb),0.4)] focus-visible:ring-offset-[var(--background)];
   }
   .btn-outline {
-    @apply btn border border-[color:var(--border)] bg-[color:var(--background)] hover:bg-[color:var(--muted-bg)];
+    @apply btn border border-[color:var(--border)] bg-[color:var(--background)] text-[color:var(--foreground)] hover:bg-[color:var(--muted-bg)] focus-visible:ring-2 focus-visible:ring-[rgba(var(--primary-rgb),0.3)];
   }
   .card {
     @apply rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] shadow-sm;
@@ -127,6 +154,14 @@ html {
   
   .button-responsive-xs {
     @apply text-center min-h-[24px] px-2 py-0.5 flex items-center justify-center;
+  }
+
+  /* Admin surface: ensure high-contrast controls in dark theme */
+  .admin-surface :is(input, select, textarea) {
+    @apply bg-white text-black placeholder:text-black/70 border border-black/30 rounded-md px-3 py-2 text-sm;
+  }
+  .admin-surface :is(input, select, textarea):focus {
+    @apply outline-none ring-4 ring-black/10;
   }
 }
 

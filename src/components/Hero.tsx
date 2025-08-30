@@ -20,7 +20,7 @@ export function Hero({ title, subtitle, ctaLabel, backgroundImage, badgeText = "
             className="w-full h-full object-cover hero-bg-enter"
           />
           {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-black/40 hero-overlay-enter"></div>
+          <div className="absolute inset-0 bg-black/60 md:bg-black/55 hero-overlay-enter"></div>
         </div>
       )}
       

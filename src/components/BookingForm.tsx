@@ -18,7 +18,10 @@ import { getPackages } from "@/lib/datasource";
 const schema = z.object({
   name: z.string().min(2, "Nome troppo corto"),
   email: z.string().email("Email non valida"),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .min(7, "Telefono obbligatorio")
+    .regex(/^[+0-9\s-]+$/, "Formato non valido"),
   // rimosso campo preferenza canale
   date: z.string().min(1, "Seleziona una data"),
   slot: z.string().min(1, "Seleziona un orario disponibile"),
@@ -506,12 +509,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   // Mantieni struttura invariata anche senza pacchetto selezionato
 
   return (
-    <div className="space-y-6">
+    <div className="section-surface p-6 sm:p-8 space-y-6">
       {/* Banner per pacchetto selezionato */}
       {selectedPackage && (
-        <div className={`border border-border rounded-lg p-4 ${showPromotionalBanner ? 'bg-green-50 border-green-200' : 'bg-card'}`}>
+        <div className={`rounded-xl p-4 shadow-md ${showPromotionalBanner ? 'bg-green-50 border border-green-200' : 'border border-foreground/20 bg-background/70 backdrop-blur-sm'}`}>
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${showPromotionalBanner ? 'bg-green-100' : 'bg-primary/10'}`}>
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${showPromotionalBanner ? 'bg-green-100' : 'bg-primary/10'}`}>
               <span className="text-lg">{showPromotionalBanner ? '🎯' : '📦'}</span>
             </div>
             <div className="flex-1">
@@ -555,7 +558,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       {/* Form di prenotazione */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Selettore Pacchetto */}
-      <div>
+      <div className="form-surface p-4">
           <label className="block text-sm font-medium mb-2">
             Pacchetto
           </label>
@@ -566,7 +569,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               const newPackage = packages.find(p => p.id === val);
               handlePackageChange(newPackage || null);
             }}
-            className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
+            className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
           >
             <option value="">Seleziona un pacchetto</option>
             {packages.map((pkg) => {
@@ -593,7 +596,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         </div>
 
         {/* Nome */}
-        <div>
+        <div className="form-surface p-4">
           <Input
             label="Nome completo *"
             {...register("name")}
@@ -605,7 +608,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         </div>
 
         {/* Email */}
-        <div>
+        <div className="form-surface p-4">
           <Input
             label="Email *"
             type="email"
@@ -618,30 +621,33 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         </div>
 
         {/* Telefono */}
-        <div>
+        <div className="form-surface p-4">
           <Input
-            label="Telefono (opzionale)"
+            label="Telefono *"
             {...register("phone")}
             placeholder="+39 123 456 7890"
           />
+          {errors.phone && (
+            <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>
+          )}
         </div>
 
         {/* Sede appuntamento - PRIMA della data */}
         {!(showPromotionalBanner || isFreeConsultation) && (
-          <div>
+          <div className="form-surface p-4">
             <label className="block text-sm font-medium mb-2">Sede appuntamento</label>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setLocation("online")}
-                className={`px-4 py-2 border rounded-lg text-sm ${location === "online" ? "bg-primary text-primary-foreground border-primary" : "border-border"}`}
+                className={`px-4 py-2 rounded-lg text-sm ${location === "online" ? "bg-primary text-primary-foreground border border-primary" : "border border-foreground/10 bg-background/70 backdrop-blur-sm"}`}
               >
                 🌐 Online
               </button>
               <button
                 type="button"
                 onClick={() => setLocation("studio")}
-                className={`px-4 py-2 border rounded-lg text-sm ${location === "studio" ? "bg-primary text-primary-foreground border-primary" : "border-border"}`}
+                className={`px-4 py-2 rounded-lg text-sm ${location === "studio" ? "bg-primary text-primary-foreground border border-primary" : "border border-foreground/10 bg-background/70 backdrop-blur-sm"}`}
               >
                 🏢 In studio
               </button>
@@ -652,7 +658,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
         {/* Selezione sede specifica quando "In studio" */}
         {location === "studio" && (
-          <div>
+          <div className="form-surface p-4">
             <label className="block text-sm font-medium mb-2">Seleziona sede</label>
             <select
               value={studioLocation}
@@ -677,7 +683,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
         {/* Selettore Pacchetto (opzionale per admin) */}
         {adminMode && requirePackage && !hidePackageSelect && (
-      <div>
+          <div className="form-surface p-4">
             <label className="block text-sm font-medium mb-2">Seleziona pacchetto</label>
             <select
               value={watch("packageId")}
@@ -698,7 +704,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         )}
 
         {/* Data con calendario interattivo (sempre visibile) */}
-        <div>
+        <div className="form-surface p-4">
             <label className="block text-sm font-medium mb-2">
               Data * {showPromotionalBanner && <span className="text-green-600">(Solo date con disponibilità)</span>}
             </label>
@@ -731,7 +737,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
         {/* Slot orari */}
         {selectedDate && availableSlots.length > 0 && (
-      <div>
+          <div className="form-surface p-4">
             <label className="block text-sm font-medium mb-2">
               Orario disponibile * {showPromotionalBanner && <span className="text-green-600">(Slot promozionali)</span>}
             </label>
@@ -774,17 +780,17 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {/* priorità rimossa */}
 
         {/* Sezione "Parlami di te" */}
-        <div>
+        <div className="form-surface p-4">
           <label className="block text-sm font-medium mb-2">
             Parlami di te
       </label>
           <textarea
             {...register("notes")}
             placeholder="Raccontaci i tuoi obiettivi, esperienze precedenti, preferenze alimentari, eventuali limitazioni o qualsiasi altra informazione che ritieni importante per la tua consulenza..."
-            className="w-full p-3 border border-border rounded-lg bg-background text-foreground min-h-[120px] resize-y"
+            className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm text-foreground min-h-[120px] resize-y focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
             rows={5}
           />
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-[12px] leading-5 text-muted-foreground mt-2">
             Queste informazioni ci aiuteranno a preparare una consulenza più personalizzata per te
           </p>
         </div>

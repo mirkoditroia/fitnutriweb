@@ -1,4 +1,5 @@
 import { SiteContent } from "@/lib/data";
+import { resolveThemeVars } from "@/lib/theme";
 import { getPackages, getSiteContent } from "@/lib/datasource";
 import { getDataMode } from "@/lib/datamode";
 import LandingClient from "@/components/LandingClient";
@@ -33,8 +34,16 @@ export default async function Home() {
 
   const featuredFirst = [...packages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
+  const theme = resolveThemeVars({
+    palette: c.themePalette,
+    customPrimary: c.themeCustomPrimary,
+    customAccent: c.themeCustomAccent,
+    customBackground: c.themeCustomBackground,
+    customForeground: c.themeCustomForeground,
+  });
+
   return (
-    <main className="min-h-dvh bg-background text-foreground pt-16">
+    <main className="min-h-dvh bg-background text-foreground pt-16" style={theme as any}>
       {/* Popup Promozionale - se abilitato da contenuti */}
       {c.freeConsultationPopup && (c.freeConsultationPopup.isEnabled === true || String(c.freeConsultationPopup.isEnabled) === "true") && (
         <FreeConsultationPopup

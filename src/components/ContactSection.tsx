@@ -64,13 +64,13 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
   const isValidPhone = contactInfo.phone && contactInfo.phone.trim().length > 0;
 
   return (
-    <section className="py-16 bg-gradient-to-b from-background to-muted/20 border-t border-foreground/10">
+    <section className="py-16 bg-gradient-to-b from-background to-muted/15 border-t border-foreground/10">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
             {contactInfo.title || "📞 Contattami"}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             {contactInfo.subtitle || "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza."}
           </p>
         </div>
@@ -83,7 +83,7 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
         }`}>
           {/* Informazioni di Contatto */}
           {(contactInfo.phone || contactInfo.email || (contactInfo.socialChannels && contactInfo.socialChannels.length > 0)) && (
-            <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+            <div className="rounded-xl p-8 border border-foreground/10 bg-background/70 backdrop-blur-sm shadow-md">
               <h3 className="text-2xl font-semibold text-foreground mb-6 flex items-center gap-3">
                 {contactInfo.contactTitle || "💬 Contatti Diretti"}
               </h3>
@@ -138,7 +138,7 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
 
                 {/* Canali Social */}
                 {contactInfo.socialChannels && contactInfo.socialChannels.length > 0 && (
-                  <div className={`pt-4 ${(contactInfo.phone || contactInfo.email) ? 'border-t border-border' : ''}`}>
+                  <div className={`pt-4 ${(contactInfo.phone || contactInfo.email) ? 'border-t border-foreground/10' : ''}`}>
                     <p className="text-sm text-muted-foreground mb-3">Seguici sui social</p>
                     <div className="flex gap-3">
                       {contactInfo.socialChannels.map((social, index) => (
@@ -147,12 +147,12 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
                           href={social.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-12 h-12 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors text-2xl overflow-hidden"
+                          className="w-10 h-10 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors text-xl overflow-hidden border border-foreground/10"
                           aria-label={social.platform}
                           title={social.platform}
                         >
                           {social.logoUrl ? (
-                            <img src={social.logoUrl} alt={social.platform} className="w-12 h-12 object-contain bg-white p-1 rounded" />
+                            <img src={social.logoUrl} alt={social.platform} className="w-10 h-10 object-contain bg-white p-1 rounded" />
                           ) : (
                             <span>{social.icon || "🔗"}</span>
                           )}
@@ -167,7 +167,7 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
 
           {/* Studi Fisici */}
           {contactInfo.addresses && contactInfo.addresses.length > 0 && (
-            <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+            <div className="rounded-xl p-8 border border-foreground/10 bg-background/70 backdrop-blur-sm shadow-md">
               <h3 className="text-2xl font-semibold text-foreground mb-6 flex items-center gap-3">
                 {contactInfo.studiosTitle || "🏢 I Nostri Studi"}
               </h3>
@@ -182,7 +182,7 @@ export function ContactSection({ contactInfo }: ContactSectionProps) {
                 {contactInfo.addresses.map((location, index) => (
                   <div
                     key={index}
-                    className="p-4 border border-border rounded-lg hover:border-primary/50 transition-colors cursor-pointer group"
+                    className="p-4 border border-foreground/10 rounded-lg hover:border-primary/40 hover:bg-background/60 transition-colors cursor-pointer group backdrop-blur-sm"
                     onClick={() => {
                       const fullAddress = `${location.address}, ${location.city} ${location.postalCode}`;
                       openGoogleMaps(fullAddress, location.coordinates);

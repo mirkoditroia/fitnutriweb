@@ -52,5 +52,9 @@
   },
   "heroBadgeText": "Performance • Benessere• Energia",
   "studiosSectionTitle": "🏢In sede",
-  "studiosSectionSubtitle": "Dove mi trovi"
+  "studiosSectionSubtitle": "Dove mi trovi",
+  "themePalette": "gz-green",
+  "themeMode": "light",
+  "navbarLogoMode": "image",
+  "navbarLogoImageUrl": "/api/upload/brand%2F1756562054718-Generated_Image_August_30__2025_-_3_27PM.jpeg"
 }

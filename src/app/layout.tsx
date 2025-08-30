@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
+import { getSiteContent } from "@/lib/datasource";
 import { Footer } from "@/components/footer";
 import ToasterProvider from "@/components/toaster-provider";
 
@@ -39,15 +40,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const content = await getSiteContent();
+  const mode = content?.themeMode || undefined;
   return (
     <html lang="it">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}>
-        <Navbar />
+        <Navbar mode={mode} />
         <ToasterProvider />
         {children}
         <Footer />

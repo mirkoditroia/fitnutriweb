@@ -20,7 +20,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           ref={ref}
           className={twMerge(
-            "w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm placeholder:text-foreground/50 focus-visible:outline-primary",
+            // Minimal, smooth, modern
+            "w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm placeholder:text-foreground/50",
+            // Focus ring subtle but visible (no heavy lines)
+            "focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)] focus:ring-offset-0",
             error && "border-accent",
             className
           )}

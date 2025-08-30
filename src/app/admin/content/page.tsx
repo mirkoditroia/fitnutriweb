@@ -9,6 +9,7 @@ import { UploadButton } from "@/components/UploadButton";
 export default function AdminContentPage() {
   const [content, setContent] = useState<SiteContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const fieldCls = "bg-white text-black placeholder:text-black/70 border-foreground/30";
 
   useEffect(() => {
           getSiteContent().then((c) => {
@@ -40,8 +41,130 @@ export default function AdminContentPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-foreground pt-4">Contenuti Landing</h1>
-      <div className="mt-6 bg-card border border-border rounded-lg p-6 space-y-6 shadow-sm">
+      <h1 className="text-2xl font-bold text-foreground pt-4 tracking-tight">Contenuti Landing</h1>
+      <div className="admin-surface mt-6 rounded-xl p-6 space-y-8 border border-foreground/10 bg-background/70 backdrop-blur-sm shadow-md">
+        <section className="space-y-3">
+          <h2 className="font-semibold">Tema e Palette</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Modalità (navbar)</label>
+              <select
+                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                value={content.themeMode ?? "dark"}
+                onChange={(e) => setContent({ ...content, themeMode: e.target.value as any })}
+              >
+                <option value="light">Light (navbar scura)</option>
+                <option value="dark">Dark (navbar chiara)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Palette</label>
+              <select
+                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                value={content.themePalette ?? "gz-green"}
+                onChange={(e) => setContent({ ...content, themePalette: e.target.value })}
+              >
+                <option value="gz-green">GZ Green (brand)</option>
+                <option value="emerald">Emerald</option>
+                <option value="teal">Teal</option>
+                <option value="indigo">Indigo</option>
+                <option value="rose">Rose</option>
+                <option value="amber">Amber</option>
+                <option value="slate">Slate (scuro)</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
+          {(content.themePalette === 'custom') && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input label="Primary (hex)" value={content.themeCustomPrimary ?? "#0B5E0B"} onChange={(e) => setContent({ ...content, themeCustomPrimary: e.target.value })} />
+              <Input label="Accent (hex)" value={content.themeCustomAccent ?? "#FF6B6B"} onChange={(e) => setContent({ ...content, themeCustomAccent: e.target.value })} />
+              <Input label="Background (hex)" value={content.themeCustomBackground ?? "#F7F9FB"} onChange={(e) => setContent({ ...content, themeCustomBackground: e.target.value })} />
+              <Input label="Foreground (hex)" value={content.themeCustomForeground ?? "#0E0F12"} onChange={(e) => setContent({ ...content, themeCustomForeground: e.target.value })} />
+            </div>
+          )}
+          <div>
+            <Button onClick={save}>Salva tema</Button>
+          </div>
+        </section>
+
+        {/* Navbar Logo */}
+        <section className="space-y-3">
+          <h2 className="font-semibold">Logo Navbar</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Modalità logo</label>
+              <select
+                className={`w-full rounded-md border px-3 py-2 text-sm bg-white text-black`}
+                value={content.navbarLogoMode ?? "text"}
+                onChange={(e) => setContent({ ...content, navbarLogoMode: e.target.value as any })}
+              >
+                <option value="image">Immagine (upload)</option>
+                <option value="text">Testo</option>
+              </select>
+            </div>
+            <div className="sm:text-right flex items-end justify-start sm:justify-end">
+              <Button onClick={save}>Salva logo</Button>
+            </div>
+          </div>
+
+          {/* Logo immagine */}
+          { (content.navbarLogoMode ?? "text") === "image" && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium mb-1">Logo image URL</label>
+                <div className="flex gap-2">
+                  <input
+                    className={`w-full rounded-md border px-3 py-2 text-sm bg-white text-black`}
+                    value={content.navbarLogoImageUrl ?? ""}
+                    onChange={(e) => setContent({ ...content, navbarLogoImageUrl: e.target.value })}
+                  />
+                  <UploadButton folder="brand" onUploaded={(url) => setContent({ ...content, navbarLogoImageUrl: url })} />
+                </div>
+                <p className="text-xs text-foreground/60 mt-1">PNG con trasparenza consigliato. Se lo sfondo è bianco prova l'opzione “Rimuovi BG”.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Altezza (px)</label>
+                <input
+                  type="number"
+                  className={`w-full rounded-md border px-3 py-2 text-sm bg-white text-black`}
+                  value={content.navbarLogoHeight ?? 24}
+                  onChange={(e) => setContent({ ...content, navbarLogoHeight: Number(e.target.value || 0) })}
+                />
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    id="autoRemoveBg"
+                    type="checkbox"
+                    checked={content.navbarLogoAutoRemoveBg ?? false}
+                    onChange={(e) => setContent({ ...content, navbarLogoAutoRemoveBg: e.target.checked })}
+                  />
+                  <label htmlFor="autoRemoveBg" className="text-sm">Rimuovi BG bianco (blend)</label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Logo testo */}
+          { (content.navbarLogoMode ?? "text") === "text" && (
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div className="sm:col-span-2">
+                <Input label="Testo logo" value={content.navbarLogoText ?? "GZnutrition"} onChange={(e) => setContent({ ...content, navbarLogoText: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Colore (hex)</label>
+                <input className={`w-full rounded-md border px-3 py-2 text-sm bg-white text-black`} value={content.navbarLogoTextColor ?? "#0B5E0B"} onChange={(e) => setContent({ ...content, navbarLogoTextColor: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Peso (400–800)</label>
+                <input type="number" className={`w-full rounded-md border px-3 py-2 text-sm bg-white text-black`} value={content.navbarLogoTextWeight ?? 700} onChange={(e) => setContent({ ...content, navbarLogoTextWeight: Number(e.target.value || 700) })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Dimensione (px)</label>
+                <input type="number" className={`w-full rounded-md border px-3 py-2 text-sm bg-white text-black`} value={content.navbarLogoTextSize ?? 18} onChange={(e) => setContent({ ...content, navbarLogoTextSize: Number(e.target.value || 18) })} />
+              </div>
+            </div>
+          )}
+        </section>
         <section className="space-y-3">
           <h2 className="font-semibold">Hero</h2>
           <Input label="Hero title" value={content.heroTitle} onChange={(e) => setContent({ ...content, heroTitle: e.target.value })} />
@@ -57,9 +180,9 @@ export default function AdminContentPage() {
               placeholder="Performance • Estetica • Energia"
             />
             <div>
-              <label className="block text-sm font-medium mb-1">Colore badge hero</label>
+              <label className="block text-sm font-medium mb-1 text-foreground/90">Colore badge hero</label>
               <select 
-                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm"
+                className={`w-full rounded-md border px-3 py-2 text-sm ${fieldCls}`}
                 value={content.heroBadgeColor ?? "bg-primary text-primary-foreground"}
                 onChange={(e) => setContent({ ...content, heroBadgeColor: e.target.value })}
               >
@@ -77,9 +200,9 @@ export default function AdminContentPage() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Hero background image URL</label>
+            <label className="block text-sm font-medium mb-1 text-foreground/90">Hero background image URL</label>
             <div className="flex gap-2">
-              <input className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" value={content.heroBackgroundImage ?? ""} onChange={(e) => setContent({ ...content, heroBackgroundImage: e.target.value })} />
+              <input className={`w-full rounded-md border px-3 py-2 text-sm ${fieldCls}`} value={content.heroBackgroundImage ?? ""} onChange={(e) => setContent({ ...content, heroBackgroundImage: e.target.value })} />
               <UploadButton folder="content" onUploaded={(url) => setContent({ ...content, heroBackgroundImage: url })} />
             </div>
           </div>
@@ -88,18 +211,18 @@ export default function AdminContentPage() {
         <section className="space-y-3">
           <h2 className="font-semibold">Presentazione nutrizionista</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <Input label="About title" value={content.aboutTitle ?? ""} onChange={(e) => setContent({ ...content, aboutTitle: e.target.value })} />
+            <Input className={`rounded-md px-3 py-2 ${fieldCls}`} label="About title" value={content.aboutTitle ?? ""} onChange={(e) => setContent({ ...content, aboutTitle: e.target.value })} />
             <div>
-              <label className="block text-sm font-medium mb-1">About image URL</label>
+              <label className="block text-sm font-medium mb-1 text-foreground/90">About image URL</label>
               <div className="flex gap-2">
-                <input className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" value={content.aboutImageUrl ?? ""} onChange={(e) => setContent({ ...content, aboutImageUrl: e.target.value })} />
+                <input className={`w-full rounded-md border px-3 py-2 text-sm ${fieldCls}`} value={content.aboutImageUrl ?? ""} onChange={(e) => setContent({ ...content, aboutImageUrl: e.target.value })} />
                 <UploadButton folder="content" onUploaded={(url) => setContent({ ...content, aboutImageUrl: url })} />
               </div>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">About body</label>
-            <textarea className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm" rows={5} value={content.aboutBody ?? ""} onChange={(e) => setContent({ ...content, aboutBody: e.target.value })} />
+            <label className="block text-sm font-medium mb-1 text-foreground/90">About body</label>
+            <textarea className={`w-full rounded-md border px-3 py-2 text-sm ${fieldCls}`} rows={5} value={content.aboutBody ?? ""} onChange={(e) => setContent({ ...content, aboutBody: e.target.value })} />
           </div>
         </section>
 
