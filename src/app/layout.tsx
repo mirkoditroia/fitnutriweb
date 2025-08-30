@@ -44,10 +44,23 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Precarica contenuti per brand SSR per evitare flash
+  const { getSiteContent } = await import("@/lib/datasource");
+  const c = await getSiteContent();
+  const initialBrand = {
+    mode: c?.navbarLogoMode === 'image' ? 'image' as const : 'text' as const,
+    imageUrl: c?.navbarLogoImageUrl || undefined,
+    height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 40,
+    autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
+    text: c?.navbarLogoText || 'GZnutrition',
+    color: c?.navbarLogoTextColor || undefined,
+    weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
+    size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
+  };
   return (
     <html lang="it">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}>
-        <Navbar />
+        <Navbar initialBrand={initialBrand} />
         <ToasterProvider />
         {children}
         <Footer />

@@ -13,12 +13,13 @@ const navigationItems = [
 ];
 
 import { getSiteContent } from "@/lib/datasource";
-export function Navbar() {
+type BrandCfg = { mode: "image"|"text"; imageUrl?: string; height?: number; autoBg?: boolean; text?: string; color?: string; weight?: number; size?: number };
+type NavbarProps = { initialBrand?: BrandCfg };
+export function Navbar({ initialBrand }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [lightBg, setLightBg] = useState(false);
-  type BrandCfg = { mode: "image"|"text"; imageUrl?: string; height?: number; autoBg?: boolean; text?: string; color?: string; weight?: number; size?: number };
-  const [brand, setBrand] = useState<BrandCfg | null>(null);
+  const [brand, setBrand] = useState<BrandCfg | null>(initialBrand ?? null);
 
   useEffect(() => {
     const handleScroll = () => {
