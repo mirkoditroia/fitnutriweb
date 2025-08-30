@@ -222,6 +222,12 @@ export async function GET() {
       if (error.message.includes('Missing Google Service Account credentials')) {
         errorMessage = error.message;
         statusCode = 400;
+      } else if (error.message.includes('Invalid private key format')) {
+        errorMessage = 'Invalid private key format. Please check your GOOGLE_PRIVATE_KEY format.';
+        statusCode = 400;
+      } else if (error.message.includes('Failed to create Google Calendar authentication')) {
+        errorMessage = 'Authentication failed. Please check your credentials.';
+        statusCode = 401;
       } else if (error.message.includes('invalid_grant') || error.message.includes('unauthorized_client')) {
         errorMessage = 'Invalid Google Service Account credentials. Please check your GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY.';
         statusCode = 401;
