@@ -16,10 +16,10 @@ export function Hero({ title, subtitle, ctaLabel, backgroundImage, badgeText = "
           <img 
             src={backgroundImage} 
             alt="Hero background" 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover hero-bg-enter"
           />
           {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-black/40"></div>
+          <div className="absolute inset-0 bg-black/40 hero-overlay-enter"></div>
         </div>
       )}
       

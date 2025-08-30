@@ -129,3 +129,43 @@ html {
     @apply text-center min-h-[24px] px-2 py-0.5 flex items-center justify-center;
   }
 }
+
+/* Hero background entrance animation */
+@keyframes hero-image-enter {
+  0% {
+    opacity: 0;
+    transform: scale(1.04) translateY(8px);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes hero-overlay-fade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@layer utilities {
+  .hero-bg-enter {
+    animation: hero-image-enter 900ms both;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform, opacity, filter;
+    transform: translateZ(0);
+  }
+
+  .hero-overlay-enter {
+    animation: hero-overlay-fade 900ms both;
+    animation-delay: 120ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg-enter,
+  .hero-overlay-enter {
+    animation: none !important;
+  }
+}
