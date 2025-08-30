@@ -764,7 +764,12 @@ export async function upsertClient(c: ClientCard): Promise<string> {
   if (!db) throw new Error("Firestore not configured");
   if (c.id) {
     const { id, ...data } = c;
-    await setDoc(doc(db as Firestore, "clients", id), data, { merge: true });
+    // Firestore does not accept undefined values – remove them
+    const sanitized: Record<string, unknown> = {};
+    Object.entries(data).forEach(([k, v]) => {
+      if (v !== undefined) sanitized[k] = v;
+    });
+    await setDoc(doc(db as Firestore, "clients", id), sanitized, { merge: true });
     return id;
   }
   const added = await addDoc(col.clients(db as Firestore), {

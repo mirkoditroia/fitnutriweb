@@ -26,15 +26,22 @@ function buildEventFromBooking(booking: {
   isFreeConsultation?: boolean;
   notes?: string;
 }, packageTitle?: string) {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  // start: YYYY-MM-DDTHH:MM:SS
   const startIso = `${booking.date}T${booking.slot}:00`;
+
+  // compute end by adding minutes to start
+  const [h, m] = booking.slot.split(":").map(Number);
+  const startDate = new Date(booking.date);
+  startDate.setHours(h, m, 0, 0);
+  const durationMinutes = booking.isFreeConsultation ? 10 : 60;
+  const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+  const endIso = `${endDate.getFullYear()}-${pad(endDate.getMonth()+1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
+
   const eventTitleBase = booking.isFreeConsultation
     ? 'Consultazione gratuita'
     : (packageTitle || 'Appuntamento');
   const summary = `${eventTitleBase} - ${booking.name}`;
-  const durationMinutes = booking.isFreeConsultation ? 10 : 60;
-  const endDate = new Date(`${startIso}:00Z`.replace('Z', ''));
-  // Add minutes in local TZ by constructing via Date then ISO again
-  const end = new Date(new Date(startIso).getTime() + durationMinutes * 60000);
 
   const descriptionLines = [
     `Nome: ${booking.name}`,
@@ -54,7 +61,7 @@ function buildEventFromBooking(booking: {
       timeZone: CALENDAR_CONFIG.timezone,
     },
     end: {
-      dateTime: `${end.toISOString().slice(0,16)}`,
+      dateTime: endIso,
       timeZone: CALENDAR_CONFIG.timezone,
     },
   } as const;
