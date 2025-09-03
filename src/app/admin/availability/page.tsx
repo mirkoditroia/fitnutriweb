@@ -32,21 +32,21 @@ function TimePicker({ value, onChange, label }: { value: string; onChange: (time
 
   return (
     <div className="relative">
-      <label className="block text-sm font-medium mb-2 text-foreground">{label}</label>
+      <label className="block text-sm font-medium mb-2 text-black">{label}</label>
       <div 
-        className="w-full p-2 border border-border rounded bg-background text-foreground cursor-pointer hover:border-primary/50 transition-colors flex items-center justify-between"
+        className="w-full p-2 border border-border rounded bg-white text-black cursor-pointer hover:border-primary/50 transition-colors flex items-center justify-between"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className={value ? "text-foreground" : "text-muted-foreground"}>
+        <span className={value ? "text-black" : "text-black/70"}>
           {value || "Seleziona orario"}
         </span>
-        <span className="text-muted-foreground">🕐</span>
+        <span className="text-black/70">🕐</span>
       </div>
 
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-50 p-4 min-w-[280px]">
           <div className="text-center mb-4">
-            <h4 className="font-medium text-foreground">Seleziona Orario</h4>
+            <h4 className="font-medium text-black">Seleziona Orario</h4>
           </div>
           
           <div className="grid grid-cols-2 gap-4 mb-4">
@@ -362,7 +362,7 @@ export default function AdminAvailabilityPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-foreground pt-4">📅 Gestione Disponibilità</h1>
+      <h1 className="text-2xl font-bold text-black pt-4">📅 Gestione Disponibilità</h1>
       
       {/* Controlli per generazione slot */}
       <div className="bg-card border border-border rounded-lg p-6 mt-4 space-y-6 shadow-sm">
@@ -384,7 +384,7 @@ export default function AdminAvailabilityPage() {
           </Button>
           {viewMode === "normal" && (
             <div className="ml-auto flex items-center gap-3">
-              <span className="text-sm text-foreground">Sede:</span>
+              <span className="text-sm text-black">Sede:</span>
               <Button
                 variant={location === "online" ? "primary" : "outline"}
                 onClick={() => setLocation("online")}
@@ -406,12 +406,12 @@ export default function AdminAvailabilityPage() {
         {/* Controlli specifici per modalità */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2 text-foreground">📅 Data</label>
+            <label className="block text-sm font-medium mb-2 text-black">📅 Data</label>
                           <DatePicker
                 selected={selectedDate}
                 onChange={(d) => d && setSelectedDate(d)}
                 dateFormat="dd/MM/yyyy"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
                 minDate={new Date()}
               />
           </div>
@@ -429,7 +429,7 @@ export default function AdminAvailabilityPage() {
                 onChange={setEnd}
               />
               <div>
-                <label className="block text-sm font-medium mb-2 text-foreground">⏱️ Intervallo (min)</label>
+                <label className="block text-sm font-medium mb-2 text-black">⏱️ Intervallo (min)</label>
                 <input
                   type="number"
                   min="5"
@@ -437,17 +437,17 @@ export default function AdminAvailabilityPage() {
                   step="5"
                   value={interval}
                   onChange={(e) => setInterval(Number(e.target.value))}
-                  className="w-full p-2 border border-border rounded bg-background text-black"
+                  className="w-full p-2 border border-border rounded bg-white text-black placeholder:text-black/70"
                 />
-                <p className="text-xs text-muted-foreground mt-1">Solo multipli di 5</p>
+                <p className="text-xs text-black/70 mt-1">Solo multipli di 5</p>
               </div>
               {location === "studio" && (
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">🏢 Sede</label>
+                  <label className="block text-sm font-medium mb-2 text-black">🏢 Sede</label>
                   <select
                     value={selectedStudio}
                     onChange={(e) => setSelectedStudio(e.target.value)}
-                    className="w-full p-2 border border-border rounded bg-background text-black"
+                    className="w-full p-2 border border-border rounded bg-white text-black placeholder:text-black/70"
                   >
                     {addresses.map((a, i) => (
                       <option key={i} value={a.name}>{a.name}</option>
@@ -475,7 +475,7 @@ export default function AdminAvailabilityPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">⏱️ Durata consultazione (minuti)</label>
+                  <label className="block text-sm font-medium mb-2 text-black">⏱️ Durata consultazione (minuti)</label>
                   <input
                     type="number"
                     min="5"
@@ -483,12 +483,12 @@ export default function AdminAvailabilityPage() {
                     step="5"
                     value={consultationDuration}
                     onChange={(e) => setConsultationDuration(Number(e.target.value))}
-                    className="w-full p-2 border border-border rounded bg-background text-black"
+                    className="w-full p-2 border border-border rounded bg-white text-black placeholder:text-black/70"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Solo multipli di 5</p>
+                  <p className="text-xs text-black/70 mt-1">Solo multipli di 5</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">⏱️ Gap tra consultazioni (minuti)</label>
+                  <label className="block text-sm font-medium mb-2 text-black">⏱️ Gap tra consultazioni (minuti)</label>
                   <input
                     type="number"
                     min="5"
@@ -496,9 +496,9 @@ export default function AdminAvailabilityPage() {
                     step="5"
                     value={gapBetweenConsultations}
                     onChange={(e) => setGapBetweenConsultations(Number(e.target.value))}
-                    className="w-full p-2 border border-border rounded bg-background text-black"
+                    className="w-full p-2 border border-border rounded bg-white text-black placeholder:text-black/70"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Solo multipli di 5</p>
+                  <p className="text-xs text-black/70 mt-1">Solo multipli di 5</p>
                 </div>
               </div>
               
@@ -538,7 +538,7 @@ export default function AdminAvailabilityPage() {
             {/* Header con statistiche */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-semibold text-foreground">
+                <h3 className="text-xl font-semibold text-black">
                   📅 Disponibilità per {selectedDate.toLocaleDateString("it-IT", { 
                     weekday: 'long', 
                     year: 'numeric', 
@@ -546,7 +546,7 @@ export default function AdminAvailabilityPage() {
                     day: 'numeric' 
                   })}
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-black/70 mt-1">
                   {viewMode === "promotional" 
                     ? `🎯 ${availability.freeConsultationSlots?.length || 0} slot consultazioni gratuite configurati`
                     : (location === "online"
@@ -603,7 +603,7 @@ export default function AdminAvailabilityPage() {
                     ➕ Aggiungi
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-black/70">
                   {viewMode === "promotional"
                     ? "🎯 Aggiungi slot dedicati ai 10 minuti consultivi gratuiti" 
                     : "📋 Aggiungi slot per consulenze normali"
@@ -614,7 +614,7 @@ export default function AdminAvailabilityPage() {
 
             {/* Lista slot configurati */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm text-foreground flex items-center gap-2">
+              <h4 className="font-medium text-sm text-black flex items-center gap-2">
                 {viewMode === "promotional"
                   ? "🎯 Slot Consultazioni Gratuite Configurati:" 
                   : "📋 Slot Normali Configurati:"
@@ -634,7 +634,7 @@ export default function AdminAvailabilityPage() {
                         key={slot}
                         className="group relative p-3 border border-border rounded-lg bg-background hover:border-primary/50 transition-all duration-200"
                       >
-                        <span className="text-sm font-medium text-foreground">{(() => {
+                        <span className="text-sm font-medium text-black">{(() => {
                           const m = /^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})/.exec(slot);
                           if (m) return `${m[1]}:${m[2]}`;
                           return slot;
@@ -651,7 +651,7 @@ export default function AdminAvailabilityPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-8 text-black/70">
                     <div className="text-4xl mb-2">📅</div>
                     <p className="text-sm">
                       {viewMode === "promotional" 

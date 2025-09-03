@@ -525,6 +525,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     contactSectionSubtitle: "",
     studiosSectionTitle: "🏢 I Nostri Studi",
     studiosSectionSubtitle: "",
+    colorPalette: "gz-default" as const,
     googleCalendar: {
       isEnabled: false,
       calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
@@ -558,6 +559,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     contactSectionSubtitle: "",
     studiosSectionTitle: "🏢 I Nostri Studi",
     studiosSectionSubtitle: "",
+    colorPalette: "gz-default" as const,
     googleCalendar: {
       isEnabled: false,
       calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",

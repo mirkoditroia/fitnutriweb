@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import ToasterProvider from "@/components/toaster-provider";
+import { generateCSSVariables } from "@/lib/palettes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,28 +40,40 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Precarica contenuti per brand SSR per evitare flash
-  const { getSiteContent } = await import("@/lib/datasource");
-  const c = await getSiteContent();
-  const initialBrand = {
-    mode: c?.navbarLogoMode === 'image' ? 'image' as const : 'text' as const,
-    imageUrl: c?.navbarLogoImageUrl || undefined,
-    height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 40,
-    autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
-    text: c?.navbarLogoText || 'GZnutrition',
-    color: c?.navbarLogoTextColor || undefined,
-    weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
-    size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
-  };
   return (
     <html lang="it">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}>
-        <Navbar initialBrand={initialBrand} />
+      <head>
+        <script 
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const palette = localStorage.getItem('gz-palette') || 'gz-default';
+                  const palettes = {
+                    'gz-default': { primary: '#0B5E0B', navbarBg: 'rgba(0,0,0,0.8)', navbarText: '#FFFFFF' },
+                    'modern-blue': { primary: '#2563EB', navbarBg: 'rgba(30, 41, 59, 0.9)', navbarText: '#FFFFFF' },
+                    'elegant-dark': { primary: '#D97706', navbarBg: 'rgba(17, 24, 39, 0.95)', navbarText: '#F9FAFB' },
+                    'nature-green': { primary: '#059669', navbarBg: 'rgba(6, 78, 59, 0.9)', navbarText: '#FFFFFF' },
+                    'warm-orange': { primary: '#EA580C', navbarBg: 'rgba(124, 45, 18, 0.9)', navbarText: '#FFFFFF' },
+                    'professional-gray': { primary: '#374151', navbarBg: 'rgba(17, 24, 39, 0.9)', navbarText: '#F9FAFB' }
+                  };
+                  const colors = palettes[palette] || palettes['gz-default'];
+                  document.documentElement.style.setProperty('--primary', colors.primary);
+                  document.documentElement.style.setProperty('--navbar-bg', colors.navbarBg);
+                  document.documentElement.style.setProperty('--navbar-text', colors.navbarText);
+                } catch(e) {}
+              })();
+            `
+          }}
+        />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 font-sans`}>
+        <Navbar />
         <ToasterProvider />
         {children}
         <Footer />

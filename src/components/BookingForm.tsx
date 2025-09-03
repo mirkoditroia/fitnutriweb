@@ -100,11 +100,11 @@ function DateCalendar({
     <div className="relative">
       {/* Input trigger */}
       <div 
-        className="w-full p-3 border border-border rounded-lg bg-background text-black cursor-pointer hover:border-primary/50 transition-colors"
+        className="w-full p-3 border border-border rounded-lg bg-background text-foreground cursor-pointer hover:border-primary/50 transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center justify-between">
-          <span className={selectedDate ? "text-black" : "text-gray-600"}>
+          <span className={selectedDate ? "text-foreground" : "text-foreground/60"}>
             {selectedDate 
               ? format(new Date(selectedDate), "EEEE d MMMM yyyy", { locale: it })
               : "Seleziona una data"
@@ -125,7 +125,7 @@ function DateCalendar({
             >
               ←
             </button>
-            <h3 className="font-semibold text-black">
+            <h3 className="font-semibold text-foreground">
               {format(currentMonth, "MMMM yyyy", { locale: it })}
             </h3>
             <button
@@ -139,7 +139,7 @@ function DateCalendar({
           {/* Giorni della settimana */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map(day => (
-              <div key={day} className="w-10 h-10 flex items-center justify-center text-xs font-medium text-black">
+              <div key={day} className="w-10 h-10 flex items-center justify-center text-xs font-medium text-foreground">
                 {day}
               </div>
             ))}
@@ -518,10 +518,10 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               <span className="text-lg">{showPromotionalBanner ? '🎯' : '📦'}</span>
             </div>
             <div className="flex-1">
-              <h3 className={`font-semibold ${showPromotionalBanner ? 'text-green-800' : 'text-black'}`}>
+              <h3 className={`font-semibold ${showPromotionalBanner ? 'text-green-800' : 'text-foreground'}`}>
                 {selectedPackage.title}
               </h3>
-              <p className={`text-sm ${showPromotionalBanner ? 'text-green-700' : 'text-black'}`}>
+              <p className={`text-sm ${showPromotionalBanner ? 'text-green-700' : 'text-foreground'}`}>
                 {selectedPackage.description}
               </p>
               {!showPromotionalBanner && (
@@ -545,7 +545,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                       € {selectedPackage.price}
                     </p>
                   )}
-                  <p className="text-xs text-black mt-1">
+                  <p className="text-xs text-foreground mt-1">
                     {selectedPackage.paymentText || "pagabile mensilmente"}
                   </p>
                 </div>
@@ -559,7 +559,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Selettore Pacchetto */}
       <div className="form-surface p-4">
-          <label className="block text-sm font-medium mb-2 text-black">
+          <label className="block text-sm font-medium mb-2 text-foreground">
             Pacchetto
           </label>
           <select
@@ -569,7 +569,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               const newPackage = packages.find(p => p.id === val);
               handlePackageChange(newPackage || null);
             }}
-            className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm text-black focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
+            className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
           >
             <option value="">Seleziona un pacchetto</option>
             {packages.map((pkg) => {
@@ -636,23 +636,41 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {!(showPromotionalBanner || isFreeConsultation) && (
           <div className="form-surface p-4">
             <label className="block text-sm font-medium mb-2 text-black">Sede appuntamento</label>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Sede appuntamento">
               <button
                 type="button"
                 onClick={() => setLocation("online")}
-                className={`px-4 py-2 rounded-lg text-sm ${location === "online" ? "bg-primary text-primary-foreground border border-primary" : "border border-foreground/10 bg-background/70 backdrop-blur-sm"}`}
+                aria-pressed={location === "online"}
+                className={`relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(var(--primary-rgb),0.15)] ${
+                  location === "online"
+                    ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(11,94,11,0.10)]"
+                    : "border-border hover:border-primary/40"
+                }`}
               >
-                🌐 Online
+                <span className="text-xl">🌐</span>
+                <div className="text-left">
+                  <div className={`text-sm font-semibold ${location === "online" ? "text-primary" : "text-black"}`}>Online</div>
+                  <div className="text-[12px] text-foreground/60">Videochiamata</div>
+                </div>
               </button>
               <button
                 type="button"
                 onClick={() => setLocation("studio")}
-                className={`px-4 py-2 rounded-lg text-sm ${location === "studio" ? "bg-primary text-primary-foreground border border-primary" : "border border-foreground/10 bg-background/70 backdrop-blur-sm"}`}
+                aria-pressed={location === "studio"}
+                className={`relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(var(--primary-rgb),0.15)] ${
+                  location === "studio"
+                    ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(11,94,11,0.10)]"
+                    : "border-border hover:border-primary/40"
+                }`}
               >
-                🏢 In studio
+                <span className="text-xl">🏢</span>
+                <div className="text-left">
+                  <div className={`text-sm font-semibold ${location === "studio" ? "text-primary" : "text-black"}`}>In studio</div>
+                  <div className="text-[12px] text-foreground/60">Presso studio</div>
+                </div>
               </button>
             </div>
-            <p className="text-xs text-black mt-1">Per consultazioni gratuite la sede è sempre Online.</p>
+            <p className="text-xs text-black mt-2">Per consultazioni gratuite la sede è sempre Online.</p>
         </div>
       )}
 
@@ -684,7 +702,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {/* Selettore Pacchetto (opzionale per admin) */}
         {adminMode && requirePackage && !hidePackageSelect && (
           <div className="form-surface p-4">
-            <label className="block text-sm font-medium mb-2 text-black">Seleziona pacchetto</label>
+            <label className="block text-sm font-medium mb-2 text-foreground">Seleziona pacchetto</label>
             <select
               value={watch("packageId")}
               onChange={(e) => {
@@ -693,7 +711,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                 const found = packages.find(p => p.id === id) || null;
                 setSelectedPackage(found);
               }}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             >
               <option value="">Nessun pacchetto</option>
               {packages.map(p => (
@@ -749,7 +767,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                   onClick={() => setValue("slot", slot)}
                   className={`p-3 border rounded-lg text-sm transition-colors ${
                     watch("slot") === slot
-                      ? "border-primary bg-primary text-primary-foreground"
+                      ? "border-primary bg-[color:var(--secondary-bg)] text-[color:var(--secondary-fg)]"
                       : "border-border hover:border-primary/50"
                   }`}
                 >

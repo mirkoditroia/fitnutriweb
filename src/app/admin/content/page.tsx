@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import { UploadButton } from "@/components/UploadButton";
+import { PALETTES, getPaletteConfig } from "@/lib/palettes";
 
 export default function AdminContentPage() {
   const [content, setContent] = useState<SiteContent | null>(null);
@@ -13,9 +14,16 @@ export default function AdminContentPage() {
 
   useEffect(() => {
           getSiteContent().then((c) => {
-        setContent(
-          c ?? { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", images: [] }
-        );
+              setContent(
+        c ?? { 
+          heroTitle: "", 
+          heroSubtitle: "", 
+          heroCta: "Prenota ora", 
+          heroBackgroundImage: "", 
+          images: [],
+          colorPalette: "gz-default" as const
+        }
+      );
         setLoading(false);
       });
   }, []);
@@ -24,7 +32,29 @@ export default function AdminContentPage() {
 
   const save = async () => {
     await upsertSiteContent(content);
-    toast.success("Contenuti salvati");
+    
+    // Save palette to localStorage for immediate effect
+    if (content.colorPalette) {
+      localStorage.setItem('gz-palette', content.colorPalette);
+      
+      // Apply immediately
+      const palettes = {
+        'gz-default': { primary: '#0B5E0B', navbarBg: 'rgba(0,0,0,0.8)', navbarText: '#FFFFFF' },
+        'modern-blue': { primary: '#2563EB', navbarBg: 'rgba(30, 41, 59, 0.9)', navbarText: '#FFFFFF' },
+        'elegant-dark': { primary: '#D97706', navbarBg: 'rgba(17, 24, 39, 0.95)', navbarText: '#F9FAFB' },
+        'nature-green': { primary: '#059669', navbarBg: 'rgba(6, 78, 59, 0.9)', navbarText: '#FFFFFF' },
+        'warm-orange': { primary: '#EA580C', navbarBg: 'rgba(124, 45, 18, 0.9)', navbarText: '#FFFFFF' },
+        'professional-gray': { primary: '#374151', navbarBg: 'rgba(17, 24, 39, 0.9)', navbarText: '#F9FAFB' }
+      };
+      const colors = palettes[content.colorPalette as keyof typeof palettes];
+      if (colors) {
+        document.documentElement.style.setProperty('--primary', colors.primary);
+        document.documentElement.style.setProperty('--navbar-bg', colors.navbarBg);
+        document.documentElement.style.setProperty('--navbar-text', colors.navbarText);
+      }
+    }
+    
+    toast.success("Palette salvata e applicata!");
   };
 
   const addImg = () => setContent({ ...content, images: [...(content.images ?? []), { key: "", url: "" }] });
@@ -43,50 +73,96 @@ export default function AdminContentPage() {
     <>
       <h1 className="text-2xl font-bold text-foreground pt-4 tracking-tight">Contenuti Landing</h1>
       <div className="admin-surface mt-6 rounded-xl p-6 space-y-8 border border-foreground/10 bg-background/70 backdrop-blur-sm shadow-md">
-        <section className="space-y-3">
-          <h2 className="font-semibold">Tema e Palette</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Modalità (navbar)</label>
-              <select
-                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-black"
-                value={content.themeMode ?? "dark"}
-                onChange={(e) => setContent({ ...content, themeMode: (e.target.value as 'light' | 'dark') })}
+        {/* Palette Colori Robuste */}
+        <section className="space-y-4">
+          <h2 className="font-semibold text-black">Palette Colori</h2>
+          <p className="text-sm text-black/70">Scegli una palette predefinita moderna e professionale per tutto il sito</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(PALETTES).map(([paletteId, palette]) => (
+              <div 
+                key={paletteId}
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  content.colorPalette === paletteId 
+                    ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50' 
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+                onClick={() => setContent({...content, colorPalette: paletteId})}
               >
-                <option value="light">Light (navbar scura)</option>
-                <option value="dark">Dark (navbar chiara)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Palette</label>
-              <select
-                className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-black"
-                value={content.themePalette ?? "gz-green"}
-                onChange={(e) => setContent({ ...content, themePalette: e.target.value })}
-              >
-                <option value="gz-green">GZ Green (brand)</option>
-                <option value="emerald">Emerald</option>
-                <option value="teal">Teal</option>
-                <option value="indigo">Indigo</option>
-                <option value="rose">Rose</option>
-                <option value="amber">Amber</option>
-                <option value="slate">Slate (scuro)</option>
-                <option value="custom">Custom</option>
-              </select>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-black">{palette.name}</h3>
+                    {content.colorPalette === paletteId && (
+                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-black/60">{palette.description}</p>
+                  
+                  <div className="flex gap-2">
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                      style={{ backgroundColor: palette.primary }}
+                      title="Primario"
+                    ></div>
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                      style={{ backgroundColor: palette.accent }}
+                      title="Accent"
+                    ></div>
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                      style={{ backgroundColor: palette.navbarBg }}
+                      title="Navbar"
+                    ></div>
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                      style={{ backgroundColor: palette.secondaryBg }}
+                      title="Secondario"
+                    ></div>
+                  </div>
+                  
+                  <div className="space-y-2 text-xs">
+                    <div 
+                      className="px-2 py-1 rounded text-white text-center font-medium"
+                      style={{ backgroundColor: palette.primary }}
+                    >
+                      Bottone Primario
+                    </div>
+                    <div 
+                      className="px-2 py-1 rounded text-center border"
+                      style={{ 
+                        backgroundColor: palette.secondaryBg,
+                        color: palette.secondaryText,
+                        borderColor: palette.border
+                      }}
+                    >
+                      Bottone Secondario
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="text-sm font-medium text-black mb-2">Cosa viene personalizzato:</div>
+            <div className="text-xs text-black/70 space-y-1">
+              <div>• <strong>Bottoni principali</strong>: "Prenota ora", "Salva", bottoni CTA</div>
+              <div>• <strong>Bottoni secondari</strong>: "Dettagli", "Scopri", bottoni outline</div>
+              <div>• <strong>Navbar</strong>: Sfondo e colore testo della navigazione</div>
+              <div>• <strong>Card e contenuti</strong>: Sfondi delle sezioni e testi</div>
+              <div>• <strong>Colori accent</strong>: Link, hover e elementi decorativi</div>
             </div>
           </div>
-          {(content.themePalette === 'custom') && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input label="Primary (hex)" value={content.themeCustomPrimary ?? "#0B5E0B"} onChange={(e) => setContent({ ...content, themeCustomPrimary: e.target.value })} />
-              <Input label="Accent (hex)" value={content.themeCustomAccent ?? "#FF6B6B"} onChange={(e) => setContent({ ...content, themeCustomAccent: e.target.value })} />
-              <Input label="Background (hex)" value={content.themeCustomBackground ?? "#F7F9FB"} onChange={(e) => setContent({ ...content, themeCustomBackground: e.target.value })} />
-              <Input label="Foreground (hex)" value={content.themeCustomForeground ?? "#0E0F12"} onChange={(e) => setContent({ ...content, themeCustomForeground: e.target.value })} />
-            </div>
-          )}
+          
           <div>
-            <Button onClick={save}>Salva tema</Button>
+            <Button onClick={save}>Salva Palette</Button>
           </div>
         </section>
+
 
         {/* Navbar Logo */}
         <section className="space-y-3">
@@ -240,7 +316,7 @@ export default function AdminContentPage() {
                 <Input label="Key" value={im.key} onChange={(e) => updateImg(i, "key", e.target.value)} />
                 <div>
                   <label className="block text-sm font-medium mb-1">URL immagine</label>
-                  <input className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-black" value={im.url} onChange={(e) => updateImg(i, "url", e.target.value)} />
+                  <input className="w-full rounded-md border border-foreground/20 bg-white px-3 py-2 text-sm text-black placeholder:text-black/70" value={im.url} onChange={(e) => updateImg(i, "url", e.target.value)} />
                 </div>
                 <div className="flex gap-2">
                   <UploadButton folder="content" onUploaded={(url) => updateImg(i, "url", url)} />
@@ -702,5 +778,6 @@ export default function AdminContentPage() {
     </>
   );
 }
+
 
 

@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  /* Base palette */
+  /* Base palette - Fixed light theme */
   --background: #F7F9FB; /* Light */
   --foreground: #0E0F12; /* Dark */
 
   /* Brand tokens */
   --primary: #0B5E0B; /* Main green */
   --primary-rgb: 11, 94, 11;
-  --accent: #00D084; /* secondary green accent for dark */
+  --accent: #00D084; /* secondary green accent */
   --accent-rgb: 0, 208, 132;
   --dark: #0E0F12;
   --light: #F7F9FB;
@@ -20,16 +20,14 @@
   --muted-bg: color-mix(in oklab, var(--foreground) 8%, transparent);
   --muted-fg: color-mix(in oklab, var(--foreground) 82%, var(--background));
   --chip-bg: color-mix(in oklab, var(--primary) 15%, transparent);
+  --card: var(--background);
+  --secondary-bg: color-mix(in oklab, var(--foreground) 6%, transparent);
+  --secondary-fg: var(--foreground);
 }
 
 /* Font CSS variables removed; handled by next/font */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0E0F12;
-    --foreground: #F7F9FB;
-  }
-}
+/* Removed dark mode media query - keeping light theme fixed */
 
 /* Base styles */
 html { scroll-behavior: smooth; }
@@ -132,13 +130,24 @@ html {
     @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] text-center;
   }
   .btn-primary {
-    @apply btn bg-[color:var(--primary)] text-white hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[rgba(var(--primary-rgb),0.4)] focus-visible:ring-offset-[var(--background)];
+    @apply btn text-white hover:brightness-[1.05] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
   }
   .btn-outline {
-    @apply btn border border-[color:var(--border)] bg-[color:var(--background)] text-[color:var(--foreground)] hover:bg-[color:var(--muted-bg)] focus-visible:ring-2 focus-visible:ring-[rgba(var(--primary-rgb),0.3)];
+    @apply btn focus-visible:ring-2;
+    border: 1px solid var(--primary) !important;
+    background-color: transparent !important;
+    color: var(--primary) !important;
+  }
+  .btn-outline:hover {
+    background-color: var(--primary) !important;
+    color: white !important;
   }
   .card {
-    @apply rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] shadow-sm;
+    @apply rounded-xl shadow-sm;
+    border: 1px solid var(--border) !important;
+    background-color: var(--card) !important;
   }
   .chip {
     @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)] bg-[color:var(--chip-bg)];
@@ -156,7 +165,81 @@ html {
     @apply text-center min-h-[24px] px-2 py-0.5 flex items-center justify-center;
   }
 
-  /* Admin surface: ensure high-contrast controls in dark theme */
+  /* ULTIMATE OVERRIDE - DESTROY TAILWIND */
+  .btn-primary,
+  button.btn-primary,
+  a.btn-primary,
+  .btn-primary:hover,
+  .btn-primary:focus,
+  .btn-primary:active,
+  .btn-primary:visited {
+    background: var(--primary) !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #ffffff !important;
+  }
+
+  /* Prevent color change on tap (mobile) for primary button */
+  .btn-primary:active,
+  button.btn-primary:active,
+  a.btn-primary:active {
+    filter: none !important;
+    transform: none !important;
+  }
+  
+  .btn-outline,
+  button.btn-outline,
+  a.btn-outline {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 2px solid var(--primary) !important;
+    color: var(--primary) !important;
+  }
+  
+  .btn-outline:hover,
+  button.btn-outline:hover,
+  a.btn-outline:hover {
+    background: var(--primary) !important;
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+  }
+
+  /* Keep outline button consistent on focus/active */
+  .btn-outline:focus,
+  button.btn-outline:focus,
+  a.btn-outline:focus,
+  .btn-outline:active,
+  button.btn-outline:active,
+  a.btn-outline:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    box-shadow: none !important;
+  }
+
+  /* Remove default tap highlight on mobile */
+  button, a, .btn, .btn-primary, .btn-outline {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* FORCE TEST - MAKE EVERYTHING RED TO SEE IF IT WORKS */
+  html[data-test-palette="true"] .btn-primary,
+  html[data-test-palette="true"] button.btn-primary,
+  html[data-test-palette="true"] a.btn-primary {
+    background: #ff0000 !important;
+    background-color: #ff0000 !important;
+    border-color: #ff0000 !important;
+    color: #ffffff !important;
+  }
+  
+  /* Navbar using CSS variables */
+  header[style*="--navbar-bg"] {
+    background-color: var(--navbar-bg) !important;
+    color: var(--navbar-text) !important;
+  }
+  
+  /* Admin surface: revert to light fields with black text */
   .admin-surface :is(input, select, textarea) {
     @apply bg-white text-black placeholder:text-black/70 border border-black/30 rounded-md px-3 py-2 text-sm;
   }

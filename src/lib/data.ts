@@ -114,13 +114,7 @@ export interface SiteContent {
   heroBackgroundImage: string;
   heroBadgeText?: string; // Testo del badge (default: "Performance • Estetica • Energia")
   heroBadgeColor?: string; // Colore del badge (default: "bg-primary text-primary-foreground")
-  // Tema / Palette
-  themePalette?: string; // es: "gz-green", "emerald", "teal", "indigo", "rose", "amber", "slate", "custom"
-  themeCustomPrimary?: string; // es: "#0B5E0B"
-  themeCustomAccent?: string;  // es: "#FF6B6B"
-  themeCustomBackground?: string; // es: "#F7F9FB"
-  themeCustomForeground?: string; // es: "#0E0F12"
-  themeMode?: "light" | "dark"; // Forza navbar e contrasto generale
+
   // Navbar logo customization
   navbarLogoMode?: "image" | "text";
   navbarLogoImageUrl?: string;
@@ -154,6 +148,9 @@ export interface SiteContent {
     icon: string;
     logoUrl?: string; // URL o dataURL del logo caricato
   }>;
+
+  // Sistema palette robusto
+  colorPalette: 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray';
   // Nuovi campi per personalizzare le sezioni contatti e studi
   contactSectionTitle?: string; // Titolo sezione contatti (default: "💬 Contatti Diretti")
   contactSectionSubtitle?: string; // Sottotitolo sezione contatti
@@ -868,8 +865,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         heroBackgroundImage: "",
         heroBadgeText: "Performance • Estetica • Energia",
         heroBadgeColor: "bg-primary text-primary-foreground",
-        themePalette: "gz-dark",
-        themeMode: "dark",
+
         aboutTitle: "Chi Sono",
         aboutBody: "Sono Gabriele Zambonin, nutrizionista e personal trainer. Ti guido con un metodo scientifico e pratico per raggiungere forma fisica, energia e benessere reale.",
         aboutImageUrl: "",
@@ -909,7 +905,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
           subtitle: "Valuta i tuoi obiettivi gratuitamente",
           description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
           ctaText: "Prenota Ora - È Gratis!"
-        }
+        },
+        colorPalette: "gz-default" as const
       };
       
       // Salva il contenuto di default in Firebase
@@ -942,12 +939,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       heroBackgroundImage: data.heroBackgroundImage || "",
       heroBadgeText: data.heroBadgeText || "Performance • Estetica • Energia",
       heroBadgeColor: data.heroBadgeColor || "bg-primary text-primary-foreground",
-      themeMode: ((val: unknown) => (val === 'light' || val === 'dark' ? val : undefined))( (data as { themeMode?: unknown }).themeMode ) as 'light' | 'dark' | undefined,
-      themePalette: typeof (data as { themePalette?: string }).themePalette === 'string' ? (data as { themePalette?: string }).themePalette : 'gz-green',
-      themeCustomPrimary: (data as { themeCustomPrimary?: string }).themeCustomPrimary || undefined,
-      themeCustomAccent: (data as { themeCustomAccent?: string }).themeCustomAccent || undefined,
-      themeCustomBackground: (data as { themeCustomBackground?: string }).themeCustomBackground || undefined,
-      themeCustomForeground: (data as { themeCustomForeground?: string }).themeCustomForeground || undefined,
+
       navbarLogoMode: ((val: unknown) => (val === 'image' || val === 'text' ? val : undefined))((data as { navbarLogoMode?: unknown }).navbarLogoMode) as 'image' | 'text' | undefined,
       navbarLogoImageUrl: (data as { navbarLogoImageUrl?: string }).navbarLogoImageUrl || undefined,
       navbarLogoHeight: typeof (data as { navbarLogoHeight?: number }).navbarLogoHeight === 'number' ? (data as { navbarLogoHeight?: number }).navbarLogoHeight : undefined,
@@ -1002,6 +994,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         timezone: data.googleCalendar?.timezone || "Europe/Rome",
         serviceAccountEmail: data.googleCalendar?.serviceAccountEmail || "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
       },
+      colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
     };
     
     console.log("getSiteContent: Contenuto finale mappato:", siteContent);

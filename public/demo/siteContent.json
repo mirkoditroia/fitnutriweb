@@ -51,6 +51,7 @@
     "description": "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance. Ti aiuteremo a definire un piano personalizzato.",
     "ctaText": "Prenota Ora - È Gratis!",
     "isEnabled": true
-  }
+  },
+  "colorPalette": "gz-default"
 }
 

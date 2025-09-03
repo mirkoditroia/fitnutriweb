@@ -16,41 +16,41 @@ export default function AdminLayout({
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <h1 className="text-xl font-bold text-foreground">⚙️ Admin Panel</h1>
+              <h1 className="text-xl font-bold text-white">⚙️ Admin Panel</h1>
               <nav className="hidden md:flex gap-6">
                 <Link 
                   href="/admin" 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium text-white/80 hover:text-white transition-colors"
                 >
                   Dashboard
                 </Link>
                 <Link 
                   href="/admin/bookings" 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium text-white/80 hover:text-white transition-colors"
                 >
                   Prenotazioni
                 </Link>
                 <Link 
                   href="/admin/clients" 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium text-white/80 hover:text-white transition-colors"
                 >
                   Clienti
                 </Link>
                 <Link 
                   href="/admin/packages" 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium text-white/80 hover:text-white transition-colors"
                 >
                   Pacchetti
                 </Link>
                 <Link 
                   href="/admin/availability" 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium text-white/80 hover:text-white transition-colors"
                 >
                   Disponibilità
                 </Link>
                 <Link 
                   href="/admin/calendar" 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium text-white/80 hover:text-white transition-colors"
                 >
                   📅 Calendario
                 </Link>

@@ -53,8 +53,6 @@
   "heroBadgeText": "Performance • Benessere• Energia",
   "studiosSectionTitle": "🏢In sede",
   "studiosSectionSubtitle": "Dove mi trovi",
-  "themePalette": "gz-green",
-  "themeMode": "light",
   "navbarLogoMode": "image",
   "navbarLogoImageUrl": "/api/upload/brand%2F1756562054718-Generated_Image_August_30__2025_-_3_27PM.jpeg",
   "googleCalendar": {
@@ -62,5 +60,14 @@
     "calendarId": "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
     "serviceAccountEmail": "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com",
     "timezone": "Europe"
-  }
+  },
+  "heroBadgeColor": "bg-gradient-to-r from-blue-500 to-purple-600 text-white",
+  "themePrimary": "#0EA5E9",
+  "themeForeground": "#E2E8F0",
+  "themeBackground": "#0F172A",
+  "themeAccent": "#22C55E",
+  "navbarBgColor": "#dfd8d8",
+  "navbarTextColor": "#e60000",
+  "buttonTarget": "secondary",
+  "colorPalette": "gz-default"
 }

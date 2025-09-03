@@ -532,8 +532,9 @@ export default function AdminBookingsPage() {
   }
 
   const renderBookingCard = (b: Booking) => (
-    <div key={b.id} className="bg-card border border-border rounded-lg p-4 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div key={b.id} className="space-y-4">
+      <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <div className="font-semibold text-foreground">{b.name}</div>
@@ -634,7 +635,134 @@ export default function AdminBookingsPage() {
             🗑️ Elimina
           </Button>
         </div>
+        </div>
       </div>
+
+      {editingBooking?.id === b.id && (
+        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-black">Modifica Prenotazione</h2>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCancelEdit}
+              className="text-xs px-3 py-1"
+            >
+              ❌ Annulla
+            </Button>
+          </div>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-black">Nome e cognome *</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-black">Email *</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-black">Telefono</label>
+                <input
+                  type="text"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-black">Pacchetto</label>
+                <select
+                  value={editForm.packageId}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, packageId: e.target.value }))}
+                  className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
+                >
+                  <option value="">Nessun pacchetto</option>
+                  {packages.map(pkg => (
+                    <option key={pkg.id} value={pkg.id}>{pkg.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-black">Data *</label>
+                <DatePicker
+                  selected={editSelectedDate}
+                  onChange={handleEditDateChange}
+                  dateFormat="dd/MM/yyyy"
+                  className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
+                  minDate={new Date()}
+                  placeholderText="Seleziona una data"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-black">Slot orario *</label>
+                <select
+                  value={editForm.slot}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, slot: e.target.value }))}
+                  className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
+                  disabled={!editSelectedDate || editAvailableSlots.length === 0}
+                  required
+                >
+                  <option value="">Seleziona un orario disponibile</option>
+                  {editAvailableSlots.map(slot => (
+                    <option key={slot} value={slot}>
+                      {new Date(slot).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+                    </option>
+                  ))}
+                </select>
+                {editSelectedDate && editAvailableSlots.length === 0 && (
+                  <p className="text-xs text-destructive mt-1">Nessun slot disponibile per questa data</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-black">Status</label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value as "pending" | "confirmed" | "cancelled" }))}
+                  className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
+                >
+                  <option value="pending">In attesa</option>
+                  <option value="confirmed">Confermata</option>
+                  <option value="cancelled">Rifiutata</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-black">Note</label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button type="submit">
+                💾 Salva Modifiche
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={handleCancelEdit}
+              >
+                ❌ Annulla
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 
@@ -643,8 +771,8 @@ export default function AdminBookingsPage() {
       {/* Header con navigazione e spazio extra per la navbar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4 pt-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Gestione Prenotazioni</h1>
-          <p className="text-sm text-muted-foreground mt-1">Amministrazione sistema prenotazioni</p>
+          <h1 className="text-2xl font-bold text-black">Gestione Prenotazioni</h1>
+          <p className="text-sm text-black/70 mt-1">Amministrazione sistema prenotazioni</p>
         </div>
         <div className="flex gap-3">
           <Button
@@ -873,8 +1001,8 @@ export default function AdminBookingsPage() {
 
           {items.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-foreground/70">Nessuna prenotazione trovata.</p>
-              <p className="text-sm text-foreground/50 mt-1">Le nuove richieste appariranno qui.</p>
+              <p className="text-black/70">Nessuna prenotazione trovata.</p>
+              <p className="text-sm text-black/50 mt-1">Le nuove richieste appariranno qui.</p>
             </div>
           )}
         </div>
@@ -885,7 +1013,7 @@ export default function AdminBookingsPage() {
         <div className="mt-8">
           <div className="bg-card border border-border rounded-lg p-6 max-w-2xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">Modifica Prenotazione</h2>
+              <h2 className="text-lg font-semibold text-black">Modifica Prenotazione</h2>
               <Button
                 size="sm"
                 variant="outline"
@@ -898,40 +1026,40 @@ export default function AdminBookingsPage() {
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Nome e cognome *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Nome e cognome *</label>
                   <input
                     type="text"
                     value={editForm.name}
                     onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                    className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Email *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Email *</label>
                   <input
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                    className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Telefono</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Telefono</label>
                   <input
                     type="text"
                     value={editForm.phone}
                     onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                    className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Pacchetto</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Pacchetto</label>
                   <select
                     value={editForm.packageId}
                     onChange={(e) => setEditForm(prev => ({ ...prev, packageId: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                    className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
                   >
                     <option value="">Nessun pacchetto</option>
                     {packages.map(pkg => (
@@ -940,22 +1068,22 @@ export default function AdminBookingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Data *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Data *</label>
                   <DatePicker
                     selected={editSelectedDate}
                     onChange={handleEditDateChange}
                     dateFormat="dd/MM/yyyy"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                    className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
                     minDate={new Date()}
                     placeholderText="Seleziona una data"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Slot orario *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Slot orario *</label>
                   <select
                     value={editForm.slot}
                     onChange={(e) => setEditForm(prev => ({ ...prev, slot: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                    className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
                     disabled={!editSelectedDate || editAvailableSlots.length === 0}
                     required
                   >
@@ -971,11 +1099,11 @@ export default function AdminBookingsPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Status</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Status</label>
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value as "pending" | "confirmed" | "cancelled" }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                    className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black placeholder:text-black/70"
                   >
                     <option value="pending">In attesa</option>
                     <option value="confirmed">Confermata</option>
@@ -983,11 +1111,11 @@ export default function AdminBookingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Note</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Note</label>
                   <textarea
                     value={editForm.notes}
                     onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-black"
+                    className="w-full rounded-md border border-white/30 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/70"
                     rows={3}
                   />
                 </div>
@@ -1014,7 +1142,7 @@ export default function AdminBookingsPage() {
          <div className="mt-6">
            <div className="bg-card border border-border rounded-lg p-6 max-w-2xl shadow-sm">
              <div className="flex items-center justify-between mb-4">
-               <h2 className="text-lg font-semibold text-foreground">Inserimento Manuale Prenotazione</h2>
+               <h2 className="text-lg font-semibold text-black">Inserimento Manuale Prenotazione</h2>
                <Button
                  size="sm"
                  variant="outline"
@@ -1030,7 +1158,7 @@ export default function AdminBookingsPage() {
             <form onSubmit={handleManualSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Nome e cognome *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Nome e cognome *</label>
                   <input
                     type="text"
                     value={manualForm.name}
@@ -1040,7 +1168,7 @@ export default function AdminBookingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Email *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Email *</label>
                   <input
                     type="email"
                     value={manualForm.email}
@@ -1050,7 +1178,7 @@ export default function AdminBookingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Telefono</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Telefono</label>
                   <input
                     type="tel"
                     value={manualForm.phone}
@@ -1059,7 +1187,7 @@ export default function AdminBookingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Pacchetto</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Pacchetto</label>
                   <select
                     value={manualForm.packageId}
                     onChange={(e) => setManualForm(prev => ({ ...prev, packageId: e.target.value }))}
@@ -1072,7 +1200,7 @@ export default function AdminBookingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Data *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Data *</label>
                   <SharedDateCalendar
                     availableDates={manualAvailableDates}
                     selectedDate={selectedDate ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}` : ""}
@@ -1085,7 +1213,7 @@ export default function AdminBookingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Slot orario *</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Slot orario *</label>
                   <select
                     value={manualForm.slot}
                     onChange={(e) => setManualForm(prev => ({ ...prev, slot: e.target.value }))}
@@ -1108,14 +1236,14 @@ export default function AdminBookingsPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Sede</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Sede</label>
                   <div className="flex gap-2">
                     <Button type="button" variant={manualForm.location === "online" ? "primary" : "outline"} onClick={() => setManualForm(prev => ({ ...prev, location: "online" }))}>🌐 Online</Button>
                     <Button type="button" variant={manualForm.location === "studio" ? "primary" : "outline"} onClick={() => setManualForm(prev => ({ ...prev, location: "studio" }))}>🏢 In studio</Button>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-foreground">Note</label>
+                  <label className="block text-sm font-medium mb-1 text-black">Note</label>
                   <textarea
                     value={manualForm.notes}
                     onChange={(e) => setManualForm(prev => ({ ...prev, notes: e.target.value }))}
