@@ -75,6 +75,12 @@ export default function LandingClient() {
           description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
           ctaText: "Prenota Ora - È Gratis!"
         },
+        googleCalendar: {
+          isEnabled: false,
+          calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
+          timezone: "Europe/Rome",
+          serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+        },
         colorPalette: "gz-default" as const
       };
       const finalPackages = Array.isArray(p) ? p : [];
