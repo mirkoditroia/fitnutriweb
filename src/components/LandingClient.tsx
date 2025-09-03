@@ -28,13 +28,54 @@ export default function LandingClient() {
       console.log("LandingClient: Contenuto caricato:", c);
       console.log("LandingClient: Pacchetti caricati:", p);
       
-      const finalContent = c ?? {
-          heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
+      const finalContent: SiteContent = c ?? {
+        heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
         heroSubtitle: "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
-          heroCta: "Prenota ora",
-          heroBackgroundImage: "/hero-demo.svg",
-          images: [],
-          colorPalette: "gz-default" as const,
+        heroCta: "Prenota ora",
+        heroBackgroundImage: "/hero-demo.svg",
+        heroBadgeText: "Performance • Estetica • Energia",
+        heroBadgeColor: "bg-primary text-primary-foreground",
+        aboutTitle: "Chi Sono",
+        aboutBody: "Sono Gabriele Zambonin, nutrizionista e personal trainer. Ti guido con un metodo scientifico e pratico per raggiungere forma fisica, energia e benessere reale.",
+        aboutImageUrl: "",
+        images: [],
+        contactTitle: "📞 Contattami",
+        contactSubtitle: "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
+        contactPhone: "+39 123 456 7890",
+        contactEmail: "info@gznutrition.it",
+        contactAddresses: [
+          {
+            name: "Studio Principale",
+            address: "Via Roma 123",
+            city: "Milano",
+            postalCode: "20100",
+            coordinates: { lat: 45.4642, lng: 9.1900 }
+          }
+        ],
+        socialChannels: [
+          {
+            platform: "Instagram",
+            url: "https://instagram.com/gznutrition",
+            icon: "📸"
+          },
+          {
+            platform: "LinkedIn",
+            url: "https://linkedin.com/in/gznutrition",
+            icon: "💼"
+          }
+        ],
+        contactSectionTitle: "💬 Contatti Diretti",
+        contactSectionSubtitle: "Siamo qui per aiutarti",
+        studiosSectionTitle: "🏢 I Nostri Studi",
+        studiosSectionSubtitle: "Trova lo studio più vicino a te",
+        freeConsultationPopup: {
+          isEnabled: true,
+          title: "🎯 10 Minuti Consultivi Gratuiti",
+          subtitle: "Valuta i tuoi obiettivi gratuitamente",
+          description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
+          ctaText: "Prenota Ora - È Gratis!"
+        },
+        colorPalette: "gz-default" as const
       };
       const finalPackages = Array.isArray(p) ? p : [];
       
