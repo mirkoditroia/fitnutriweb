@@ -30,6 +30,7 @@ export default async function Home() {
       heroCta: "Prenota ora",
       heroBackgroundImage: "",
       images: [],
+      colorPalette: "gz-default" as const,
     };
 
   const featuredFirst = [...packages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
