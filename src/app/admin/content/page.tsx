@@ -87,7 +87,7 @@ export default function AdminContentPage() {
                     ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50' 
                     : 'border-gray-200 hover:border-gray-300 bg-white'
                 }`}
-                onClick={() => setContent({...content, colorPalette: paletteId})}
+                onClick={() => setContent({...content, colorPalette: paletteId as typeof content.colorPalette})}
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
