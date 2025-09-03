@@ -23,7 +23,7 @@ export default function AdminCalendarPage() {
 
   useEffect(() => {
     getSiteContent().then((c) => {
-      setContent(c ?? { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", images: [] });
+      setContent(c ?? { heroTitle: "", heroSubtitle: "", heroCta: "Prenota ora", heroBackgroundImage: "", images: [], colorPalette: "gz-default" as const });
       setLoading(false);
     });
   }, []);

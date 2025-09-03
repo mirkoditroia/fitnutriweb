@@ -4,9 +4,7 @@ const nextConfig = {
     // Disabilita ESLint durante il build
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
+
 }
 
 module.exports = nextConfig
