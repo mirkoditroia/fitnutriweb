@@ -1162,6 +1162,7 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
       description: fromFs("freeConsultationPopup.description") || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
       ctaText: fromFs("freeConsultationPopup.ctaText") || "Prenota Ora - È Gratis!"
     },
+    colorPalette: (fromFs("colorPalette") as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default'
   };
 }
 
