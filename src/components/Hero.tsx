@@ -42,7 +42,7 @@ export function Hero({ title, subtitle, ctaLabel, backgroundImage, badgeText = "
                 {ctaLabel}
               </span>
             </a>
-            <a href="#pacchetti" className="btn-outline">
+            <a href="#pacchetti" className="btn-secondary-white">
               <span className="text-center">
                 Scopri i pacchetti
               </span>

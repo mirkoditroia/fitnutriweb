@@ -74,7 +74,7 @@ export function PackageModal({ pkg, onClose }: Props) {
         onClick={handleBackdropClick}
       >
         {/* Modal */}
-        <div className="bg-gradient-to-br from-background to-muted/20 text-foreground rounded-t-2xl md:rounded-2xl w-full max-w-3xl max-h-[95vh] md:max-h-[90vh] shadow-2xl border border-border/50 flex flex-col overflow-hidden">
+        <div className="bg-gradient-to-br from-background to-muted/20 text-foreground rounded-t-2xl md:rounded-2xl w-full max-w-3xl h-[90vh] md:max-h-[90vh] shadow-2xl border border-border/50 flex flex-col overflow-hidden">
           {/* Header - responsive spacing */}
           <div className="bg-gradient-to-br from-background to-muted/30 border-b border-border/30 p-4 md:p-6 lg:p-8">
             <div className="flex items-start justify-between gap-3">

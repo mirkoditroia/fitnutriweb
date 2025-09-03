@@ -144,6 +144,22 @@ html {
     background-color: var(--primary) !important;
     color: white !important;
   }
+  
+  /* Secondary button sempre bianco e più piccolo */
+  .btn-secondary-white {
+    @apply btn focus-visible:ring-2;
+    background: white !important;
+    background-color: white !important;
+    border: 2px solid white !important;
+    color: var(--primary) !important;
+    padding: 0.5rem 1rem !important; /* Più piccolo */
+    font-size: 0.875rem !important; /* Testo più piccolo */
+  }
+  .btn-secondary-white:hover {
+    background: rgba(255, 255, 255, 0.9) !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    color: var(--primary) !important;
+  }
   .card {
     @apply rounded-xl shadow-sm;
     border: 1px solid var(--border) !important;
@@ -219,8 +235,16 @@ html {
   }
 
   /* Remove default tap highlight on mobile */
-  button, a, .btn, .btn-primary, .btn-outline {
+  button, a, .btn, .btn-primary, .btn-outline, .btn-secondary-white {
     -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Force white background for secondary button on focus/active */
+  .btn-secondary-white:focus,
+  .btn-secondary-white:active {
+    background: white !important;
+    background-color: white !important;
+    color: var(--primary) !important;
   }
   
   /* FORCE TEST - MAKE EVERYTHING RED TO SEE IF IT WORKS */
