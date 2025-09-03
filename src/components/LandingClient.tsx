@@ -28,14 +28,15 @@ export default function LandingClient() {
       console.log("LandingClient: Contenuto caricato:", c);
       console.log("LandingClient: Pacchetti caricati:", p);
       
-      const finalContent: SiteContent = c ?? ({
+      const fallbackContent: any = {
         heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
         heroSubtitle: "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
         heroCta: "Prenota ora",
         heroBackgroundImage: "",
         images: [],
         colorPalette: "gz-default"
-      } as SiteContent);
+      };
+      const finalContent: SiteContent = c ?? fallbackContent;
       const finalPackages = Array.isArray(p) ? p : [];
       
       setContent(finalContent);
