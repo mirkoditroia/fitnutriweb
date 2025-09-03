@@ -32,9 +32,10 @@ export default function LandingClient() {
         heroTitle: "Trasforma il tuo fisico. Potenzia la tua performance.",
         heroSubtitle: "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
         heroCta: "Prenota ora",
-        heroBackgroundImage: "/hero-demo.svg",
+        heroBackgroundImage: "",
         heroBadgeText: "Performance • Estetica • Energia",
         heroBadgeColor: "bg-primary text-primary-foreground",
+
         aboutTitle: "Chi Sono",
         aboutBody: "Sono Gabriele Zambonin, nutrizionista e personal trainer. Ti guido con un metodo scientifico e pratico per raggiungere forma fisica, energia e benessere reale.",
         aboutImageUrl: "",
@@ -74,12 +75,6 @@ export default function LandingClient() {
           subtitle: "Valuta i tuoi obiettivi gratuitamente",
           description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
           ctaText: "Prenota Ora - È Gratis!"
-        },
-        googleCalendar: {
-          isEnabled: false,
-          calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
-          timezone: "Europe/Rome",
-          serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
         },
         colorPalette: "gz-default" as const
       };
