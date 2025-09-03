@@ -34,6 +34,7 @@ export default function LandingClient() {
           heroCta: "Prenota ora",
           heroBackgroundImage: "/hero-demo.svg",
           images: [],
+          colorPalette: "gz-default" as const,
       };
       const finalPackages = Array.isArray(p) ? p : [];
       
