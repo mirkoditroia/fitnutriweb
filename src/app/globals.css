@@ -147,13 +147,21 @@ html {
   
   /* Secondary button sempre bianco e più piccolo */
   .btn-secondary-white {
-    @apply btn focus-visible:ring-2;
+    @apply focus-visible:ring-2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
     background: white !important;
     background-color: white !important;
     border: 2px solid white !important;
     color: var(--primary) !important;
-    padding: 0.5rem 1rem !important; /* Più piccolo */
-    font-size: 0.875rem !important; /* Testo più piccolo */
+    padding: 0.375rem 0.875rem !important; /* Ancora più piccolo */
+    font-size: 0.8rem !important; /* Testo più piccolo */
+    height: auto !important;
+    min-height: 2.25rem !important; /* Altezza fissa più piccola del btn normale */
   }
   .btn-secondary-white:hover {
     background: rgba(255, 255, 255, 0.9) !important;
