@@ -37,21 +37,31 @@ export default function AdminContentPage() {
     if (content.colorPalette) {
       localStorage.setItem('gz-palette', content.colorPalette);
       
-      // Apply immediately
-      const palettes = {
-        'gz-default': { primary: '#0B5E0B', navbarBg: 'rgba(0,0,0,0.8)', navbarText: '#FFFFFF' },
-        'modern-blue': { primary: '#2563EB', navbarBg: 'rgba(30, 41, 59, 0.9)', navbarText: '#FFFFFF' },
-        'elegant-dark': { primary: '#D97706', navbarBg: 'rgba(17, 24, 39, 0.95)', navbarText: '#F9FAFB' },
-        'nature-green': { primary: '#059669', navbarBg: 'rgba(6, 78, 59, 0.9)', navbarText: '#FFFFFF' },
-        'warm-orange': { primary: '#EA580C', navbarBg: 'rgba(124, 45, 18, 0.9)', navbarText: '#FFFFFF' },
-        'professional-gray': { primary: '#374151', navbarBg: 'rgba(17, 24, 39, 0.9)', navbarText: '#F9FAFB' }
+      // Apply complete palette immediately
+      const paletteConfig = getPaletteConfig(content.colorPalette);
+      const root = document.documentElement;
+      
+      // Helper function for RGB conversion
+      const hexToRgb = (hex: string): string => {
+        const h = hex.replace('#', '');
+        const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+        return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
       };
-      const colors = palettes[content.colorPalette as keyof typeof palettes];
-      if (colors) {
-        document.documentElement.style.setProperty('--primary', colors.primary);
-        document.documentElement.style.setProperty('--navbar-bg', colors.navbarBg);
-        document.documentElement.style.setProperty('--navbar-text', colors.navbarText);
-      }
+      
+      // Apply complete palette
+      root.style.setProperty('--primary', paletteConfig.primary, 'important');
+      root.style.setProperty('--primary-rgb', hexToRgb(paletteConfig.primary), 'important');
+      root.style.setProperty('--accent', paletteConfig.accent, 'important');
+      root.style.setProperty('--accent-rgb', hexToRgb(paletteConfig.accent), 'important');
+      root.style.setProperty('--background', paletteConfig.background, 'important');
+      root.style.setProperty('--foreground', paletteConfig.foreground, 'important');
+      root.style.setProperty('--border', paletteConfig.border, 'important');
+      root.style.setProperty('--card', paletteConfig.card, 'important');
+      root.style.setProperty('--muted-bg', paletteConfig.muted, 'important');
+      root.style.setProperty('--navbar-bg', paletteConfig.navbarBg, 'important');
+      root.style.setProperty('--navbar-text', paletteConfig.navbarText, 'important');
+      root.style.setProperty('--secondary-bg', paletteConfig.secondaryBg, 'important');
+      root.style.setProperty('--secondary-fg', paletteConfig.secondaryText, 'important');
     }
     
     toast.success("Palette salvata e applicata!");
@@ -87,7 +97,42 @@ export default function AdminContentPage() {
                     ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50' 
                     : 'border-gray-200 hover:border-gray-300 bg-white'
                 }`}
-                onClick={() => setContent({...content, colorPalette: paletteId as typeof content.colorPalette})}
+                onClick={() => {
+                  setContent({...content, colorPalette: paletteId as typeof content.colorPalette});
+                  
+                  // Apply immediately for preview
+                  const paletteConfig = getPaletteConfig(paletteId);
+                  const root = document.documentElement;
+                  
+                  // Helper function for RGB conversion
+                  const hexToRgb = (hex: string): string => {
+                    const h = hex.replace('#', '');
+                    const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+                    return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+                  };
+                  
+                  // Apply palette immediately
+                  root.style.setProperty('--primary', paletteConfig.primary, 'important');
+                  root.style.setProperty('--primary-rgb', hexToRgb(paletteConfig.primary), 'important');
+                  root.style.setProperty('--accent', paletteConfig.accent, 'important');
+                  root.style.setProperty('--accent-rgb', hexToRgb(paletteConfig.accent), 'important');
+                  root.style.setProperty('--background', paletteConfig.background, 'important');
+                  root.style.setProperty('--foreground', paletteConfig.foreground, 'important');
+                  root.style.setProperty('--border', paletteConfig.border, 'important');
+                  root.style.setProperty('--card', paletteConfig.card, 'important');
+                  root.style.setProperty('--muted-bg', paletteConfig.muted, 'important');
+                  root.style.setProperty('--navbar-bg', paletteConfig.navbarBg, 'important');
+                  root.style.setProperty('--navbar-text', paletteConfig.navbarText, 'important');
+                  root.style.setProperty('--secondary-bg', paletteConfig.secondaryBg, 'important');
+                  root.style.setProperty('--secondary-fg', paletteConfig.secondaryText, 'important');
+                  
+                  // Also update localStorage for immediate effect across the site
+                  try {
+                    localStorage.setItem('gz-palette', paletteId);
+                  } catch (e) {
+                    // Ignore if localStorage is not available
+                  }
+                }}
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
