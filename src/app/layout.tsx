@@ -142,32 +142,60 @@ export default async function RootLayout({
                   
                   const colors = palettes[palette] || palettes['gz-default'];
                   
-                  // Apply all CSS variables
+                  // Apply all CSS variables IMMEDIATELY
                   const root = document.documentElement;
-                  root.style.setProperty('--primary', colors.primary);
-                  root.style.setProperty('--primary-rgb', hexToRgb(colors.primary));
-                  root.style.setProperty('--accent', colors.accent);
-                  root.style.setProperty('--accent-rgb', hexToRgb(colors.accent));
-                  root.style.setProperty('--background', colors.background);
-                  root.style.setProperty('--foreground', colors.foreground);
-                  root.style.setProperty('--border', colors.border);
-                  root.style.setProperty('--card', colors.card);
-                  root.style.setProperty('--muted-bg', colors.muted);
-                  root.style.setProperty('--navbar-bg', colors.navbarBg);
-                  root.style.setProperty('--navbar-text', colors.navbarText);
-                  root.style.setProperty('--secondary-bg', colors.secondaryBg);
-                  root.style.setProperty('--secondary-fg', colors.secondaryText);
+                  const cssVars = {
+                    '--primary': colors.primary,
+                    '--primary-rgb': hexToRgb(colors.primary),
+                    '--accent': colors.accent,
+                    '--accent-rgb': hexToRgb(colors.accent),
+                    '--background': colors.background,
+                    '--foreground': colors.foreground,
+                    '--border': colors.border,
+                    '--card': colors.card,
+                    '--muted-bg': colors.muted,
+                    '--navbar-bg': colors.navbarBg,
+                    '--navbar-text': colors.navbarText,
+                    '--secondary-bg': colors.secondaryBg,
+                    '--secondary-fg': colors.secondaryText
+                  };
+                  
+                  // Apply immediately, forcing style recalculation
+                  Object.entries(cssVars).forEach(([key, value]) => {
+                    root.style.setProperty(key, value, 'important');
+                  });
+                  
+                  // Force style recalculation
+                  root.style.display = 'none';
+                  root.offsetHeight; // Trigger reflow
+                  root.style.display = '';
                 } catch(e) {
                   // Complete fallback - apply default palette
                   console.log('Palette loading failed, applying default');
                   const root = document.documentElement;
-                  root.style.setProperty('--primary', '#0B5E0B');
-                  root.style.setProperty('--primary-rgb', '11, 94, 11');
-                  root.style.setProperty('--navbar-bg', 'rgba(0,0,0,0.8)');
-                  root.style.setProperty('--navbar-text', '#FFFFFF');
-                  root.style.setProperty('--background', '#FFFFFF');
-                  root.style.setProperty('--foreground', '#0E0F12');
-                  root.style.setProperty('--card', '#FFFFFF');
+                  const fallbackVars = {
+                    '--primary': '#0B5E0B',
+                    '--primary-rgb': '11, 94, 11',
+                    '--navbar-bg': 'rgba(0,0,0,0.8)',
+                    '--navbar-text': '#FFFFFF',
+                    '--background': '#FFFFFF',
+                    '--foreground': '#0E0F12',
+                    '--card': '#FFFFFF',
+                    '--accent': '#00D084',
+                    '--border': '#E2E8F0',
+                    '--muted-bg': '#F1F5F9',
+                    '--secondary-bg': '#F8FAFC',
+                    '--secondary-fg': '#475569'
+                  };
+                  
+                  Object.entries(fallbackVars).forEach(([key, value]) => {
+                    root.style.setProperty(key, value, 'important');
+                  });
+                  
+                  // Force style recalculation
+                  root.style.display = 'none';
+                  root.offsetHeight; // Trigger reflow
+                  root.style.display = '';
                 }
               })();
             `

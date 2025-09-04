@@ -20,7 +20,9 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
   const [scrolled, setScrolled] = useState(false);
 
   const [brand, setBrand] = useState<BrandCfg | null>(initialBrand ?? null);
-  const [imageLoaded, setImageLoaded] = useState(!!initialBrand?.imageUrl);
+  const [imageLoaded, setImageLoaded] = useState(
+    initialBrand ? (initialBrand.mode === 'image' ? !!initialBrand.imageUrl : true) : false
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,8 +35,12 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
   // Load only branding info if not already provided via SSR
   useEffect(() => {
     if (initialBrand) {
-      // If we have initial brand from SSR, just set imageLoaded to true
-      setImageLoaded(true);
+      // If we have initial brand from SSR, set up appropriately
+      if (initialBrand.mode === 'image' && initialBrand.imageUrl) {
+        setImageLoaded(true); // Should already be preloaded
+      } else {
+        setImageLoaded(true); // Text mode or no image
+      }
       return;
     }
 
@@ -83,16 +89,33 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
             <div className="flex h-16 items-center justify-between">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-2">
-                {brand?.mode === "image" && brand?.imageUrl && imageLoaded ? (
-                  <img
-                    src={brand.imageUrl}
-                    alt="Logo"
-                    style={{ height: `${brand.height}px` }}
-                    className={`${brand.autoBg ? 'mix-blend-multiply' : ''} transition-opacity duration-300`}
-                  />
+                {brand?.mode === "image" && brand?.imageUrl ? (
+                  <div className="relative flex items-center">
+                    {/* Image logo - always render if we have imageUrl */}
+                    <img
+                      src={brand.imageUrl}
+                      alt="Logo"
+                      style={{ height: `${brand.height}px` }}
+                      className={`${brand.autoBg ? 'mix-blend-multiply' : ''} transition-opacity duration-150 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      onLoad={() => setImageLoaded(true)}
+                      onError={() => {
+                        // Fallback to text on image error
+                        setBrand(prev => prev ? {...prev, mode: 'text'} : null);
+                      }}
+                    />
+                    {/* Text fallback - show while image loads */}
+                    {!imageLoaded && (
+                      <span
+                        className="absolute inset-0 flex items-center tracking-tight"
+                        style={{ fontWeight: brand?.weight || 700, fontSize: brand?.size ? `${brand.size}px` : undefined }}
+                      >
+                        {brand?.text || 'GZnutrition'}
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <span
-                    className={`tracking-tight transition-opacity duration-300 ${brand?.mode === "image" && !imageLoaded ? 'opacity-0' : 'opacity-100'}`}
+                    className="tracking-tight"
                     style={{ fontWeight: brand?.weight || 700, fontSize: brand?.size ? `${brand.size}px` : undefined }}
                   >
                     {brand?.text || 'GZnutrition'}
