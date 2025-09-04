@@ -96,10 +96,10 @@ export default function ResultsCarouselDesktop({ photos }: ResultsCarouselDeskto
         {/* Controlli di navigazione - solo se più di 3 foto */}
         {photos.length > photosPerPage && (
           <>
-            {/* Frecce di navigazione moderne */}
+            {/* Frecce di navigazione esterne */}
             <button
               onClick={goToPrev}
-              className="absolute left-6 top-1/2 -translate-y-1/2 group bg-primary/90 hover:bg-primary backdrop-blur-sm rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 z-10 border border-primary/20"
+              className="absolute -left-16 top-1/2 -translate-y-1/2 group bg-primary/90 hover:bg-primary backdrop-blur-sm rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 z-10 border border-primary/20"
               aria-label="Foto precedenti"
             >
               <ChevronLeft className="w-6 h-6 text-white group-hover:text-white/90 transition-colors duration-200" />
@@ -107,7 +107,7 @@ export default function ResultsCarouselDesktop({ photos }: ResultsCarouselDeskto
             
             <button
               onClick={goToNext}
-              className="absolute right-6 top-1/2 -translate-y-1/2 group bg-primary/90 hover:bg-primary backdrop-blur-sm rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 z-10 border border-primary/20"
+              className="absolute -right-16 top-1/2 -translate-y-1/2 group bg-primary/90 hover:bg-primary backdrop-blur-sm rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 z-10 border border-primary/20"
               aria-label="Foto successive"
             >
               <ChevronRight className="w-6 h-6 text-white group-hover:text-white/90 transition-colors duration-200" />

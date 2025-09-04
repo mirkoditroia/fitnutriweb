@@ -849,54 +849,14 @@ export default function AdminContentPage() {
         </section>
         </div>
 
-        {/* ========== INTEGRAZIONI ========== */}
+        {/* ========== POPUP E INTEGRAZIONI ========== */}
         <div>
           <h3 className="text-lg font-bold text-black mb-6 flex items-center gap-2">
-            🔌 Integrazioni
+            🔔 Popup e Integrazioni
           </h3>
           
-          {/* Google Calendar */}
+          {/* Popup 10 Minuti Consultivi Gratuiti */}
           <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold text-black">📅 Google Calendar</h2>
-              <p className="text-sm text-black/70">Sincronizzazione automatica delle prenotazioni</p>
-            </div>
-          </div>
-          
-          <div className="bg-background/50 border border-foreground/10 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="calendarEnabledSimple"
-                checked={content.googleCalendar?.isEnabled ?? false}
-                onChange={(e) => setContent({
-                  ...content,
-                  googleCalendar: {
-                    ...content.googleCalendar,
-                    isEnabled: e.target.checked
-                  }
-                })}
-                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-              />
-              <label htmlFor="calendarEnabledSimple" className="text-sm font-medium text-black">
-                Abilita sincronizzazione Google Calendar
-              </label>
-            </div>
-            
-            {content.googleCalendar?.isEnabled && (
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  📋 <strong>Configurazione richiesta:</strong> Per attivare la sincronizzazione, 
-                  completa la configurazione in <strong>Impostazioni → Google Calendar</strong>
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Popup 10 Minuti Consultivi Gratuiti */}
-        <section className="space-y-4 mt-8">
           <h2 className="font-semibold text-black">🔔 Popup Consultazione Gratuita</h2>
           
           <div className="space-y-4">
