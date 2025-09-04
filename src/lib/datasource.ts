@@ -105,9 +105,9 @@ export async function listBookings(): Promise<Booking[]> {
   return [];
 }
 
-export async function createBooking(b: Booking): Promise<string> {
+export async function createBooking(b: Booking, captchaToken?: string): Promise<string> {
   const mode = getDataMode();
-  if (mode === "firebase") return fb_createBooking(b);
+  if (mode === "firebase") return fb_createBooking(b, captchaToken);
   if (mode === "demo") throw new Error("Preprod demo read-only");
   
   // Validazione: lo slot deve essere obbligatorio e disponibile

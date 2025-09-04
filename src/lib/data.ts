@@ -1246,7 +1246,7 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
     colorPalette: (fromFs("colorPalette") as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
     notificationEmail: fromFs("notificationEmail") || "mirkoditroia@gmail.com",
     businessName: fromFs("businessName") || "GZ Nutrition",
-    recaptchaEnabled: fromFs("recaptchaEnabled") !== false, // Default true
+    recaptchaEnabled: fromFs("recaptchaEnabled") !== "false", // Default true
     recaptchaSiteKey: fromFs("recaptchaSiteKey") || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
   };
 }
