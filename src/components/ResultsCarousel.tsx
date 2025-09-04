@@ -54,13 +54,6 @@ export function ResultsCarousel({
     setIsAutoPlaying(false); // Stop auto-play when user interacts
   };
 
-  // Debug logging
-  console.log('🎯 ResultsCarousel rendering with:', { 
-    title, 
-    subtitle, 
-    photosCount: photos?.length,
-    photos: photos?.map(p => ({ id: p.id, url: p.url }))
-  });
 
   return (
     <section 
@@ -92,18 +85,10 @@ export function ResultsCarousel({
               {photos.map((photo, index) => (
                 <div key={photo.id} className="min-w-full">
                   <div className="relative aspect-[16/10] md:aspect-[20/9]">
-                    {/* Try Next.js Image first, fallback to regular img */}
                     <img
                       src={photo.url}
                       alt={photo.description || `Risultato cliente ${index + 1}`}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        console.error('❌ Errore caricamento immagine:', photo.url);
-                        e.currentTarget.src = '/placeholder-image.jpg'; // Fallback image
-                      }}
-                      onLoad={() => {
-                        console.log('✅ Immagine caricata:', photo.url);
-                      }}
                     />
                     
                     {/* Overlay with description */}
