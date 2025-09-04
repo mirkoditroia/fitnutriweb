@@ -25,7 +25,7 @@ export default function AdminNotificationsPage() {
   // Carica configurazione email
   const loadEmailConfig = async () => {
     try {
-      const response = await fetch('https://us-central1-gznutrition-d5d13.cloudfunctions.net/testEmailConfiguration');
+      const response = await fetch('https://testemailconfiguration-4ks3j6nupa-uc.a.run.app');
       const result = await response.json();
       setEmailConfig(result);
     } catch (error) {
@@ -40,7 +40,7 @@ export default function AdminNotificationsPage() {
   const testEmailConfiguration = async () => {
     setTesting(true);
     try {
-      const response = await fetch('https://us-central1-gznutrition-d5d13.cloudfunctions.net/sendBookingNotification', {
+      const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

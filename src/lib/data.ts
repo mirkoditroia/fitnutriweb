@@ -20,7 +20,7 @@ import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCa
 async function sendBookingNotification(booking: Booking, packageTitle?: string) {
   try {
     // Usa Firebase Functions per l'invio email
-    const response = await fetch('https://us-central1-gznutrition-d5d13.cloudfunctions.net/sendBookingNotification', {
+    const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
