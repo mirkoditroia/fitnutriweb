@@ -4,7 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import ToasterProvider from "@/components/toaster-provider";
-import { generateCSSVariables } from "@/lib/palettes";
+import { generateCSSVariables, getPaletteConfig } from "@/lib/palettes";
 import { getSiteContent } from "@/lib/datasource";
 import { getDataMode } from "@/lib/datamode";
 
@@ -58,13 +58,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch brand info for SSR to eliminate logo loading delay
+  // Fetch site content for SSR including brand info and palette
   let initialBrand: BrandCfg | undefined = undefined;
+  let serverPalette: string = 'gz-default';
   
   try {
     if (getDataMode() !== "local") {
       const siteContent = await getSiteContent();
       if (siteContent) {
+        // Extract brand info
         initialBrand = {
           mode: siteContent.navbarLogoMode === 'image' ? 'image' : 'text',
           imageUrl: siteContent.navbarLogoImageUrl || undefined,
@@ -74,18 +76,30 @@ export default async function RootLayout({
           weight: typeof siteContent.navbarLogoTextWeight === 'number' ? siteContent.navbarLogoTextWeight : 700,
           size: typeof siteContent.navbarLogoTextSize === 'number' ? siteContent.navbarLogoTextSize : 20,
         };
+        
+        // Extract palette from server content 
+        serverPalette = siteContent.colorPalette || 'gz-default';
       }
     }
   } catch (error) {
-    // Fallback to null if fetch fails
-    console.log('Failed to fetch brand info for SSR:', error);
+    // Fallback to defaults if fetch fails
+    console.log('Failed to fetch site content for SSR:', error);
   }
 
-  // Generate CSS variables for immediate application
-  const defaultPalette = {
-    primary: '#0B5E0B', accent: '#00D084', background: '#FFFFFF', foreground: '#0E0F12',
-    border: '#E2E8F0', card: '#FFFFFF', muted: '#F1F5F9', navbarBg: 'rgba(0,0,0,0.8)',
-    navbarText: '#FFFFFF', secondaryBg: '#F8FAFC', secondaryText: '#475569'
+  // Generate CSS variables using server palette
+  const serverPaletteConfig = getPaletteConfig(serverPalette);
+  const initialPalette = {
+    primary: serverPaletteConfig.primary,
+    accent: serverPaletteConfig.accent,
+    background: serverPaletteConfig.background,
+    foreground: serverPaletteConfig.foreground,
+    border: serverPaletteConfig.border,
+    card: serverPaletteConfig.card,
+    muted: serverPaletteConfig.muted,
+    navbarBg: serverPaletteConfig.navbarBg,
+    navbarText: serverPaletteConfig.navbarText,
+    secondaryBg: serverPaletteConfig.secondaryBg,
+    secondaryText: serverPaletteConfig.secondaryText
   };
 
   const hexToRgb = (hex: string): string => {
@@ -102,29 +116,31 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               :root {
-                --primary: ${defaultPalette.primary} !important;
-                --primary-rgb: ${hexToRgb(defaultPalette.primary)} !important;
-                --accent: ${defaultPalette.accent} !important;
-                --accent-rgb: ${hexToRgb(defaultPalette.accent)} !important;
-                --background: ${defaultPalette.background} !important;
-                --foreground: ${defaultPalette.foreground} !important;
-                --border: ${defaultPalette.border} !important;
-                --card: ${defaultPalette.card} !important;
-                --muted-bg: ${defaultPalette.muted} !important;
-                --navbar-bg: ${defaultPalette.navbarBg} !important;
-                --navbar-text: ${defaultPalette.navbarText} !important;
-                --secondary-bg: ${defaultPalette.secondaryBg} !important;
-                --secondary-fg: ${defaultPalette.secondaryText} !important;
+                --primary: ${initialPalette.primary} !important;
+                --primary-rgb: ${hexToRgb(initialPalette.primary)} !important;
+                --accent: ${initialPalette.accent} !important;
+                --accent-rgb: ${hexToRgb(initialPalette.accent)} !important;
+                --background: ${initialPalette.background} !important;
+                --foreground: ${initialPalette.foreground} !important;
+                --border: ${initialPalette.border} !important;
+                --card: ${initialPalette.card} !important;
+                --muted-bg: ${initialPalette.muted} !important;
+                --navbar-bg: ${initialPalette.navbarBg} !important;
+                --navbar-text: ${initialPalette.navbarText} !important;
+                --secondary-bg: ${initialPalette.secondaryBg} !important;
+                --secondary-fg: ${initialPalette.secondaryText} !important;
               }
             `
           }}
         />
-        {/* Script to override with localStorage palette if available */}
+        {/* Script to apply localStorage palette override if available and different from server */}
         <script 
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
+                  // Server palette is already applied: ${serverPalette}
+                  
                   // Helper function to extract RGB values from hex
                   function hexToRgb(hex) {
                     const h = hex.replace('#', '');
@@ -133,20 +149,25 @@ export default async function RootLayout({
                   }
                   
                   // Try to get palette from localStorage
-                  let palette = null;
+                  let localPalette = null;
                   try {
                     if (typeof Storage !== 'undefined' && localStorage) {
-                      palette = localStorage.getItem('gz-palette');
+                      localPalette = localStorage.getItem('gz-palette');
                     }
                   } catch(e) {
-                    // localStorage not available (incognito mode, etc.) - keep default
+                    // localStorage not available (incognito mode, etc.) - server palette already applied
                     return;
                   }
                   
-                  // Only override if we have a stored palette different from default
-                  if (!palette || palette === 'gz-default') return;
+                  // Only override if we have a local palette different from server palette
+                  if (!localPalette || localPalette === '${serverPalette}') return;
                   
                   const palettes = {
+                    'gz-default': {
+                      primary: '#0B5E0B', accent: '#00D084', background: '#FFFFFF', foreground: '#0E0F12',
+                      border: '#E2E8F0', card: '#FFFFFF', muted: '#F1F5F9', navbarBg: 'rgba(0,0,0,0.8)',
+                      navbarText: '#FFFFFF', secondaryBg: '#F8FAFC', secondaryText: '#475569'
+                    },
                     'modern-blue': {
                       primary: '#2563EB', accent: '#3B82F6', background: '#FFFFFF', foreground: '#1E293B',
                       border: '#E2E8F0', card: '#FFFFFF', muted: '#F1F5F9', navbarBg: 'rgba(30, 41, 59, 0.9)',
@@ -174,10 +195,10 @@ export default async function RootLayout({
                     }
                   };
                   
-                  const colors = palettes[palette];
+                  const colors = palettes[localPalette];
                   if (!colors) return;
                   
-                  // Override CSS variables
+                  // Override CSS variables with localStorage palette
                   const root = document.documentElement;
                   root.style.setProperty('--primary', colors.primary, 'important');
                   root.style.setProperty('--primary-rgb', hexToRgb(colors.primary), 'important');
@@ -193,7 +214,7 @@ export default async function RootLayout({
                   root.style.setProperty('--secondary-bg', colors.secondaryBg, 'important');
                   root.style.setProperty('--secondary-fg', colors.secondaryText, 'important');
                 } catch(e) {
-                  // Silent fail - default palette already applied
+                  // Silent fail - server palette already applied
                 }
               })();
             `
