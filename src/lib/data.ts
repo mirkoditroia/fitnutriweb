@@ -17,7 +17,7 @@ import {
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
 
 // Funzione per inviare notifica email per nuova prenotazione
-async function sendBookingNotification(booking: Booking, packageTitle?: string) {
+async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string) {
   try {
     // Usa Firebase Functions per l'invio email
     const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
@@ -28,7 +28,8 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string) 
       body: JSON.stringify({
         type: 'new-booking',
         booking,
-        packageTitle
+        packageTitle,
+        notificationEmail // Passa l'email configurabile
       }),
     });
 
@@ -198,6 +199,8 @@ export interface SiteContent {
     timezone?: string;
     serviceAccountEmail?: string;
   };
+  // Email notification settings
+  notificationEmail?: string; // Email del nutrizionista per ricevere notifiche
 }
 
 export type Availability = {
@@ -468,7 +471,12 @@ export async function createBooking(b: Booking): Promise<string> {
   // Invia notifica email al nutrizionista per nuova prenotazione
   try {
     const bookingWithId = { ...b, id: added.id };
-    await sendBookingNotification(bookingWithId, packageTitle);
+    
+    // Ottieni l'email di notifica dalle impostazioni
+    const siteContent = await getSiteContent();
+    const notificationEmail = siteContent?.notificationEmail || "mirkoditroia@gmail.com";
+    
+    await sendBookingNotification(bookingWithId, packageTitle, notificationEmail);
   } catch (error) {
     console.error("Error sending booking notification:", error);
     // Don't fail the booking creation if notification fails
@@ -942,7 +950,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
           description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
           ctaText: "Prenota Ora - È Gratis!"
         },
-        colorPalette: "gz-default" as const
+        colorPalette: "gz-default" as const,
+        notificationEmail: "mirkoditroia@gmail.com" // Default notification email
       };
       
       // Salva il contenuto di default in Firebase
@@ -1031,6 +1040,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         serviceAccountEmail: data.googleCalendar?.serviceAccountEmail || "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
       },
       colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
+      notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com"
     };
     
     console.log("getSiteContent: Contenuto finale mappato:", siteContent);
@@ -1198,7 +1208,8 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
       description: fromFs("freeConsultationPopup.description") || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
       ctaText: fromFs("freeConsultationPopup.ctaText") || "Prenota Ora - È Gratis!"
     },
-    colorPalette: (fromFs("colorPalette") as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default'
+    colorPalette: (fromFs("colorPalette") as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
+    notificationEmail: fromFs("notificationEmail") || "mirkoditroia@gmail.com"
   };
 }
 

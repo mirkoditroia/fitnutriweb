@@ -239,7 +239,7 @@ exports.calendarOperations = onRequest(async (req, res) => {
 });
 
 // Email configuration using secure secrets and environment variables
-function getEmailConfig() {
+function getEmailConfig(customNotificationEmail) {
   // Use secure secrets and environment variables
   const enabled = process.env.EMAIL_NOTIFICATIONS_ENABLED || 'true';
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -248,7 +248,8 @@ function getEmailConfig() {
   const user = process.env.SMTP_USER || 'fitnutriweb@gmail.com';
   const password = smtpPassword.value(); // Use secure secret
   const from = process.env.SMTP_FROM || 'noreply@gznutrition.it';
-  const notificationEmail = process.env.NOTIFICATION_EMAIL || 'mirkoditroia@gmail.com';
+  // Use custom notification email from request, fallback to env var, then default
+  const notificationEmail = customNotificationEmail || process.env.NOTIFICATION_EMAIL || 'mirkoditroia@gmail.com';
   
   if (!password) {
     throw new Error('SMTP_PASSWORD secret is required - please configure Firebase Secret');
@@ -267,8 +268,8 @@ function getEmailConfig() {
 }
 
 // Create email transporter
-function createEmailTransporter() {
-  const emailConfig = getEmailConfig();
+function createEmailTransporter(customNotificationEmail) {
+  const emailConfig = getEmailConfig(customNotificationEmail);
   
   return nodemailer.createTransport({
     host: emailConfig.host,
@@ -395,13 +396,13 @@ exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (
   if (handleCors(req, res)) return;
   
   try {
-    const { type, booking, packageTitle } = req.body;
+    const { type, booking, packageTitle, notificationEmail } = req.body;
     
     if (type !== 'new-booking') {
       return res.status(400).json({ success: false, message: 'Invalid notification type' });
     }
 
-    const emailConfig = getEmailConfig();
+    const emailConfig = getEmailConfig(notificationEmail);
     
     if (!emailConfig.enabled) {
       console.log('Email notifications disabled, skipping...');
@@ -413,7 +414,7 @@ exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (
       return res.status(500).json({ success: false, message: 'Notification email not configured' });
     }
 
-    const transporter = createEmailTransporter();
+    const transporter = createEmailTransporter(notificationEmail);
     
     // Verify configuration
     await transporter.verify();
