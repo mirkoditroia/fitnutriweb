@@ -84,7 +84,6 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [confirmingBookingId, setConfirmingBookingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("requests");
-  const [calendarId, setCalendarId] = useState<string>("");
   
   // Manual booking form state
   const [manualForm, setManualForm] = useState({
@@ -144,31 +143,6 @@ export default function AdminBookingsPage() {
     loadData();
   }, []);
 
-  // Carica il Calendar ID per Google Calendar
-  useEffect(() => {
-    getSiteContent().then(content => {
-      const id = content?.googleCalendar?.calendarId || "";
-      setCalendarId(id);
-    }).catch(error => {
-      console.error("Errore nel caricamento del Calendar ID:", error);
-    });
-  }, []);
-
-  // Funzioni per Google Calendar
-  const openCalendar = () => {
-    if (!calendarId) {
-      toast.error("Calendar ID mancante. Configura Google Calendar nelle impostazioni.");
-      return;
-    }
-    window.open(
-      `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(calendarId)}`,
-      "_blank"
-    );
-  };
-
-  const openCalendarSettings = () => {
-    router.push("/admin/calendar");
-  };
 
   const getPackageName = (packageId?: string) => {
     if (!packageId) return "Nessun pacchetto";
@@ -801,35 +775,6 @@ export default function AdminBookingsPage() {
         </div>
       </div>
       
-      {/* Barra accesso Google Calendar - sempre visibile anche su mobile */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-3 border-b border-border/40 mt-6">
-        <div className="flex items-center justify-between gap-2 px-2 sm:px-4">
-          <div className="text-xs sm:text-sm text-foreground/60 truncate flex-1">
-            <span className="hidden sm:inline">Google Calendar: </span>
-            <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
-              {calendarId || "Non configurato"}
-            </span>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <Button 
-              size="sm" 
-              onClick={openCalendar} 
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
-              disabled={!calendarId}
-            >
-              📅 Apri Calendario
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={openCalendarSettings}
-              className="text-xs px-3 py-1"
-            >
-              ⚙️ Impostazioni
-            </Button>
-          </div>
-        </div>
-      </div>
       
       {/* Navigation Tabs */}
        <div className="flex items-center justify-between mt-6 border-b border-foreground/20">
@@ -1500,17 +1445,6 @@ export default function AdminBookingsPage() {
         </div>
       )}
       
-      {/* FAB per accesso rapido al calendario su mobile */}
-      <div className="fixed bottom-6 right-6 z-50 sm:hidden">
-        <Button
-          onClick={openCalendar}
-          className="w-14 h-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white"
-          disabled={!calendarId}
-          title="Apri Google Calendar"
-        >
-          📅
-        </Button>
-      </div>
     </>
   );
 }

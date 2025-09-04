@@ -96,21 +96,21 @@ export default function ResultsCarouselDesktop({ photos }: ResultsCarouselDeskto
         {/* Controlli di navigazione - solo se più di 3 foto */}
         {photos.length > photosPerPage && (
           <>
-            {/* Frecce di navigazione visibili e a metà altezza */}
+            {/* Frecce di navigazione molto visibili */}
             <button
               onClick={goToPrev}
-              className="absolute left-2 top-[40%] -translate-y-1/2 group bg-primary/95 hover:bg-primary backdrop-blur-sm rounded-full p-3 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 z-20 border border-primary/30"
+              className="absolute left-4 top-1/2 -translate-y-1/2 group bg-white hover:bg-gray-50 backdrop-blur-sm rounded-full p-4 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110 z-30 border-2 border-gray-200 hover:border-primary"
               aria-label="Foto precedenti"
             >
-              <ChevronLeft className="w-5 h-5 text-white group-hover:text-white/90 transition-colors duration-200" />
+              <ChevronLeft className="w-6 h-6 text-primary group-hover:text-primary/80 transition-colors duration-200" />
             </button>
             
             <button
               onClick={goToNext}
-              className="absolute right-2 top-[40%] -translate-y-1/2 group bg-primary/95 hover:bg-primary backdrop-blur-sm rounded-full p-3 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 z-20 border border-primary/30"
+              className="absolute right-4 top-1/2 -translate-y-1/2 group bg-white hover:bg-gray-50 backdrop-blur-sm rounded-full p-4 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110 z-30 border-2 border-gray-200 hover:border-primary"
               aria-label="Foto successive"
             >
-              <ChevronRight className="w-5 h-5 text-white group-hover:text-white/90 transition-colors duration-200" />
+              <ChevronRight className="w-6 h-6 text-primary group-hover:text-primary/80 transition-colors duration-200" />
             </button>
 
             {/* Indicatori di paginazione (dots) */}
