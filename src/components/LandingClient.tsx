@@ -241,13 +241,53 @@ export default function LandingClient() {
       <PackagesCarousel items={featuredFirst} />
       
       {/* Sezione Risultati Clienti - se abilitata */}
-      {effectiveContent.resultsSection?.isEnabled && effectiveContent.resultsSection.photos && effectiveContent.resultsSection.photos.length > 0 && (
-        <ResultsCarousel
-          title={effectiveContent.resultsSection.title}
-          subtitle={effectiveContent.resultsSection.subtitle}
-          photos={effectiveContent.resultsSection.photos}
-        />
-      )}
+      {effectiveContent.resultsSection?.isEnabled && effectiveContent.resultsSection.photos && effectiveContent.resultsSection.photos.length > 0 && (() => {
+        try {
+          return (
+            <ResultsCarousel
+              title={effectiveContent.resultsSection.title}
+              subtitle={effectiveContent.resultsSection.subtitle}
+              photos={effectiveContent.resultsSection.photos}
+            />
+          );
+        } catch (error) {
+          console.error('❌ Errore ResultsCarousel:', error);
+          return (
+            <section className="py-20 bg-gradient-to-b from-secondary-bg/30 to-background">
+              <div className="container max-w-6xl mx-auto px-4 text-center">
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                  🎯 Risultati dei Nostri Clienti
+                </h2>
+                <p className="text-lg text-foreground/70 max-w-3xl mx-auto mb-8">
+                  Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {effectiveContent.resultsSection.photos.map((photo, index) => (
+                    <div key={photo.id} className="bg-card rounded-lg overflow-hidden shadow-lg">
+                      <div className="aspect-square bg-gray-200 flex items-center justify-center">
+                        <img 
+                          src={photo.url} 
+                          alt={photo.description || `Risultato ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement.innerHTML = '<div class="text-gray-500">Immagine non disponibile</div>';
+                          }}
+                        />
+                      </div>
+                      {photo.description && (
+                        <div className="p-4">
+                          <p className="text-sm text-foreground/80">{photo.description}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        }
+      })()}
       
       {/* Sezione Prenota Consulenza */}
       <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
