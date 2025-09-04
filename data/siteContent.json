@@ -76,16 +76,10 @@
     "subtitle": "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
     "photos": [
       {
-        "id": "1757013410125",
-        "url": "/api/upload/results%2F1757013410064-289262710_1694863080847740_3701375318360437609_n.jpg",
-        "description": "un figo",
-        "beforeAfter": "before"
-      },
-      {
-        "id": "1757013430016",
-        "url": "/api/upload/results%2F1757013429941-ab67616d0000b273edfa4883e6e22c01334bab45.jpg",
-        "description": "top",
-        "beforeAfter": "after"
+        "id": "1757018737518",
+        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop",
+        "description": "",
+        "beforeAfter": "single"
       }
     ]
   }
