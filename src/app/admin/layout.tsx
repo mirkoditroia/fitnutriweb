@@ -54,6 +54,12 @@ export default function AdminLayout({
                 >
                   📅 Calendario
                 </Link>
+                <Link 
+                  href="/admin/notifications" 
+                  className="text-sm font-medium text-white/80 hover:text-white transition-colors"
+                >
+                  📧 Email
+                </Link>
               </nav>
             </div>
             <div className="flex gap-3">

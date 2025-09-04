@@ -15,6 +15,32 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
+
+// Funzione per inviare notifica email per nuova prenotazione
+async function sendBookingNotification(booking: Booking, packageTitle?: string) {
+  try {
+    const response = await fetch('/api/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'new-booking',
+        booking,
+        packageTitle
+      }),
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      console.log('Booking notification sent successfully:', result.sentTo);
+    } else {
+      console.error('Failed to send booking notification:', result.message);
+    }
+  } catch (error) {
+    console.error('Error sending booking notification:', error);
+  }
+}
 import { db } from "@/lib/firebase";
 import type { Firestore } from "firebase/firestore";
 
@@ -436,6 +462,15 @@ export async function createBooking(b: Booking): Promise<string> {
   } catch (error) {
     console.error("Error creating Google Calendar event:", error);
     // Don't fail the booking creation if calendar fails
+  }
+
+  // Invia notifica email al nutrizionista per nuova prenotazione
+  try {
+    const bookingWithId = { ...b, id: added.id };
+    await sendBookingNotification(bookingWithId, packageTitle);
+  } catch (error) {
+    console.error("Error sending booking notification:", error);
+    // Don't fail the booking creation if notification fails
   }
 
   return added.id;
