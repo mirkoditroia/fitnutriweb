@@ -48,29 +48,6 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <h2 className="font-semibold">Google Calendar</h2>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-foreground/70">
-              Accedi direttamente al calendario Google e gestisci l'integrazione per sincronizzare le prenotazioni.
-            </p>
-            <div className="mt-4 flex gap-3">
-              <Link 
-                href="https://calendar.google.com/calendar/u/0/r?cid=9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com" 
-                target="_blank"
-                className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-base font-semibold"
-              >
-                📅 Apri Google Calendar
-              </Link>
-              <Link href="/admin/calendar" className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-medium">
-                ⚙️ Configurazione
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <h2 className="font-semibold">Disponibilità</h2>
           </CardHeader>
           <CardContent>
@@ -110,6 +87,26 @@ export default function AdminPage() {
             <div className="mt-4 flex gap-3">
               <Link href="/admin/content" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium">
                 ✏️ Editor Contenuti
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold">Google Calendar</h2>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-foreground/70">
+              Accedi direttamente al calendario Google e gestisci l'integrazione per sincronizzare le prenotazioni.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <Link 
+                href="https://calendar.google.com/calendar/u/0/r?cid=9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com" 
+                target="_blank"
+                className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-base font-semibold"
+              >
+                📅 Apri Google Calendar
               </Link>
             </div>
           </CardContent>
