@@ -1,161 +1,254 @@
-# GZnutrition — Piattaforma Nutrizionista
+# 🥗 GZ Nutrition Website
 
-Stack completo: **Next.js 14 (App Router) + TypeScript + Tailwind CSS + Firebase (Firestore + Storage)**
+Un sistema completo di gestione prenotazioni per nutrizionisti con integrazione email, calendario e admin panel.
 
 ## 🚀 Quick Start
 
-### Prerequisiti
-- **Node.js 20+** (richiesto per deploy Firebase)
-- Account Firebase con progetto configurato
-
-### Installazione
-
+### Sviluppo Locale
 ```bash
-# 1. Installa dipendenze
+# 1. Clona e installa
+git clone https://github.com/[USERNAME]/gznutrition-website.git
+cd gznutrition-website/gznutrition
 npm install
 
-# 2. Configura environment
-cp .env.example .env.local
-# Popola i valori Firebase nel file .env.local
-
-# 3. Avvia development server
+# 2. Avvia sviluppo
 npm run dev
+
+# 3. Apri http://localhost:3000
 ```
 
-🌐 **URL Development**: `http://localhost:3000`  
-🔧 **Admin Panel**: `http://localhost:3000/admin?key=admin123`
+### Modalità Data
+- **🔧 Locale**: `localStorage` (automatico in sviluppo)
+- **🌐 Demo**: File JSON statici (Render pre-produzione)  
+- **🚀 Firebase**: Database reale (produzione)
 
-## 🔧 Modalità di Data
+## 📁 Struttura Progetto
 
-Il sistema supporta 3 modalità configurabili via `NEXT_PUBLIC_DATA_MODE`:
-
-### 🏠 `local` (Development)
-- **Storage**: localStorage + file JSON locali in `.data/`
-- **Uso**: Development locale e testing
-- **Persistenza**: Dati salvati localmente, persi solo con reset manuale
-
-### 📁 `demo` (Pre-production)
-- **Storage**: File statici in `/public/demo/`
-- **Uso**: Demo su GitHub Pages o altri hosting statici
-- **Caratteristiche**: Read-only, perfetto per showcasing
-
-### ☁️ `firebase` (Production)
-- **Storage**: Firebase Firestore + Storage
-- **Uso**: Production con dati persistenti
-- **Caratteristiche**: Scalabile, backup automatico, real-time
-
-## ⚙️ Environment Variables
-
-```bash
-# Data Mode
-NEXT_PUBLIC_DATA_MODE=local  # local | demo | firebase
-
-# Firebase (solo per modalità 'firebase')
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=
-
-# Admin Access
-ADMIN_ACCESS_KEY=admin123
-
-# Trustpilot (opzionale)
-TRUSTPILOT_API_KEY=
-TRUSTPILOT_BUSINESS_ID=
+```
+gznutrition/
+├── src/
+│   ├── app/                 # Next.js App Router
+│   │   ├── admin/          # Panel amministrativo
+│   │   ├── api/            # API endpoints
+│   │   └── globals.css     # Stili globali + Palette
+│   ├── components/         # Componenti React
+│   │   ├── BookingForm.tsx # Form prenotazioni + CAPTCHA
+│   │   ├── navbar.tsx      # Navigation
+│   │   └── ui/            # Componenti base
+│   └── lib/               # Logica business
+│       ├── data.ts        # Firebase integration
+│       ├── datasource.ts  # Data abstraction layer
+│       ├── palettes.ts    # Sistema colori
+│       └── directState.ts # State management
+├── functions/             # Firebase Functions
+│   └── index.js          # Email + Calendar + CAPTCHA
+├── public/
+│   └── demo/             # Dati demo per pre-produzione
+└── DEPLOYMENT_GUIDE.md  # Guida completa deploy
 ```
 
-## 🛠️ Scripts NPM
+## ✨ Funzionalità
 
-```bash
-npm run dev        # Development server
-npm run build      # Build produzione
-npm run start      # Start build produzione
-npm run lint       # ESLint check
-npm run typecheck  # TypeScript check
-npm run format     # Prettier format
+### 👤 Cliente
+- 📱 Form prenotazione responsive
+- 🎨 Selezione pacchetti con modal
+- 📅 Calendario interattivo disponibilità
+- 🏢 Scelta sede (online/studio)
+- 🔒 Protezione CAPTCHA anti-spam
+- 💳 Visualizzazione prezzi e sconti
+
+### 🏥 Nutrizionista (Admin)
+- 📊 Dashboard prenotazioni
+- ✅ Conferma/rifiuta appuntamenti
+- 👥 Gestione clienti automatica
+- 📧 Email notifiche configurabili
+- 📅 Sincronizzazione Google Calendar
+- 🎨 Personalizzazione contenuti e colori
+- ⚙️ Configurazioni avanzate
+
+### 🔧 Sistema
+- 🔄 Multi-environment (local/demo/prod)
+- 📨 Email automatiche con template HTML
+- 📅 Google Calendar API integration
+- 🔒 reCAPTCHA v2 verification
+- 🎨 Sistema palette colori configurabile
+- 📱 Responsive design completo
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 15 + TypeScript + Tailwind CSS
+- **Database**: Firebase Firestore
+- **Backend**: Firebase Functions
+- **Email**: Nodemailer + Gmail SMTP
+- **Calendar**: Google Calendar API
+- **Security**: reCAPTCHA v2
+- **Forms**: React Hook Form + Zod validation
+- **Styling**: Tailwind CSS + CSS Custom Properties
+
+## 📦 Dipendenze Principali
+
+```json
+{
+  "dependencies": {
+    "next": "15.5.0",
+    "react": "^18.0.0",
+    "firebase": "^10.7.0",
+    "react-hook-form": "^7.48.0",
+    "react-google-recaptcha": "^3.1.0",
+    "date-fns": "^3.0.0",
+    "zod": "^3.22.0"
+  }
+}
 ```
 
-## 📱 Admin Panel
+## 🚀 Deploy
 
-**URL**: `/admin?key=ADMIN_ACCESS_KEY`
+### Pre-produzione (Render)
+- **URL**: `https://app-name.onrender.com`
+- **Data**: Demo files from `/public/demo/`
+- **Features**: Form + Admin read-only
 
-### 📋 Gestione Prenotazioni
-- **Visualizza** tutte le richieste con dettagli completi
-- **Conferma/Rifiuta** prenotazioni con aggiornamento stato
-- **Gestione slot**: slot confermati vengono automaticamente rimossi dalla disponibilità
+### Produzione (Firebase)
+- **URL**: `https://project-id.web.app`
+- **Data**: Firebase Firestore
+- **Features**: Complete system + integrations
 
-### 📦 Gestione Pacchetti  
-- CRUD completo: titolo, descrizione, prezzo, immagine, badge
-- Toggle attivo/disattivo, flag "featured"
-- Upload immagini (locale/Firebase Storage)
+📖 **Guida completa**: Vedi [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
 
-### 📅 Disponibilità
-- Generatore slot automatico con intervalli configurabili
-- Calendar picker per selezione date
-- Gestione orari (inizio, fine, intervallo)
+## ⚙️ Configurazione
 
-### 🏠 Contenuti Landing
-- Hero section: titolo, sottotitolo, CTA
-- Sezione "Chi sono": titolo, immagine, descrizione
-- FAQ: CRUD completo domande/risposte
-- Galleria immagini con slider
-
-## 🎨 Design System
-
-**Palette Colori**:
-- 🟢 Primary: `#00D084` (neon wellness green)
-- 🔴 Accent: `#FF6B6B` (CTA red)  
-- ⚫ Dark: `#0E0F12` (deep dark)
-- ⚪ Light: `#F7F9FB` (clean light)
-
-**Principi UX**:
-- 📱 Mobile-first responsive design
-- ♿ Accessibilità: contrasto 4.5:1, focus ring, ARIA labels
-- ⚡ Performance: ottimizzato per mobile, lazy loading
-- 🎯 Target: giovani adulti 20-35 focalizzati su fitness/wellness
-
-## 🚀 Deploy Firebase
-
+### Email (Firebase Functions)
 ```bash
-# 1. Build del progetto
+firebase functions:secrets:set SMTP_PASSWORD
+# Gmail App Password (16 chars)
+```
+
+### Google Calendar
+```bash
+firebase functions:secrets:set GOOGLE_SERVICE_ACCOUNT --data-file="service-account.json"
+```
+
+### reCAPTCHA
+```bash
+firebase functions:secrets:set RECAPTCHA_SECRET_KEY
+# Google reCAPTCHA Secret Key
+```
+
+## 🎨 Personalizzazione
+
+### Palette Colori
+5 palette predefinite configurabili da admin:
+- **GZ Default**: Verde natura
+- **Modern Blue**: Blu professionale  
+- **Elegant Dark**: Grigio scuro elegante
+- **Nature Green**: Verde intenso
+- **Warm Orange**: Arancione caldo
+
+### Contenuti
+Tutto personalizzabile da `/admin/content`:
+- Hero section + CTA
+- Pacchetti e prezzi
+- Sezioni informative
+- FAQ dinamiche
+- Dettagli contatto
+
+## 🔐 Sicurezza
+
+- ✅ **reCAPTCHA v2**: Anti-spam per form
+- ✅ **Firebase Security Rules**: Accesso controllato
+- ✅ **Environment Variables**: Credenziali sicure
+- ✅ **HTTPS Only**: Comunicazioni criptate
+- ✅ **Admin Authentication**: Accesso riservato
+
+## 📊 Admin Panel
+
+### Sezioni Disponibili
+- 📈 **Dashboard**: Panoramica prenotazioni
+- 📅 **Prenotazioni**: Gestione completa appuntamenti
+- 👥 **Clienti**: Database clienti automatico
+- 📦 **Pacchetti**: Gestione offerte e prezzi
+- 📝 **Contenuti**: Personalizzazione sito
+- ⚙️ **Impostazioni**: Email, Calendar, CAPTCHA
+
+### Accesso Admin
+- **URL**: `/admin`
+- **Auth**: Sistema integrato Next.js
+- **Responsive**: Ottimizzato mobile
+
+## 🐛 Troubleshooting
+
+### Build Errors
+```bash
+# Clean e rebuild
+rm -rf .next
 npm run build
-
-# 2. Login Firebase
-npx firebase login
-
-# 3. Deploy (include Firestore rules + hosting)
-npx firebase deploy
-
-# 4. Configura environment produzione
-# Imposta NEXT_PUBLIC_DATA_MODE=firebase nelle env vars di Firebase
 ```
 
-### Firestore Rules
-Le regole sono automaticamente deployate da `firestore.rules`:
-- **Packages, Content, Availability**: Read pubblico, Write solo admin
-- **Bookings, Clients**: Read/Write aperto (da restringere con auth in futuro)
+### Firebase Issues
+```bash
+# Re-login e re-deploy
+firebase login
+firebase use your-project-id
+firebase deploy
+```
 
-## 🧪 Testing & QA
+### Email Non Funziona
+1. Verifica Gmail App Password (non password account)
+2. Controlla Firebase Functions logs: `firebase functions:log`
+3. Testa configurazione da admin panel
 
-### Checklist Manual Testing
-- [ ] 📱 Responsive design su mobile/tablet/desktop
-- [ ] 🎨 Palette colori corretta in tutte le sezioni  
-- [ ] ♿ Focus ring visibile su navigazione keyboard
-- [ ] 📋 Form prenotazione: validazione + submit + toast
-- [ ] 🔧 Admin: tutte le sezioni CRUD funzionanti
-- [ ] 📦 Pacchetti: scroll a form + precompilazione
-- [ ] 📅 Disponibilità: generazione slot + rimozione su conferma
-- [ ] 🌐 Switch modalità: local ↔ firebase funzionante
+### Calendar Non Sincronizza
+1. Verifica Service Account permissions
+2. Controlla Calendar ID in configurazione
+3. Assicurati che calendar sia condiviso con Service Account
 
-### Performance Targets
-- 📊 Lighthouse Mobile: ≥90 Performance, ≥95 Accessibility
-- ⚡ First Contentful Paint: <2.5s
-- 📱 Mobile responsiveness: tutte le breakpoint
+## 📞 Supporto
+
+### Log e Debug
+```bash
+# Firebase Functions
+firebase functions:log
+
+# Browser Console
+F12 → Console tab
+
+# Render Logs
+Dashboard → Logs section
+```
+
+### Performance
+- **Lighthouse**: Score target > 90
+- **Core Web Vitals**: Optimized
+- **Mobile First**: Responsive design
+
+## 🔄 Updates
+
+Per aggiornare il sistema:
+1. Backup database: `gcloud firestore export`
+2. Test su branch feature
+3. Deploy su pre-produzione
+4. Verify functionality  
+5. Deploy produzione
+
+## 📋 Checklist Go-Live
+
+- [ ] Firebase project configurato
+- [ ] Email SMTP testata
+- [ ] Google Calendar collegato
+- [ ] reCAPTCHA configurato
+- [ ] Admin panel testato
+- [ ] Mobile responsive verificato
+- [ ] Performance ottimizzata
+- [ ] Backup configurato
+
+## 📄 Licenza
+
+Proprietario: GZ Nutrition
+Versione: 1.0
+Data: Gennaio 2025
 
 ---
 
-**Target Audience**: Giovani adulti 20-35 orientati a trasformazione fisica, estetica e performance  
-**Tech Stack**: Next.js 14, TypeScript, Tailwind CSS, Firebase, React Hook Form, Zod validation
+**🚀 Pronto per il deploy!** 
+
+Per istruzioni dettagliate vedi [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
