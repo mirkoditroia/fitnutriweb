@@ -52,6 +52,12 @@
     "ctaText": "Prenota Ora - È Gratis!",
     "isEnabled": true
   },
-  "colorPalette": "gz-default"
+  "colorPalette": "gz-default",
+  "resultsSection": {
+    "isEnabled": false,
+    "title": "🎯 Risultati dei Nostri Clienti",
+    "subtitle": "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+    "photos": []
+  }
 }
 

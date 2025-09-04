@@ -6,6 +6,13 @@
   "faq": [
     { "q": "Quanto tempo serve?", "a": "4–6 settimane per cambi visibili." },
     { "q": "Serve palestra?", "a": "Consigliata ma non obbligatoria." }
-  ]
+  ],
+  "colorPalette": "gz-default",
+  "resultsSection": {
+    "isEnabled": false,
+    "title": "🎯 Risultati dei Nostri Clienti",
+    "subtitle": "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+    "photos": []
+  }
 }
 
