@@ -31,6 +31,12 @@ export default async function Home() {
       heroBackgroundImage: "",
       images: [],
       colorPalette: "gz-default" as const,
+      resultsSection: {
+        isEnabled: false,
+        title: "🎯 Risultati dei Nostri Clienti",
+        subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+        photos: []
+      },
     };
 
   const featuredFirst = [...packages].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));

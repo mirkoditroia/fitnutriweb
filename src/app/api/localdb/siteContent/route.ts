@@ -58,7 +58,14 @@ if (!existsSync(filePath)) {
         city: "Milano",
         postalCode: "20122"
       }
-    ]
+    ],
+    colorPalette: "gz-default",
+    resultsSection: {
+      isEnabled: false,
+      title: "🎯 Risultati dei Nostri Clienti",
+      subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+      photos: []
+    }
   };
   
   writeFileSync(filePath, JSON.stringify(demoData, null, 2));

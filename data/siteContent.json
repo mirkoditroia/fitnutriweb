@@ -69,5 +69,24 @@
   "navbarBgColor": "#dfd8d8",
   "navbarTextColor": "#e60000",
   "buttonTarget": "secondary",
-  "colorPalette": "modern-blue"
+  "colorPalette": "modern-blue",
+  "resultsSection": {
+    "isEnabled": true,
+    "title": "🎯 Risultati dei Nostri Clienti",
+    "subtitle": "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+    "photos": [
+      {
+        "id": "1757013410125",
+        "url": "/api/upload/results%2F1757013410064-289262710_1694863080847740_3701375318360437609_n.jpg",
+        "description": "un figo",
+        "beforeAfter": "before"
+      },
+      {
+        "id": "1757013430016",
+        "url": "/api/upload/results%2F1757013429941-ab67616d0000b273edfa4883e6e22c01334bab45.jpg",
+        "description": "top",
+        "beforeAfter": "after"
+      }
+    ]
+  }
 }

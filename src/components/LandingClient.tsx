@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Hero } from "@/components/Hero";
 import { AboutSection } from "@/components/AboutSection";
 import { PackagesCarousel } from "@/components/PackagesCarousel";
+import { ResultsCarousel } from "@/components/ResultsCarousel";
 import { TrustpilotWall } from "@/components/TrustpilotWall";
 import { BookingForm } from "@/components/BookingForm";
 import { LandingImages } from "@/components/LandingImages";
@@ -33,7 +34,13 @@ export default function LandingClient() {
         heroCta: "Prenota ora",
         heroBackgroundImage: "",
         images: [],
-        colorPalette: "gz-default"
+        colorPalette: "gz-default",
+        resultsSection: {
+          isEnabled: false,
+          title: "🎯 Risultati dei Nostri Clienti",
+          subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+          photos: []
+        }
       };
       const finalContent = c ?? fallbackContent;
       const finalPackages = Array.isArray(p) ? p : [];
@@ -100,6 +107,12 @@ export default function LandingClient() {
         calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
         timezone: "Europe/Rome",
         serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+      },
+      resultsSection: {
+        isEnabled: false,
+        title: "🎯 Risultati dei Nostri Clienti",
+        subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+        photos: []
       }
     };
   }
@@ -165,6 +178,12 @@ export default function LandingClient() {
       calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
       timezone: "Europe/Rome",
       serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+    },
+    resultsSection: {
+      isEnabled: false,
+      title: "🎯 Risultati dei Nostri Clienti",
+      subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+      photos: []
     }
   };
   const effectivePackages = finalPackages;
@@ -220,6 +239,15 @@ export default function LandingClient() {
         <LandingImages images={effectiveContent.images} />
       )}
       <PackagesCarousel items={featuredFirst} />
+      
+      {/* Sezione Risultati Clienti - se abilitata */}
+      {effectiveContent.resultsSection?.isEnabled && effectiveContent.resultsSection.photos && effectiveContent.resultsSection.photos.length > 0 && (
+        <ResultsCarousel
+          title={effectiveContent.resultsSection.title}
+          subtitle={effectiveContent.resultsSection.subtitle}
+          photos={effectiveContent.resultsSection.photos}
+        />
+      )}
       
       {/* Sezione Prenota Consulenza */}
       <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">

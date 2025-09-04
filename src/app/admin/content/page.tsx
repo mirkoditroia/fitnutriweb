@@ -732,6 +732,188 @@ export default function AdminContentPage() {
           </div>
         </section>
 
+        {/* Sezione Risultati Clienti */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-black">📸 Risultati Clienti</h2>
+              <p className="text-sm text-black/70">Carosello di foto dei risultati ottenuti dai clienti</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={content.resultsSection?.isEnabled ?? false}
+                  onChange={(e) => setContent({
+                    ...content,
+                    resultsSection: {
+                      ...content.resultsSection,
+                      isEnabled: e.target.checked,
+                      title: content.resultsSection?.title ?? "🎯 Risultati dei Nostri Clienti",
+                      subtitle: content.resultsSection?.subtitle ?? "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+                      photos: content.resultsSection?.photos ?? []
+                    }
+                  })}
+                  className="rounded"
+                />
+                <span className="text-black">Abilita sezione</span>
+              </label>
+            </div>
+          </div>
+
+          {content.resultsSection?.isEnabled && (
+            <div className="space-y-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              {/* Titoli sezione */}
+              <div className="grid grid-cols-1 gap-3">
+                <Input
+                  label="Titolo sezione"
+                  value={content.resultsSection?.title ?? ""}
+                  onChange={(e) => setContent({
+                    ...content,
+                    resultsSection: {
+                      ...content.resultsSection,
+                      title: e.target.value
+                    }
+                  })}
+                  placeholder="🎯 Risultati dei Nostri Clienti"
+                  className={fieldCls}
+                />
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-black">Sottotitolo sezione</label>
+                  <textarea
+                    value={content.resultsSection?.subtitle ?? ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      resultsSection: {
+                        ...content.resultsSection,
+                        subtitle: e.target.value
+                      }
+                    })}
+                    placeholder="Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme."
+                    className={`w-full rounded-md border px-3 py-2 text-sm ${fieldCls}`}
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              {/* Gestione foto */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-black">Foto risultati</h3>
+                  <UploadButton
+                    folder="results"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    maxSize={5}
+                    onUploaded={(url) => {
+                      const newPhoto = {
+                        id: Date.now().toString(),
+                        url,
+                        description: "",
+                        beforeAfter: "single" as const
+                      };
+                      setContent({
+                        ...content,
+                        resultsSection: {
+                          ...content.resultsSection,
+                          photos: [...(content.resultsSection?.photos ?? []), newPhoto]
+                        }
+                      });
+                    }}
+                  />
+                </div>
+
+                {content.resultsSection?.photos && content.resultsSection.photos.length > 0 && (
+                  <div className="space-y-3">
+                    {content.resultsSection.photos.map((photo, index) => (
+                      <div key={photo.id} className="flex gap-3 p-3 bg-white border border-gray-200 rounded-lg">
+                        {/* Anteprima foto */}
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={photo.url} 
+                            alt={`Risultato ${index + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg border"
+                          />
+                        </div>
+                        
+                        {/* Campi modifica */}
+                        <div className="flex-1 space-y-2">
+                          <Input
+                            label="Descrizione"
+                            value={photo.description ?? ""}
+                            onChange={(e) => {
+                              const updatedPhotos = [...(content.resultsSection?.photos ?? [])];
+                              updatedPhotos[index] = { ...photo, description: e.target.value };
+                              setContent({
+                                ...content,
+                                resultsSection: {
+                                  ...content.resultsSection,
+                                  photos: updatedPhotos
+                                }
+                              });
+                            }}
+                            placeholder="Descrizione del risultato..."
+                            className={fieldCls}
+                          />
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-1 text-black">Tipo foto</label>
+                            <select
+                              value={photo.beforeAfter ?? "single"}
+                              onChange={(e) => {
+                                const updatedPhotos = [...(content.resultsSection?.photos ?? [])];
+                                updatedPhotos[index] = { ...photo, beforeAfter: e.target.value as any };
+                                setContent({
+                                  ...content,
+                                  resultsSection: {
+                                    ...content.resultsSection,
+                                    photos: updatedPhotos
+                                  }
+                                });
+                              }}
+                              className={`w-full rounded-md border px-3 py-2 text-sm ${fieldCls}`}
+                            >
+                              <option value="single">Foto singola</option>
+                              <option value="before">Prima</option>
+                              <option value="after">Dopo</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        {/* Pulsante elimina */}
+                        <div className="flex-shrink-0 flex flex-col justify-between">
+                          <button
+                            onClick={() => {
+                              const updatedPhotos = content.resultsSection?.photos?.filter((_, i) => i !== index) ?? [];
+                              setContent({
+                                ...content,
+                                resultsSection: {
+                                  ...content.resultsSection,
+                                  photos: updatedPhotos
+                                }
+                              });
+                            }}
+                            className="text-red-600 hover:text-red-800 p-2"
+                            title="Rimuovi foto"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(!content.resultsSection?.photos || content.resultsSection.photos.length === 0) && (
+                  <div className="text-center py-8 text-black/60">
+                    <p>Nessuna foto caricata. Usa il pulsante "Carica File" per aggiungere foto dei risultati.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+
         {/* Popup 10 Minuti Consultivi Gratuiti */}
         <section className="space-y-3">
           <h2 className="font-semibold">Popup</h2>

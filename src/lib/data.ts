@@ -208,6 +208,19 @@ export interface SiteContent {
   // CAPTCHA settings
   recaptchaEnabled?: boolean; // Abilita/disabilita CAPTCHA per le prenotazioni
   recaptchaSiteKey?: string; // Site key per reCAPTCHA v2
+  
+  // Sezione Risultati Clienti
+  resultsSection?: {
+    isEnabled?: boolean; // Abilita/disabilita la sezione risultati
+    title?: string; // Titolo sezione (default: "🎯 Risultati dei Nostri Clienti")
+    subtitle?: string; // Sottotitolo sezione
+    photos?: Array<{
+      id: string;
+      url: string;
+      description?: string; // Descrizione opzionale del risultato
+      beforeAfter?: 'before' | 'after' | 'single'; // Tipo di foto
+    }>;
+  };
 }
 
 export type Availability = {
@@ -985,7 +998,13 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         notificationEmail: "mirkoditroia@gmail.com", // Default notification email
         businessName: "GZ Nutrition", // Default business name
         recaptchaEnabled: false, // CAPTCHA disabilitato di default per sviluppo
-        recaptchaSiteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Default test key
+        recaptchaSiteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI", // Default test key
+        resultsSection: {
+          isEnabled: false, // Disabilitata di default
+          title: "🎯 Risultati dei Nostri Clienti",
+          subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+          photos: []
+        }
       };
       
       // Salva il contenuto di default in Firebase
@@ -1077,7 +1096,18 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com",
       businessName: data.businessName || "GZ Nutrition",
       recaptchaEnabled: data.recaptchaEnabled === true, // Default false, esplicito true per abilitare
-      recaptchaSiteKey: data.recaptchaSiteKey || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+      recaptchaSiteKey: data.recaptchaSiteKey || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",
+      resultsSection: data.resultsSection ? {
+        isEnabled: data.resultsSection.isEnabled === true,
+        title: data.resultsSection.title || "🎯 Risultati dei Nostri Clienti",
+        subtitle: data.resultsSection.subtitle || "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+        photos: Array.isArray(data.resultsSection.photos) ? data.resultsSection.photos : []
+      } : {
+        isEnabled: false,
+        title: "🎯 Risultati dei Nostri Clienti",
+        subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
+        photos: []
+      }
     };
     
     console.log("getSiteContent: Contenuto finale mappato:", siteContent);
