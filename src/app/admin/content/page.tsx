@@ -137,12 +137,13 @@ export default function AdminContentPage() {
                   // Also update localStorage for immediate effect across the site
                   try {
                     localStorage.setItem('gz-palette', paletteId);
-                    // Toast per anteprima palette
+                    // Toast per anteprima palette con colore dinamico
                     toast(`🎨 Anteprima palette "${palette.name}" applicata! Clicca "Salva contenuti" per confermare.`, {
                       icon: '🎨',
                       style: {
-                        background: '#3b82f6',
+                        background: paletteConfig.primary,
                         color: 'white',
+                        border: `2px solid ${paletteConfig.accent}`,
                       },
                     });
                   } catch (e) {
