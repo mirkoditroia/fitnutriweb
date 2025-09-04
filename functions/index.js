@@ -18,7 +18,28 @@ const nodemailer = require('nodemailer');
 // Define secrets for secure email configuration
 const smtpPassword = defineSecret('SMTP_PASSWORD');
 
-setGlobalOptions({ maxInstances: 10 });
+// Sanitize error messages to prevent leaking sensitive data
+function sanitizeError(error) {
+  const sensitivePatterns = [
+    /password[^a-zA-Z0-9]*[:\s]*[^\s,;}]*/gi,
+    /smtp_password[^a-zA-Z0-9]*[:\s]*[^\s,;}]*/gi,
+    /auth[^a-zA-Z0-9]*[:\s]*[^\s,;}]*/gi,
+    /credential[^a-zA-Z0-9]*[:\s]*[^\s,;}]*/gi,
+    /secret[^a-zA-Z0-9]*[:\s]*[^\s,;}]*/gi
+  ];
+  
+  let sanitized = error.toString();
+  sensitivePatterns.forEach(pattern => {
+    sanitized = sanitized.replace(pattern, '[REDACTED]');
+  });
+  
+  return sanitized;
+}
+
+setGlobalOptions({ 
+  maxInstances: 10,
+  logLevel: 'WARN' // Reduce logging to prevent sensitive data leaks
+});
 
 admin.initializeApp();
 
@@ -230,7 +251,7 @@ function getEmailConfig() {
   const notificationEmail = process.env.NOTIFICATION_EMAIL || 'mirkoditroia@gmail.com';
   
   if (!password) {
-    throw new Error('SMTP_PASSWORD secret is required');
+    throw new Error('SMTP_PASSWORD secret is required - please configure Firebase Secret');
   }
 
   return {
@@ -410,7 +431,7 @@ exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (
 
     await transporter.sendMail(mailOptions);
     
-    console.log(`Notification email sent for booking from ${booking.name}`);
+    console.log(`Notification email sent successfully`);
     res.json({ 
       success: true, 
       message: 'Notification email sent successfully',
@@ -418,8 +439,8 @@ exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (
     });
 
   } catch (error) {
-    console.error('Failed to send notification email:', error);
-    const errorMessage = error.message || 'Unknown error';
+    console.error('Failed to send notification email:', sanitizeError(error));
+    const errorMessage = sanitizeError(error);
     res.status(500).json({ 
       success: false, 
       message: `Failed to send notification: ${errorMessage}` 
@@ -459,8 +480,8 @@ exports.testEmailConfiguration = onRequest({ secrets: [smtpPassword] }, async (r
     });
 
   } catch (error) {
-    console.error('Email configuration test failed:', error);
-    const errorMessage = error.message || 'Configuration test failed';
+    console.error('Email configuration test failed:', sanitizeError(error));
+    const errorMessage = sanitizeError(error);
     res.status(500).json({ 
       success: false, 
       message: errorMessage 
