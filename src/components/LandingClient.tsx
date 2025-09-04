@@ -240,7 +240,36 @@ export default function LandingClient() {
       )}
       <PackagesCarousel items={featuredFirst} />
       
-      {/* Sezione Risultati Clienti - se abilitata */}
+      {/* Sezione Risultati Clienti - SEMPRE VISIBILE PER DEBUG */}
+      <section 
+        id="results-section-debug" 
+        className="py-20 bg-gradient-to-b from-blue-50 to-white border-4 border-red-500"
+        style={{backgroundColor: '#fee2e2', border: '4px solid #dc2626'}}
+      >
+        <div className="container max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-red-800 mb-4">
+              🚨 DEBUG: Sezione Risultati (Sempre Visibile)
+            </h2>
+            <p className="text-lg text-red-600 max-w-3xl mx-auto">
+              Se vedi questa sezione, il rendering React funziona. Debug in corso...
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-lg border border-red-300">
+            <h3 className="font-bold mb-4">🔍 Debug Info:</h3>
+            <ul className="space-y-2 text-sm">
+              <li>✅ Componente renderizzato: SÌ</li>
+              <li>📊 effectiveContent: {effectiveContent ? 'PRESENTE' : 'ASSENTE'}</li>
+              <li>🎯 resultsSection: {effectiveContent?.resultsSection ? 'PRESENTE' : 'ASSENTE'}</li>
+              <li>🔧 isEnabled: {String(effectiveContent?.resultsSection?.isEnabled)}</li>
+              <li>📷 photos: {effectiveContent?.resultsSection?.photos?.length || 0}</li>
+              <li>🌐 Ambiente: PRODUZIONE</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Sezione Risultati Clienti CONDIZIONALE - se abilitata */}
       {effectiveContent.resultsSection?.isEnabled && effectiveContent.resultsSection.photos && effectiveContent.resultsSection.photos.length > 0 && (() => {
         try {
           return (
