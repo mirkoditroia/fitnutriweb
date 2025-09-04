@@ -8,6 +8,17 @@ import { generateCSSVariables } from "@/lib/palettes";
 import { getSiteContent } from "@/lib/datasource";
 import { getDataMode } from "@/lib/datamode";
 
+type BrandCfg = { 
+  mode: "image" | "text"; 
+  imageUrl?: string; 
+  height?: number; 
+  autoBg?: boolean; 
+  text?: string; 
+  color?: string; 
+  weight?: number; 
+  size?: number 
+};
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -48,7 +59,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // Fetch brand info for SSR to eliminate logo loading delay
-  let initialBrand = null;
+  let initialBrand: BrandCfg | undefined = undefined;
   
   try {
     if (getDataMode() !== "local") {
@@ -101,7 +112,7 @@ export default async function RootLayout({
         )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 font-sans`}>
-        <Navbar initialBrand={initialBrand || undefined} />
+        <Navbar initialBrand={initialBrand} />
         <ToasterProvider />
         {children}
         <Footer />
