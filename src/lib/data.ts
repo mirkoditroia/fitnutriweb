@@ -218,7 +218,6 @@ export interface SiteContent {
       id: string;
       url: string;
       description?: string; // Descrizione opzionale del risultato
-      beforeAfter?: 'before' | 'after' | 'single'; // Tipo di foto
     }>;
   };
 }

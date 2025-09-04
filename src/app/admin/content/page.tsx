@@ -818,8 +818,7 @@ export default function AdminContentPage() {
                         const newPhoto = {
                           id: Date.now().toString(),
                           url,
-                          description: "",
-                          beforeAfter: "single" as const
+                          description: ""
                         };
                         setContent({
                           ...content,
@@ -844,8 +843,7 @@ export default function AdminContentPage() {
                               const newPhoto = {
                                 id: Date.now().toString(),
                                 url,
-                                description: "",
-                                beforeAfter: "single" as const
+                                description: ""
                               };
                               setContent({
                                 ...content,
@@ -902,28 +900,6 @@ export default function AdminContentPage() {
                             className={fieldCls}
                           />
                           
-                          <div>
-                            <label className="block text-sm font-medium mb-1 text-black">Tipo foto</label>
-                            <select
-                              value={photo.beforeAfter ?? "single"}
-                              onChange={(e) => {
-                                const updatedPhotos = [...(content.resultsSection?.photos ?? [])];
-                                updatedPhotos[index] = { ...photo, beforeAfter: e.target.value as any };
-                                setContent({
-                                  ...content,
-                                  resultsSection: {
-                                    ...content.resultsSection,
-                                    photos: updatedPhotos
-                                  }
-                                });
-                              }}
-                              className={`w-full rounded-md border px-3 py-2 text-sm ${fieldCls}`}
-                            >
-                              <option value="single">Foto singola</option>
-                              <option value="before">Prima</option>
-                              <option value="after">Dopo</option>
-                            </select>
-                          </div>
                         </div>
                         
                         {/* Pulsante elimina */}
