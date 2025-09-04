@@ -5,6 +5,8 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import ToasterProvider from "@/components/toaster-provider";
 import { generateCSSVariables } from "@/lib/palettes";
+import { getSiteContent } from "@/lib/datasource";
+import { getDataMode } from "@/lib/datamode";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,11 +42,34 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch brand info for SSR to eliminate logo loading delay
+  let initialBrand = null;
+  
+  try {
+    if (getDataMode() !== "local") {
+      const siteContent = await getSiteContent();
+      if (siteContent) {
+        initialBrand = {
+          mode: siteContent.navbarLogoMode === 'image' ? 'image' : 'text',
+          imageUrl: siteContent.navbarLogoImageUrl || undefined,
+          height: typeof siteContent.navbarLogoHeight === 'number' ? siteContent.navbarLogoHeight : 40,
+          autoBg: Boolean(siteContent.navbarLogoAutoRemoveBg),
+          text: siteContent.navbarLogoText || 'GZnutrition',
+          weight: typeof siteContent.navbarLogoTextWeight === 'number' ? siteContent.navbarLogoTextWeight : 700,
+          size: typeof siteContent.navbarLogoTextSize === 'number' ? siteContent.navbarLogoTextSize : 20,
+        };
+      }
+    }
+  } catch (error) {
+    // Fallback to null if fetch fails
+    console.log('Failed to fetch brand info for SSR:', error);
+  }
+
   return (
     <html lang="it">
       <head>
@@ -71,9 +96,12 @@ export default function RootLayout({
             `
           }}
         />
+        {initialBrand?.mode === 'image' && initialBrand.imageUrl && (
+          <link rel="preload" as="image" href={initialBrand.imageUrl} />
+        )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 font-sans`}>
-        <Navbar />
+        <Navbar initialBrand={initialBrand || undefined} />
         <ToasterProvider />
         {children}
         <Footer />

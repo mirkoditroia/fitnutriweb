@@ -20,7 +20,7 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
   const [scrolled, setScrolled] = useState(false);
 
   const [brand, setBrand] = useState<BrandCfg | null>(initialBrand ?? null);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(!!initialBrand?.imageUrl);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,8 +30,14 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Load only branding info (colors handled by CSS variables)
+  // Load only branding info if not already provided via SSR
   useEffect(() => {
+    if (initialBrand) {
+      // If we have initial brand from SSR, just set imageLoaded to true
+      setImageLoaded(true);
+      return;
+    }
+
     getSiteContent().then((c) => {
       const cfg: BrandCfg = {
         mode: c?.navbarLogoMode === 'image' ? 'image' : 'text',
@@ -60,7 +66,7 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
         setBrand(cfg);
       }
     }).catch(() => {});
-  }, []);
+  }, [initialBrand]);
 
   // Glass navbar using CSS variables
   const headerClasses = 'backdrop-blur-xl border-b border-white/15 shadow-lg shadow-black/30';
