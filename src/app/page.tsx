@@ -88,33 +88,107 @@ export default async function Home() {
               </p>
             </div>
             
-            {/* Griglia responsive di foto */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {c.resultsSection.photos?.map((photo, index) => (
-                <div key={photo.id} className="bg-card rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="aspect-[4/3] relative">
-                    <img
-                      src={photo.url}
-                      alt={photo.description || `Risultato cliente ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    
-                    {/* Badge tipo foto */}
-                    {photo.beforeAfter && photo.beforeAfter !== 'single' && (
-                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
-                        {photo.beforeAfter === 'before' ? 'Prima' : 'Dopo'}
+            {/* Carosello/Griglia moderna di foto */}
+            <div className="relative">
+              {/* Controlli Desktop - Griglia */}
+              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {c.resultsSection.photos?.map((photo, index) => (
+                  <div key={photo.id} className="group relative">
+                    {/* Card con effetto hover */}
+                    <div className="relative bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                      {/* Immagine con overlay gradiente */}
+                      <div className="aspect-[4/5] relative overflow-hidden">
+                        <img
+                          src={photo.url}
+                          alt={photo.description || `Risultato cliente ${index + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        
+                        {/* Overlay gradiente */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        
+                        {/* Badge tipo foto - più elegante */}
+                        {photo.beforeAfter && photo.beforeAfter !== 'single' && (
+                          <div className="absolute top-3 right-3">
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border border-white/20 ${
+                              photo.beforeAfter === 'before' 
+                                ? 'bg-blue-500/80 text-white' 
+                                : 'bg-green-500/80 text-white'
+                            }`}>
+                              {photo.beforeAfter === 'before' ? '✨ Prima' : '🎯 Dopo'}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Numero risultato */}
+                        <div className="absolute top-3 left-3">
+                          <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                            {index + 1}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  
-                  {/* Descrizione */}
-                  {photo.description && (
-                    <div className="p-4">
-                      <p className="text-sm text-muted-foreground leading-relaxed">{photo.description}</p>
+                      
+                      {/* Descrizione con styling moderno */}
+                      {photo.description && (
+                        <div className="p-5">
+                          <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                            {photo.description}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Mobile - Carosello scorrevole */}
+              <div className="md:hidden">
+                <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+                  {c.resultsSection.photos?.map((photo, index) => (
+                    <div key={photo.id} className="flex-none w-72 snap-start">
+                      <div className="bg-card rounded-xl overflow-hidden shadow-lg">
+                        <div className="aspect-[4/5] relative">
+                          <img
+                            src={photo.url}
+                            alt={photo.description || `Risultato cliente ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          
+                          {/* Badge mobile */}
+                          {photo.beforeAfter && photo.beforeAfter !== 'single' && (
+                            <div className="absolute top-2 right-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                photo.beforeAfter === 'before' 
+                                  ? 'bg-blue-500 text-white' 
+                                  : 'bg-green-500 text-white'
+                              }`}>
+                                {photo.beforeAfter === 'before' ? 'Prima' : 'Dopo'}
+                              </span>
+                            </div>
+                          )}
+                          
+                          <div className="absolute top-2 left-2">
+                            <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                              {index + 1}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {photo.description && (
+                          <div className="p-4">
+                            <p className="text-sm text-muted-foreground leading-relaxed">{photo.description}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                
+                {/* Indicatore scroll mobile */}
+                <div className="flex justify-center mt-4">
+                  <p className="text-xs text-muted-foreground">← Scorri per vedere tutti i risultati →</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>

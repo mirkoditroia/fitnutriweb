@@ -313,6 +313,15 @@ html {
     animation: hero-overlay-fade 1600ms both;
     animation-delay: 200ms;
   }
+  
+  /* Nasconde scrollbar ma mantiene funzionalità scroll */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

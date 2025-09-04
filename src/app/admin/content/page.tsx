@@ -64,7 +64,7 @@ export default function AdminContentPage() {
       root.style.setProperty('--secondary-fg', paletteConfig.secondaryText, 'important');
     }
     
-    toast.success("Palette salvata e applicata!");
+    toast.success("🎉 Contenuti e palette salvati con successo!");
   };
 
   const addImg = () => setContent({ ...content, images: [...(content.images ?? []), { key: "", url: "" }] });
@@ -129,6 +129,8 @@ export default function AdminContentPage() {
                   // Also update localStorage for immediate effect across the site
                   try {
                     localStorage.setItem('gz-palette', paletteId);
+                    // Toast per anteprima palette
+                    toast.info(`🎨 Anteprima palette "${palette.name}" applicata! Clicca "Salva contenuti" per confermare.`);
                   } catch (e) {
                     // Ignore if localStorage is not available
                   }
