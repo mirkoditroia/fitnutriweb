@@ -130,7 +130,13 @@ export default function AdminContentPage() {
                   try {
                     localStorage.setItem('gz-palette', paletteId);
                     // Toast per anteprima palette
-                    toast.info(`🎨 Anteprima palette "${palette.name}" applicata! Clicca "Salva contenuti" per confermare.`);
+                    toast(`🎨 Anteprima palette "${palette.name}" applicata! Clicca "Salva contenuti" per confermare.`, {
+                      icon: '🎨',
+                      style: {
+                        background: '#3b82f6',
+                        color: 'white',
+                      },
+                    });
                   } catch (e) {
                     // Ignore if localStorage is not available
                   }
