@@ -19,7 +19,8 @@ import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCa
 // Funzione per inviare notifica email per nuova prenotazione
 async function sendBookingNotification(booking: Booking, packageTitle?: string) {
   try {
-    const response = await fetch('/api/notifications', {
+    // Usa Firebase Functions per l'invio email
+    const response = await fetch('https://us-central1-gznutrition-d5d13.cloudfunctions.net/sendBookingNotification', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

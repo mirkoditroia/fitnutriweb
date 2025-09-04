@@ -12,6 +12,7 @@ const { setGlobalOptions } = require('firebase-functions/v2');
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const { google } = require('googleapis');
+const nodemailer = require('nodemailer');
 
 setGlobalOptions({ maxInstances: 10 });
 
@@ -208,6 +209,253 @@ exports.calendarOperations = onRequest(async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+});
+
+// Email configuration
+function getEmailConfig() {
+  const config = functions.config();
+  
+  if (!config.email || !config.email.notifications_enabled) {
+    throw new Error('Email notifications are not enabled');
+  }
+  
+  if (!config.email.smtp_host || !config.email.smtp_user || !config.email.smtp_password) {
+    throw new Error('Missing email configuration. Please set SMTP_HOST, SMTP_USER, and SMTP_PASSWORD.');
+  }
+
+  return {
+    enabled: config.email.notifications_enabled === 'true',
+    host: config.email.smtp_host,
+    port: parseInt(config.email.smtp_port) || 587,
+    secure: config.email.smtp_secure === 'true',
+    user: config.email.smtp_user,
+    password: config.email.smtp_password,
+    from: config.email.smtp_from || config.email.smtp_user,
+    notificationEmail: config.email.notification_email
+  };
+}
+
+// Create email transporter
+function createEmailTransporter() {
+  const emailConfig = getEmailConfig();
+  
+  return nodemailer.createTransporter({
+    host: emailConfig.host,
+    port: emailConfig.port,
+    secure: emailConfig.secure,
+    auth: {
+      user: emailConfig.user,
+      pass: emailConfig.password,
+    },
+  });
+}
+
+// Generate HTML email for new booking
+function generateBookingNotificationHTML(booking, packageTitle) {
+  const locationText = booking.location === 'online' ? 'Online' : 
+                      booking.studioLocation ? `Studio: ${booking.studioLocation}` : 'In Studio';
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Nuova Prenotazione - GZ Nutrition</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #0B5E0B; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .footer { background: #333; color: white; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; }
+        .info-row { margin: 10px 0; padding: 8px; background: white; border-radius: 4px; }
+        .label { font-weight: bold; color: #0B5E0B; }
+        .urgent { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🔔 Nuova Prenotazione Ricevuta</h1>
+          <p>GZ Nutrition - Sistema di Gestione</p>
+        </div>
+        
+        <div class="content">
+          <div class="urgent">
+            <strong>⚠️ Azione Richiesta:</strong> Una nuova prenotazione è in attesa di conferma nell'admin panel.
+          </div>
+          
+          <h2>📋 Dettagli Prenotazione</h2>
+          
+          <div class="info-row">
+            <span class="label">👤 Cliente:</span> ${booking.name}
+          </div>
+          
+          <div class="info-row">
+            <span class="label">📧 Email:</span> ${booking.email}
+          </div>
+          
+          ${booking.phone ? `
+          <div class="info-row">
+            <span class="label">📞 Telefono:</span> ${booking.phone}
+          </div>
+          ` : ''}
+          
+          <div class="info-row">
+            <span class="label">📅 Data:</span> ${new Date(booking.date).toLocaleDateString('it-IT', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </div>
+          
+          <div class="info-row">
+            <span class="label">🕐 Orario:</span> ${booking.slot}
+          </div>
+          
+          <div class="info-row">
+            <span class="label">📍 Modalità:</span> ${locationText}
+          </div>
+          
+          ${packageTitle ? `
+          <div class="info-row">
+            <span class="label">📦 Pacchetto:</span> ${packageTitle}
+          </div>
+          ` : ''}
+          
+          ${booking.isFreeConsultation ? `
+          <div class="info-row" style="background: #e8f5e8;">
+            <span class="label">🆓 Tipo:</span> Consultazione Gratuita (10 minuti)
+          </div>
+          ` : ''}
+          
+          ${booking.notes ? `
+          <div class="info-row">
+            <span class="label">📝 Note del cliente:</span><br>
+            <em>"${booking.notes}"</em>
+          </div>
+          ` : ''}
+          
+          <div class="info-row">
+            <span class="label">📊 Stato:</span> <strong style="color: #ffc107;">In Attesa di Conferma</strong>
+          </div>
+          
+          <div style="margin: 25px 0; text-align: center;">
+            <p><strong>🎯 Prossimi Passi:</strong></p>
+            <p>1. Accedi all'admin panel per confermare o rifiutare la prenotazione</p>
+            <p>2. Il cliente verrà automaticamente aggiunto alla lista clienti</p>
+            <p>3. Verrà creato l'evento in Google Calendar (se configurato)</p>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p>📧 Email automatica dal sistema GZ Nutrition</p>
+          <p>🕐 Ricevuta il ${new Date().toLocaleString('it-IT')}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Send booking notification email
+exports.sendBookingNotification = onRequest(async (req, res) => {
+  // Handle CORS
+  if (handleCors(req, res)) return;
+  
+  try {
+    const { type, booking, packageTitle } = req.body;
+    
+    if (type !== 'new-booking') {
+      return res.status(400).json({ success: false, message: 'Invalid notification type' });
+    }
+
+    const emailConfig = getEmailConfig();
+    
+    if (!emailConfig.enabled) {
+      console.log('Email notifications disabled, skipping...');
+      return res.json({ success: true, message: 'Email notifications disabled' });
+    }
+
+    if (!emailConfig.notificationEmail) {
+      console.error('NOTIFICATION_EMAIL not configured');
+      return res.status(500).json({ success: false, message: 'Notification email not configured' });
+    }
+
+    const transporter = createEmailTransporter();
+    
+    // Verify configuration
+    await transporter.verify();
+    
+    const subject = `🔔 Nuova Prenotazione - ${booking.name} (${new Date(booking.date).toLocaleDateString('it-IT')})`;
+    const html = generateBookingNotificationHTML(booking, packageTitle);
+    
+    const mailOptions = {
+      from: emailConfig.from,
+      to: emailConfig.notificationEmail,
+      subject: subject,
+      html: html,
+      text: `Nuova prenotazione ricevuta da ${booking.name} per il ${new Date(booking.date).toLocaleDateString('it-IT')} alle ${booking.slot}. Accedi all'admin panel per gestire la richiesta.`
+    };
+
+    await transporter.sendMail(mailOptions);
+    
+    console.log(`Notification email sent for booking from ${booking.name}`);
+    res.json({ 
+      success: true, 
+      message: 'Notification email sent successfully',
+      sentTo: emailConfig.notificationEmail 
+    });
+
+  } catch (error) {
+    console.error('Failed to send notification email:', error);
+    const errorMessage = error.message || 'Unknown error';
+    res.status(500).json({ 
+      success: false, 
+      message: `Failed to send notification: ${errorMessage}` 
+    });
+  }
+});
+
+// Test email configuration
+exports.testEmailConfiguration = onRequest(async (req, res) => {
+  // Handle CORS
+  if (handleCors(req, res)) return;
+  
+  try {
+    const emailConfig = getEmailConfig();
+    
+    if (!emailConfig.enabled) {
+      return res.json({ 
+        success: false, 
+        message: 'Email notifications are not enabled. Set EMAIL_NOTIFICATIONS_ENABLED=true to enable.' 
+      });
+    }
+
+    const transporter = createEmailTransporter();
+    await transporter.verify();
+
+    res.json({ 
+      success: true, 
+      message: 'Email configuration is valid',
+      config: {
+        host: emailConfig.host,
+        port: emailConfig.port,
+        secure: emailConfig.secure,
+        from: emailConfig.from,
+        notificationEmail: emailConfig.notificationEmail,
+        enabled: emailConfig.enabled
+      }
+    });
+
+  } catch (error) {
+    console.error('Email configuration test failed:', error);
+    const errorMessage = error.message || 'Configuration test failed';
+    res.status(500).json({ 
+      success: false, 
+      message: errorMessage 
     });
   }
 });
