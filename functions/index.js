@@ -19,6 +19,68 @@ const nodemailer = require('nodemailer');
 const smtpPassword = defineSecret('SMTP_PASSWORD');
 const recaptchaSecretKey = defineSecret('RECAPTCHA_SECRET_KEY');
 
+// Palette configurations for dynamic email styling
+const PALETTES = {
+  'gz-default': {
+    primary: '#0B5E0B',
+    accent: '#00D084',
+    background: '#FFFFFF',
+    foreground: '#0E0F12',
+    border: '#E2E8F0',
+    card: '#FFFFFF',
+    muted: '#F1F5F9'
+  },
+  'modern-blue': {
+    primary: '#2563EB',
+    accent: '#3B82F6',
+    background: '#FFFFFF',
+    foreground: '#1E293B',
+    border: '#E2E8F0',
+    card: '#FFFFFF',
+    muted: '#F1F5F9'
+  },
+  'elegant-dark': {
+    primary: '#D97706',
+    accent: '#F59E0B',
+    background: '#FFFFFF',
+    foreground: '#1F2937',
+    border: '#E5E7EB',
+    card: '#FFFFFF',
+    muted: '#F9FAFB'
+  },
+  'nature-green': {
+    primary: '#059669',
+    accent: '#10B981',
+    background: '#FFFFFF',
+    foreground: '#1F2937',
+    border: '#D1FAE5',
+    card: '#FFFFFF',
+    muted: '#F0FDF4'
+  },
+  'warm-orange': {
+    primary: '#EA580C',
+    accent: '#FB923C',
+    background: '#FFFFFF',
+    foreground: '#1C1917',
+    border: '#E7E5E4',
+    card: '#FFFFFF',
+    muted: '#FAFAF9'
+  },
+  'professional-gray': {
+    primary: '#374151',
+    accent: '#6B7280',
+    background: '#FFFFFF',
+    foreground: '#111827',
+    border: '#E5E7EB',
+    card: '#FFFFFF',
+    muted: '#F9FAFB'
+  }
+};
+
+function getPaletteColors(paletteId) {
+  return PALETTES[paletteId] || PALETTES['gz-default'];
+}
+
 // Sanitize error messages to prevent leaking sensitive data
 function sanitizeError(error) {
   const sensitivePatterns = [
@@ -284,9 +346,12 @@ function createEmailTransporter(customNotificationEmail) {
 }
 
 // Generate HTML email for new booking
-function generateBookingNotificationHTML(booking, packageTitle, businessName) {
+function generateBookingNotificationHTML(booking, packageTitle, businessName, colorPalette) {
   const locationText = booking.location === 'online' ? 'Online' : 
                       booking.studioLocation ? `Studio: ${booking.studioLocation}` : 'In Studio';
+  
+  // Get palette colors
+  const colors = getPaletteColors(colorPalette || 'gz-default');
   
   return `
     <!DOCTYPE html>
@@ -295,14 +360,14 @@ function generateBookingNotificationHTML(booking, packageTitle, businessName) {
       <meta charset="utf-8">
       <title>Nuova Prenotazione - ${businessName || 'GZ Nutrition'}</title>
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: ${colors.foreground}; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #0B5E0B; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
-        .footer { background: #333; color: white; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; }
-        .info-row { margin: 10px 0; padding: 8px; background: white; border-radius: 4px; }
-        .label { font-weight: bold; color: #0B5E0B; }
-        .urgent { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+        .header { background: ${colors.primary}; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: ${colors.muted}; padding: 20px; border: 1px solid ${colors.border}; }
+        .footer { background: ${colors.primary}; color: white; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; }
+        .info-row { margin: 10px 0; padding: 8px; background: ${colors.background}; border-radius: 4px; border: 1px solid ${colors.border}; }
+        .label { font-weight: bold; color: ${colors.primary}; }
+        .urgent { background: ${colors.card}; border-left: 4px solid ${colors.accent}; padding: 10px; margin: 15px 0; }
       </style>
     </head>
     <body>
@@ -397,7 +462,7 @@ exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (
   if (handleCors(req, res)) return;
   
   try {
-    const { type, booking, packageTitle, notificationEmail, businessName } = req.body;
+    const { type, booking, packageTitle, notificationEmail, businessName, colorPalette } = req.body;
     
     if (type !== 'new-booking') {
       return res.status(400).json({ success: false, message: 'Invalid notification type' });
@@ -421,7 +486,7 @@ exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (
     await transporter.verify();
     
     const subject = `🔔 Nuova Prenotazione - ${booking.name} (${new Date(booking.date).toLocaleDateString('it-IT')})`;
-    const html = generateBookingNotificationHTML(booking, packageTitle, businessName);
+    const html = generateBookingNotificationHTML(booking, packageTitle, businessName, colorPalette);
     
     const mailOptions = {
       from: emailConfig.from,

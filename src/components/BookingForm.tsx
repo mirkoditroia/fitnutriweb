@@ -824,9 +824,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             className="w-full rounded-lg border border-foreground/10 bg-background/70 backdrop-blur-sm px-3.5 py-2.5 text-sm text-black min-h-[120px] resize-y focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.15)]"
             rows={5}
           />
-          <p className="text-[12px] leading-5 text-black mt-2">
-            Queste informazioni ci aiuteranno a preparare una consulenza più personalizzata per te
-          </p>
+          
         </div>
 
         {/* CAPTCHA - Solo se abilitato e non in modalità admin */}
@@ -842,9 +840,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               onExpired={() => setCaptchaToken(null)}
               onError={() => setCaptchaToken(null)}
             />
-            <p className="text-xs text-black mt-2">
-              Completa la verifica per proteggere il sito da spam e bot
-            </p>
+            
           </div>
         )}
 
@@ -867,9 +863,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {/* Informazioni aggiuntive per consultazione gratuita */}
         {selectedPackage && showPromotionalBanner && (
           <div className="text-center text-sm text-black">
-            <p>* La consultazione gratuita dura 10 minuti</p>
-            <p>* Solo per nuovi clienti</p>
-            <p>* Valutazione obiettivi e piano personalizzato</p>
+            
       </div>
         )}
     </form>

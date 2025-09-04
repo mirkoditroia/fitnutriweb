@@ -89,7 +89,8 @@ export default function AdminSettingsPage() {
           },
           packageTitle: 'Pacchetto Test',
           notificationEmail: content.notificationEmail,
-          businessName: content.businessName
+          businessName: content.businessName,
+          colorPalette: content.colorPalette
         }),
       });
 

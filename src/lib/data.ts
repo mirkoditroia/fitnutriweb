@@ -17,7 +17,7 @@ import {
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
 
 // Funzione per inviare notifica email per nuova prenotazione
-async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string) {
+async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string, colorPalette?: string) {
   try {
     // Usa Firebase Functions per l'invio email
     const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
@@ -30,7 +30,8 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
         booking,
         packageTitle,
         notificationEmail, // Passa l'email configurabile
-        businessName // Passa il nome business configurabile
+        businessName, // Passa il nome business configurabile
+        colorPalette // Passa la palette selezionata
       }),
     });
 
@@ -500,12 +501,13 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   try {
     const bookingWithId = { ...b, id: added.id };
     
-    // Ottieni l'email di notifica e il nome business dalle impostazioni
+    // Ottieni l'email di notifica, nome business e palette dalle impostazioni
     const siteContent = await getSiteContent();
     const notificationEmail = siteContent?.notificationEmail || "mirkoditroia@gmail.com";
     const businessName = siteContent?.businessName || "GZ Nutrition";
+    const colorPalette = siteContent?.colorPalette || "gz-default";
     
-    await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName);
+    await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName, colorPalette);
   } catch (error) {
     console.error("Error sending booking notification:", error);
     // Don't fail the booking creation if notification fails
