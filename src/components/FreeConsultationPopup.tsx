@@ -85,11 +85,10 @@ export function FreeConsultationPopup({
         <div className="text-center space-y-4">
           {/* Icona */}
           <div 
-            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto ring-1"
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto ring-1 ring-primary/20"
             style={{ 
               backgroundColor: 'var(--primary)', 
-              color: 'white',
-              '--tw-ring-color': 'var(--primary)'
+              color: 'white'
             }}
           >
             <span className="text-3xl">🎯</span>
@@ -113,11 +112,10 @@ export function FreeConsultationPopup({
           {/* CTA */}
           <button
             onClick={handleCTAClick}
-            className="w-full font-semibold py-3 px-6 rounded-lg transition-colors shadow focus:outline-none focus:ring-4"
+            className="w-full font-semibold py-3 px-6 rounded-lg transition-colors shadow focus:outline-none focus:ring-4 focus:ring-primary/25"
             style={{ 
               backgroundColor: 'var(--primary)', 
-              color: 'white',
-              '--tw-ring-color': 'rgba(var(--primary-rgb), 0.25)'
+              color: 'white'
             }}
           >
             {ctaText}
