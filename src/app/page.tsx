@@ -96,8 +96,8 @@ export default async function Home() {
                   <div key={photo.id} className="group relative">
                     {/* Card con effetto hover */}
                     <div className="relative bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                      {/* Immagine ottimizzata per foto di persone */}
-                      <div className="aspect-[3/4] relative overflow-hidden">
+                      {/* Immagine con overlay gradiente */}
+                      <div className="aspect-[4/5] relative overflow-hidden">
                         <img
                           src={photo.url}
                           alt={photo.description || `Risultato cliente ${index + 1}`}
@@ -127,7 +127,7 @@ export default async function Home() {
                   {c.resultsSection.photos?.map((photo, index) => (
                     <div key={photo.id} className="flex-none w-64 snap-start">
                       <div className="bg-card rounded-xl overflow-hidden shadow-lg">
-                        <div className="aspect-[3/4] relative">
+                        <div className="aspect-[4/5] relative">
                           <img
                             src={photo.url}
                             alt={photo.description || `Risultato cliente ${index + 1}`}
