@@ -11,6 +11,7 @@ import { TrustpilotWall } from "@/components/TrustpilotWall";
 import { BookingForm } from "@/components/BookingForm";
 import { ContactSection } from "@/components/ContactSection";
 import { FreeConsultationPopup } from "@/components/FreeConsultationPopup";
+import ResultsCarouselDesktop from "@/components/ResultsCarouselDesktop";
 
 export const dynamic = 'force-dynamic';
 
@@ -88,38 +89,10 @@ export default async function Home() {
               </p>
             </div>
             
-            {/* Carosello/Griglia moderna di foto */}
+            {/* Carosello moderno - Desktop e Mobile */}
             <div className="relative">
-              {/* Controlli Desktop - Griglia */}
-              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {c.resultsSection.photos?.map((photo, index) => (
-                  <div key={photo.id} className="group relative">
-                    {/* Card con effetto hover */}
-                    <div className="relative bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                      {/* Immagine con overlay gradiente */}
-                      <div className="aspect-[4/5] relative overflow-hidden">
-                        <img
-                          src={photo.url}
-                          alt={photo.description || `Risultato cliente ${index + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        
-                        {/* Overlay gradiente */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-                      
-                      {/* Descrizione con styling moderno */}
-                      {photo.description && (
-                        <div className="p-5">
-                          <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                            {photo.description}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* Desktop - Carosello con controlli */}
+              <ResultsCarouselDesktop photos={c.resultsSection.photos || []} />
 
               {/* Mobile - Carosello scorrevole */}
               <div className="md:hidden">
