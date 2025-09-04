@@ -81,9 +81,45 @@ export default async function RootLayout({
     console.log('Failed to fetch brand info for SSR:', error);
   }
 
+  // Generate CSS variables for immediate application
+  const defaultPalette = {
+    primary: '#0B5E0B', accent: '#00D084', background: '#FFFFFF', foreground: '#0E0F12',
+    border: '#E2E8F0', card: '#FFFFFF', muted: '#F1F5F9', navbarBg: 'rgba(0,0,0,0.8)',
+    navbarText: '#FFFFFF', secondaryBg: '#F8FAFC', secondaryText: '#475569'
+  };
+
+  const hexToRgb = (hex: string): string => {
+    const h = hex.replace('#', '');
+    const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+    return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+  };
+
   return (
     <html lang="it">
       <head>
+        {/* CSS Variables applied IMMEDIATELY - no JavaScript delay */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              :root {
+                --primary: ${defaultPalette.primary} !important;
+                --primary-rgb: ${hexToRgb(defaultPalette.primary)} !important;
+                --accent: ${defaultPalette.accent} !important;
+                --accent-rgb: ${hexToRgb(defaultPalette.accent)} !important;
+                --background: ${defaultPalette.background} !important;
+                --foreground: ${defaultPalette.foreground} !important;
+                --border: ${defaultPalette.border} !important;
+                --card: ${defaultPalette.card} !important;
+                --muted-bg: ${defaultPalette.muted} !important;
+                --navbar-bg: ${defaultPalette.navbarBg} !important;
+                --navbar-text: ${defaultPalette.navbarText} !important;
+                --secondary-bg: ${defaultPalette.secondaryBg} !important;
+                --secondary-fg: ${defaultPalette.secondaryText} !important;
+              }
+            `
+          }}
+        />
+        {/* Script to override with localStorage palette if available */}
         <script 
           dangerouslySetInnerHTML={{
             __html: `
@@ -96,23 +132,21 @@ export default async function RootLayout({
                     return (n >> 16) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255);
                   }
                   
-                  // Try to get palette from localStorage, fallback to default
-                  let palette = 'gz-default';
+                  // Try to get palette from localStorage
+                  let palette = null;
                   try {
                     if (typeof Storage !== 'undefined' && localStorage) {
-                      palette = localStorage.getItem('gz-palette') || 'gz-default';
+                      palette = localStorage.getItem('gz-palette');
                     }
                   } catch(e) {
-                    // localStorage not available (incognito mode, etc.)
-                    palette = 'gz-default';
+                    // localStorage not available (incognito mode, etc.) - keep default
+                    return;
                   }
                   
+                  // Only override if we have a stored palette different from default
+                  if (!palette || palette === 'gz-default') return;
+                  
                   const palettes = {
-                    'gz-default': {
-                      primary: '#0B5E0B', accent: '#00D084', background: '#FFFFFF', foreground: '#0E0F12',
-                      border: '#E2E8F0', card: '#FFFFFF', muted: '#F1F5F9', navbarBg: 'rgba(0,0,0,0.8)',
-                      navbarText: '#FFFFFF', secondaryBg: '#F8FAFC', secondaryText: '#475569'
-                    },
                     'modern-blue': {
                       primary: '#2563EB', accent: '#3B82F6', background: '#FFFFFF', foreground: '#1E293B',
                       border: '#E2E8F0', card: '#FFFFFF', muted: '#F1F5F9', navbarBg: 'rgba(30, 41, 59, 0.9)',
@@ -140,62 +174,26 @@ export default async function RootLayout({
                     }
                   };
                   
-                  const colors = palettes[palette] || palettes['gz-default'];
+                  const colors = palettes[palette];
+                  if (!colors) return;
                   
-                  // Apply all CSS variables IMMEDIATELY
+                  // Override CSS variables
                   const root = document.documentElement;
-                  const cssVars = {
-                    '--primary': colors.primary,
-                    '--primary-rgb': hexToRgb(colors.primary),
-                    '--accent': colors.accent,
-                    '--accent-rgb': hexToRgb(colors.accent),
-                    '--background': colors.background,
-                    '--foreground': colors.foreground,
-                    '--border': colors.border,
-                    '--card': colors.card,
-                    '--muted-bg': colors.muted,
-                    '--navbar-bg': colors.navbarBg,
-                    '--navbar-text': colors.navbarText,
-                    '--secondary-bg': colors.secondaryBg,
-                    '--secondary-fg': colors.secondaryText
-                  };
-                  
-                  // Apply immediately, forcing style recalculation
-                  Object.entries(cssVars).forEach(([key, value]) => {
-                    root.style.setProperty(key, value, 'important');
-                  });
-                  
-                  // Force style recalculation
-                  root.style.display = 'none';
-                  root.offsetHeight; // Trigger reflow
-                  root.style.display = '';
+                  root.style.setProperty('--primary', colors.primary, 'important');
+                  root.style.setProperty('--primary-rgb', hexToRgb(colors.primary), 'important');
+                  root.style.setProperty('--accent', colors.accent, 'important');
+                  root.style.setProperty('--accent-rgb', hexToRgb(colors.accent), 'important');
+                  root.style.setProperty('--background', colors.background, 'important');
+                  root.style.setProperty('--foreground', colors.foreground, 'important');
+                  root.style.setProperty('--border', colors.border, 'important');
+                  root.style.setProperty('--card', colors.card, 'important');
+                  root.style.setProperty('--muted-bg', colors.muted, 'important');
+                  root.style.setProperty('--navbar-bg', colors.navbarBg, 'important');
+                  root.style.setProperty('--navbar-text', colors.navbarText, 'important');
+                  root.style.setProperty('--secondary-bg', colors.secondaryBg, 'important');
+                  root.style.setProperty('--secondary-fg', colors.secondaryText, 'important');
                 } catch(e) {
-                  // Complete fallback - apply default palette
-                  console.log('Palette loading failed, applying default');
-                  const root = document.documentElement;
-                  const fallbackVars = {
-                    '--primary': '#0B5E0B',
-                    '--primary-rgb': '11, 94, 11',
-                    '--navbar-bg': 'rgba(0,0,0,0.8)',
-                    '--navbar-text': '#FFFFFF',
-                    '--background': '#FFFFFF',
-                    '--foreground': '#0E0F12',
-                    '--card': '#FFFFFF',
-                    '--accent': '#00D084',
-                    '--border': '#E2E8F0',
-                    '--muted-bg': '#F1F5F9',
-                    '--secondary-bg': '#F8FAFC',
-                    '--secondary-fg': '#475569'
-                  };
-                  
-                  Object.entries(fallbackVars).forEach(([key, value]) => {
-                    root.style.setProperty(key, value, 'important');
-                  });
-                  
-                  // Force style recalculation
-                  root.style.display = 'none';
-                  root.offsetHeight; // Trigger reflow
-                  root.style.display = '';
+                  // Silent fail - default palette already applied
                 }
               })();
             `
