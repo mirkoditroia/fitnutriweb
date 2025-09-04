@@ -221,8 +221,8 @@ function getEmailConfig() {
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
-    user: 'memirkod95@gmail.com',
-    password: 'nlld aigt bwim ixkd',
+    user: 'mirkod95@gmail.com',
+    password: 'nlldaigtbwimixkd',
     from: 'noreply@gznutrition.it',
     notificationEmail: 'mirkoditroia@gmail.com'
   };
