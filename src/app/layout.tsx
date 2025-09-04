@@ -89,20 +89,86 @@ export default async function RootLayout({
             __html: `
               (function() {
                 try {
-                  const palette = localStorage.getItem('gz-palette') || 'gz-default';
+                  // Helper function to extract RGB values from hex
+                  function hexToRgb(hex) {
+                    const h = hex.replace('#', '');
+                    const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+                    return (n >> 16) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255);
+                  }
+                  
+                  // Try to get palette from localStorage, fallback to default
+                  let palette = 'gz-default';
+                  try {
+                    if (typeof Storage !== 'undefined' && localStorage) {
+                      palette = localStorage.getItem('gz-palette') || 'gz-default';
+                    }
+                  } catch(e) {
+                    // localStorage not available (incognito mode, etc.)
+                    palette = 'gz-default';
+                  }
+                  
                   const palettes = {
-                    'gz-default': { primary: '#0B5E0B', navbarBg: 'rgba(0,0,0,0.8)', navbarText: '#FFFFFF' },
-                    'modern-blue': { primary: '#2563EB', navbarBg: 'rgba(30, 41, 59, 0.9)', navbarText: '#FFFFFF' },
-                    'elegant-dark': { primary: '#D97706', navbarBg: 'rgba(17, 24, 39, 0.95)', navbarText: '#F9FAFB' },
-                    'nature-green': { primary: '#059669', navbarBg: 'rgba(6, 78, 59, 0.9)', navbarText: '#FFFFFF' },
-                    'warm-orange': { primary: '#EA580C', navbarBg: 'rgba(124, 45, 18, 0.9)', navbarText: '#FFFFFF' },
-                    'professional-gray': { primary: '#374151', navbarBg: 'rgba(17, 24, 39, 0.9)', navbarText: '#F9FAFB' }
+                    'gz-default': {
+                      primary: '#0B5E0B', accent: '#00D084', background: '#FFFFFF', foreground: '#0E0F12',
+                      border: '#E2E8F0', card: '#FFFFFF', muted: '#F1F5F9', navbarBg: 'rgba(0,0,0,0.8)',
+                      navbarText: '#FFFFFF', secondaryBg: '#F8FAFC', secondaryText: '#475569'
+                    },
+                    'modern-blue': {
+                      primary: '#2563EB', accent: '#3B82F6', background: '#FFFFFF', foreground: '#1E293B',
+                      border: '#E2E8F0', card: '#FFFFFF', muted: '#F1F5F9', navbarBg: 'rgba(30, 41, 59, 0.9)',
+                      navbarText: '#FFFFFF', secondaryBg: '#EFF6FF', secondaryText: '#1E40AF'
+                    },
+                    'elegant-dark': {
+                      primary: '#D97706', accent: '#F59E0B', background: '#FFFFFF', foreground: '#1F2937',
+                      border: '#E5E7EB', card: '#FFFFFF', muted: '#F9FAFB', navbarBg: 'rgba(17, 24, 39, 0.95)',
+                      navbarText: '#F9FAFB', secondaryBg: '#FEF3C7', secondaryText: '#92400E'
+                    },
+                    'nature-green': {
+                      primary: '#059669', accent: '#10B981', background: '#FFFFFF', foreground: '#1F2937',
+                      border: '#D1FAE5', card: '#FFFFFF', muted: '#F0FDF4', navbarBg: 'rgba(6, 78, 59, 0.9)',
+                      navbarText: '#FFFFFF', secondaryBg: '#ECFDF5', secondaryText: '#047857'
+                    },
+                    'warm-orange': {
+                      primary: '#EA580C', accent: '#FB923C', background: '#FFFFFF', foreground: '#1C1917',
+                      border: '#E7E5E4', card: '#FFFFFF', muted: '#FAFAF9', navbarBg: 'rgba(124, 45, 18, 0.9)',
+                      navbarText: '#FFFFFF', secondaryBg: '#FED7AA', secondaryText: '#C2410C'
+                    },
+                    'professional-gray': {
+                      primary: '#374151', accent: '#6B7280', background: '#FFFFFF', foreground: '#111827',
+                      border: '#E5E7EB', card: '#FFFFFF', muted: '#F9FAFB', navbarBg: 'rgba(17, 24, 39, 0.9)',
+                      navbarText: '#F9FAFB', secondaryBg: '#F3F4F6', secondaryText: '#374151'
+                    }
                   };
+                  
                   const colors = palettes[palette] || palettes['gz-default'];
-                  document.documentElement.style.setProperty('--primary', colors.primary);
-                  document.documentElement.style.setProperty('--navbar-bg', colors.navbarBg);
-                  document.documentElement.style.setProperty('--navbar-text', colors.navbarText);
-                } catch(e) {}
+                  
+                  // Apply all CSS variables
+                  const root = document.documentElement;
+                  root.style.setProperty('--primary', colors.primary);
+                  root.style.setProperty('--primary-rgb', hexToRgb(colors.primary));
+                  root.style.setProperty('--accent', colors.accent);
+                  root.style.setProperty('--accent-rgb', hexToRgb(colors.accent));
+                  root.style.setProperty('--background', colors.background);
+                  root.style.setProperty('--foreground', colors.foreground);
+                  root.style.setProperty('--border', colors.border);
+                  root.style.setProperty('--card', colors.card);
+                  root.style.setProperty('--muted-bg', colors.muted);
+                  root.style.setProperty('--navbar-bg', colors.navbarBg);
+                  root.style.setProperty('--navbar-text', colors.navbarText);
+                  root.style.setProperty('--secondary-bg', colors.secondaryBg);
+                  root.style.setProperty('--secondary-fg', colors.secondaryText);
+                } catch(e) {
+                  // Complete fallback - apply default palette
+                  console.log('Palette loading failed, applying default');
+                  const root = document.documentElement;
+                  root.style.setProperty('--primary', '#0B5E0B');
+                  root.style.setProperty('--primary-rgb', '11, 94, 11');
+                  root.style.setProperty('--navbar-bg', 'rgba(0,0,0,0.8)');
+                  root.style.setProperty('--navbar-text', '#FFFFFF');
+                  root.style.setProperty('--background', '#FFFFFF');
+                  root.style.setProperty('--foreground', '#0E0F12');
+                  root.style.setProperty('--card', '#FFFFFF');
+                }
               })();
             `
           }}
