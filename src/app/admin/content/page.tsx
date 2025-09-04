@@ -81,11 +81,19 @@ export default function AdminContentPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-foreground pt-4 tracking-tight">Contenuti Landing</h1>
-      <div className="admin-surface mt-6 rounded-xl p-6 space-y-8 border border-foreground/10 bg-background/70 backdrop-blur-sm shadow-md">
-        {/* Palette Colori Robuste */}
-        <section className="space-y-4">
-          <h2 className="font-semibold text-black">Palette Colori</h2>
+      <h1 className="text-2xl font-bold text-foreground pt-4 tracking-tight">Contenuti Landing Page</h1>
+      <p className="text-sm text-foreground/70 mt-2">Gestisci tutti i contenuti e la personalizzazione della landing page</p>
+      
+      <div className="admin-surface mt-6 rounded-xl p-8 space-y-12 border border-foreground/10 bg-background/70 backdrop-blur-sm shadow-md">
+        {/* ========== STILE E ASPETTO ========== */}
+        <div className="border-b border-foreground/10 pb-8">
+          <h3 className="text-lg font-bold text-black mb-6 flex items-center gap-2">
+            🎨 Stile e Aspetto
+          </h3>
+          
+          {/* Palette Colori */}
+          <section className="space-y-4">
+            <h2 className="font-semibold text-black">Palette Colori</h2>
           <p className="text-sm text-black/70">Scegli una palette predefinita moderna e professionale per tutto il sito</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -216,10 +224,9 @@ export default function AdminContentPage() {
           </div>
         </section>
 
-
-        {/* Navbar Logo */}
-        <section className="space-y-3">
-          <h2 className="font-semibold">Logo Navbar</h2>
+        {/* Logo Navbar */}
+        <section className="space-y-4 mt-8">
+          <h2 className="font-semibold text-black">Logo Navbar</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Modalità logo</label>
@@ -294,8 +301,17 @@ export default function AdminContentPage() {
             </div>
           )}
         </section>
-        <section className="space-y-3">
-          <h2 className="font-semibold">Hero</h2>
+        </div>
+
+        {/* ========== CONTENUTI PRINCIPALI ========== */}
+        <div className="border-b border-foreground/10 pb-8">
+          <h3 className="text-lg font-bold text-black mb-6 flex items-center gap-2">
+            📝 Contenuti Principali
+          </h3>
+          
+          {/* Hero Section */}
+          <section className="space-y-4">
+            <h2 className="font-semibold text-black">Hero</h2>
           <Input label="Hero title" value={content.heroTitle} onChange={(e) => setContent({ ...content, heroTitle: e.target.value })} />
           <Input label="Hero subtitle" value={content.heroSubtitle} onChange={(e) => setContent({ ...content, heroSubtitle: e.target.value })} />
           <Input label="Hero CTA" value={content.heroCta} onChange={(e) => setContent({ ...content, heroCta: e.target.value })} />
@@ -337,8 +353,9 @@ export default function AdminContentPage() {
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="font-semibold">Presentazione nutrizionista</h2>
+        {/* Presentazione nutrizionista */}
+        <section className="space-y-4 mt-8">
+          <h2 className="font-semibold text-black">Presentazione nutrizionista</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Input className={`rounded-md px-3 py-2 ${fieldCls}`} label="About title" value={content.aboutTitle ?? ""} onChange={(e) => setContent({ ...content, aboutTitle: e.target.value })} />
             <div>
@@ -354,10 +371,18 @@ export default function AdminContentPage() {
             <textarea className={`w-full rounded-md border px-3 py-2 text-sm ${fieldCls}`} rows={5} value={content.aboutBody ?? ""} onChange={(e) => setContent({ ...content, aboutBody: e.target.value })} />
           </div>
         </section>
+        </div>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">Immagini sezione</h2>
+        {/* ========== SEZIONI AGGIUNTIVE ========== */}
+        <div className="border-b border-foreground/10 pb-8">
+          <h3 className="text-lg font-bold text-black mb-6 flex items-center gap-2">
+            🖼️ Sezioni Aggiuntive
+          </h3>
+          
+          {/* Immagini sezione */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-semibold text-black">Immagini sezione</h2>
             <div className="flex gap-2">
               <UploadButton folder="content" onUploaded={addImgFromUpload} />
               <Button type="button" onClick={addImg}>Aggiungi immagine</Button>
@@ -381,8 +406,8 @@ export default function AdminContentPage() {
         </section>
 
         {/* Sezione Contatti */}
-        <section className="space-y-3">
-          <h2 className="font-semibold">Contatti</h2>
+        <section className="space-y-4 mt-8">
+          <h2 className="font-semibold text-black">Contatti</h2>
           
           {/* Titoli personalizzabili delle sezioni */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -626,122 +651,9 @@ export default function AdminContentPage() {
           </div>
         </section>
 
-        {/* Google Calendar Integration */}
-        <section className="space-y-3">
-          <h2 className="font-semibold">Google Calendar</h2>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="calendarEnabled"
-                checked={content.googleCalendar?.isEnabled ?? false}
-                onChange={(e) => setContent({
-                  ...content,
-                  googleCalendar: {
-                    ...content.googleCalendar,
-                    isEnabled: e.target.checked
-                  }
-                })}
-                className="text-primary"
-              />
-              <label htmlFor="calendarEnabled" className="font-medium">
-                Abilita sincronizzazione Google Calendar
-              </label>
-            </div>
-
-            {content.googleCalendar?.isEnabled && (
-              <div className="space-y-4 p-4 border border-border rounded-lg bg-background/50">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input
-                    label="Calendar ID"
-                    value={content.googleCalendar?.calendarId ?? ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      googleCalendar: {
-                        ...content.googleCalendar,
-                        calendarId: e.target.value
-                      }
-                    })}
-                    placeholder="ID del calendario Google"
-                  />
-                  
-                  <Input
-                    label="Timezone"
-                    value={content.googleCalendar?.timezone ?? ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      googleCalendar: {
-                        ...content.googleCalendar,
-                        timezone: e.target.value
-                      }
-                    })}
-                    placeholder="Europe/Rome"
-                  />
-                  
-                  <Input
-                    label="Service Account Email"
-                    value={content.googleCalendar?.serviceAccountEmail ?? ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      googleCalendar: {
-                        ...content.googleCalendar,
-                        serviceAccountEmail: e.target.value
-                      }
-                    })}
-                    placeholder="email@project.iam.gserviceaccount.com"
-                  />
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/calendar');
-                        const result = await response.json();
-                        if (result.success) {
-                          toast.success('Connessione Google Calendar riuscita!');
-                        } else {
-                          toast.error(`Errore connessione: ${result.message}`);
-                        }
-                      } catch (error) {
-                        toast.error('Errore nel test della connessione');
-                      }
-                    }}
-                  >
-                    Test Connessione
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      // Apri il calendario in una nuova tab
-                      const calendarId = content.googleCalendar?.calendarId;
-                      if (calendarId) {
-                        window.open(`https://calendar.google.com/calendar/embed?src=${encodeURIComponent(calendarId)}`, '_blank');
-                      }
-                    }}
-                  >
-                    Apri Calendario
-                  </Button>
-                </div>
-                
-                <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-                  <p><strong>Info:</strong> Ogni prenotazione verrà automaticamente sincronizzata con Google Calendar.</p>
-                  <p>• Eventi confermati: colore blu</p>
-                  <p>• Consultazioni gratuite: colore arancione</p>
-                  <p>• Promemoria automatici: 24h prima e 30 minuti prima</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
 
         {/* Sezione Risultati Clienti */}
-        <section className="space-y-4">
+        <section className="space-y-4 mt-8">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-black">📸 Risultati Clienti</h2>
@@ -935,10 +847,57 @@ export default function AdminContentPage() {
             </div>
           )}
         </section>
+        </div>
+
+        {/* ========== INTEGRAZIONI ========== */}
+        <div>
+          <h3 className="text-lg font-bold text-black mb-6 flex items-center gap-2">
+            🔌 Integrazioni
+          </h3>
+          
+          {/* Google Calendar */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-black">📅 Google Calendar</h2>
+              <p className="text-sm text-black/70">Sincronizzazione automatica delle prenotazioni</p>
+            </div>
+          </div>
+          
+          <div className="bg-background/50 border border-foreground/10 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="calendarEnabledSimple"
+                checked={content.googleCalendar?.isEnabled ?? false}
+                onChange={(e) => setContent({
+                  ...content,
+                  googleCalendar: {
+                    ...content.googleCalendar,
+                    isEnabled: e.target.checked
+                  }
+                })}
+                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              />
+              <label htmlFor="calendarEnabledSimple" className="text-sm font-medium text-black">
+                Abilita sincronizzazione Google Calendar
+              </label>
+            </div>
+            
+            {content.googleCalendar?.isEnabled && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  📋 <strong>Configurazione richiesta:</strong> Per attivare la sincronizzazione, 
+                  completa la configurazione in <strong>Impostazioni → Google Calendar</strong>
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Popup 10 Minuti Consultivi Gratuiti */}
-        <section className="space-y-3">
-          <h2 className="font-semibold">Popup</h2>
+        <section className="space-y-4 mt-8">
+          <h2 className="font-semibold text-black">🔔 Popup Consultazione Gratuita</h2>
           
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -1020,8 +979,13 @@ export default function AdminContentPage() {
             )}
           </div>
         </section>
-        <div className="flex justify-end pt-2">
-          <Button onClick={save}>Salva contenuti</Button>
+        </div>
+
+        {/* Pulsante salva */}
+        <div className="flex justify-end pt-6 border-t border-foreground/10 mt-8">
+          <Button onClick={save} className="bg-primary hover:bg-primary/90 px-6 py-2">
+            💾 Salva Contenuti
+          </Button>
         </div>
       </div>
     </>
