@@ -283,7 +283,7 @@ function createEmailTransporter(customNotificationEmail) {
 }
 
 // Generate HTML email for new booking
-function generateBookingNotificationHTML(booking, packageTitle) {
+function generateBookingNotificationHTML(booking, packageTitle, businessName) {
   const locationText = booking.location === 'online' ? 'Online' : 
                       booking.studioLocation ? `Studio: ${booking.studioLocation}` : 'In Studio';
   
@@ -292,7 +292,7 @@ function generateBookingNotificationHTML(booking, packageTitle) {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Nuova Prenotazione - GZ Nutrition</title>
+      <title>Nuova Prenotazione - ${businessName || 'GZ Nutrition'}</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -308,7 +308,7 @@ function generateBookingNotificationHTML(booking, packageTitle) {
       <div class="container">
         <div class="header">
           <h1>🔔 Nuova Prenotazione Ricevuta</h1>
-          <p>GZ Nutrition - Sistema di Gestione</p>
+          <p>${businessName || 'GZ Nutrition'} - Sistema di Gestione</p>
         </div>
         
         <div class="content">
@@ -381,7 +381,7 @@ function generateBookingNotificationHTML(booking, packageTitle) {
         </div>
         
         <div class="footer">
-          <p>📧 Email automatica dal sistema GZ Nutrition</p>
+          <p>📧 Email automatica dal sistema ${businessName || 'GZ Nutrition'}</p>
           <p>🕐 Ricevuta il ${new Date().toLocaleString('it-IT')}</p>
         </div>
       </div>
@@ -396,7 +396,7 @@ exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (
   if (handleCors(req, res)) return;
   
   try {
-    const { type, booking, packageTitle, notificationEmail } = req.body;
+    const { type, booking, packageTitle, notificationEmail, businessName } = req.body;
     
     if (type !== 'new-booking') {
       return res.status(400).json({ success: false, message: 'Invalid notification type' });
@@ -420,7 +420,7 @@ exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (
     await transporter.verify();
     
     const subject = `🔔 Nuova Prenotazione - ${booking.name} (${new Date(booking.date).toLocaleDateString('it-IT')})`;
-    const html = generateBookingNotificationHTML(booking, packageTitle);
+    const html = generateBookingNotificationHTML(booking, packageTitle, businessName);
     
     const mailOptions = {
       from: emailConfig.from,

@@ -17,7 +17,7 @@ import {
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
 
 // Funzione per inviare notifica email per nuova prenotazione
-async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string) {
+async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string) {
   try {
     // Usa Firebase Functions per l'invio email
     const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
@@ -29,7 +29,8 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
         type: 'new-booking',
         booking,
         packageTitle,
-        notificationEmail // Passa l'email configurabile
+        notificationEmail, // Passa l'email configurabile
+        businessName // Passa il nome business configurabile
       }),
     });
 
@@ -201,6 +202,7 @@ export interface SiteContent {
   };
   // Email notification settings
   notificationEmail?: string; // Email del nutrizionista per ricevere notifiche
+  businessName?: string; // Nome del nutrizionista/studio per le email
 }
 
 export type Availability = {
@@ -472,11 +474,12 @@ export async function createBooking(b: Booking): Promise<string> {
   try {
     const bookingWithId = { ...b, id: added.id };
     
-    // Ottieni l'email di notifica dalle impostazioni
+    // Ottieni l'email di notifica e il nome business dalle impostazioni
     const siteContent = await getSiteContent();
     const notificationEmail = siteContent?.notificationEmail || "mirkoditroia@gmail.com";
+    const businessName = siteContent?.businessName || "GZ Nutrition";
     
-    await sendBookingNotification(bookingWithId, packageTitle, notificationEmail);
+    await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName);
   } catch (error) {
     console.error("Error sending booking notification:", error);
     // Don't fail the booking creation if notification fails
@@ -951,7 +954,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
           ctaText: "Prenota Ora - È Gratis!"
         },
         colorPalette: "gz-default" as const,
-        notificationEmail: "mirkoditroia@gmail.com" // Default notification email
+        notificationEmail: "mirkoditroia@gmail.com", // Default notification email
+        businessName: "GZ Nutrition" // Default business name
       };
       
       // Salva il contenuto di default in Firebase
@@ -1040,7 +1044,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         serviceAccountEmail: data.googleCalendar?.serviceAccountEmail || "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
       },
       colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
-      notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com"
+      notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com",
+      businessName: data.businessName || "GZ Nutrition"
     };
     
     console.log("getSiteContent: Contenuto finale mappato:", siteContent);
@@ -1209,7 +1214,8 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
       ctaText: fromFs("freeConsultationPopup.ctaText") || "Prenota Ora - È Gratis!"
     },
     colorPalette: (fromFs("colorPalette") as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
-    notificationEmail: fromFs("notificationEmail") || "mirkoditroia@gmail.com"
+    notificationEmail: fromFs("notificationEmail") || "mirkoditroia@gmail.com",
+    businessName: fromFs("businessName") || "GZ Nutrition"
   };
 }
 

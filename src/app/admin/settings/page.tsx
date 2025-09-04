@@ -88,7 +88,8 @@ export default function AdminSettingsPage() {
             notes: 'Questa è una prenotazione di test per verificare il sistema di notifiche email.'
           },
           packageTitle: 'Pacchetto Test',
-          notificationEmail: content.notificationEmail
+          notificationEmail: content.notificationEmail,
+          businessName: content.businessName
         }),
       });
 
@@ -136,6 +137,21 @@ export default function AdminSettingsPage() {
           </p>
           
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-black mb-2">
+                Nome Studio/Nutrizionista
+              </label>
+              <Input
+                value={content.businessName || ""}
+                onChange={(e) => setContent({...content, businessName: e.target.value})}
+                placeholder="GZ Nutrition"
+                className="max-w-md"
+              />
+              <p className="text-xs text-black/60 mt-1">
+                Nome che apparirà nelle email di notifica e in altre comunicazioni
+              </p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-black mb-2">
                 Email Nutrizionista
