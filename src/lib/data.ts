@@ -984,7 +984,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         colorPalette: "gz-default" as const,
         notificationEmail: "mirkoditroia@gmail.com", // Default notification email
         businessName: "GZ Nutrition", // Default business name
-        recaptchaEnabled: true, // CAPTCHA abilitato di default per sicurezza
+        recaptchaEnabled: false, // CAPTCHA disabilitato di default per sviluppo
         recaptchaSiteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Default test key
       };
       
@@ -1076,7 +1076,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
       notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com",
       businessName: data.businessName || "GZ Nutrition",
-      recaptchaEnabled: data.recaptchaEnabled !== false, // Default true, esplicito false per disabilitare
+      recaptchaEnabled: data.recaptchaEnabled === true, // Default false, esplicito true per abilitare
       recaptchaSiteKey: data.recaptchaSiteKey || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
     };
     
@@ -1248,7 +1248,7 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
     colorPalette: (fromFs("colorPalette") as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
     notificationEmail: fromFs("notificationEmail") || "mirkoditroia@gmail.com",
     businessName: fromFs("businessName") || "GZ Nutrition",
-    recaptchaEnabled: fromFs("recaptchaEnabled") !== "false", // Default true
+    recaptchaEnabled: fromFs("recaptchaEnabled") === "true", // Default false
     recaptchaSiteKey: fromFs("recaptchaSiteKey") || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
   };
 }
