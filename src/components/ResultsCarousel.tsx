@@ -54,8 +54,20 @@ export function ResultsCarousel({
     setIsAutoPlaying(false); // Stop auto-play when user interacts
   };
 
+  // Debug logging
+  console.log('🎯 ResultsCarousel rendering with:', { 
+    title, 
+    subtitle, 
+    photosCount: photos?.length,
+    photos: photos?.map(p => ({ id: p.id, url: p.url }))
+  });
+
   return (
-    <section className="py-20 bg-gradient-to-b from-secondary-bg/30 to-background">
+    <section 
+      className="py-20 bg-gradient-to-b from-secondary-bg/30 to-background"
+      data-testid="results-carousel"
+      id="results-section"
+    >
       <div className="container max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -80,12 +92,18 @@ export function ResultsCarousel({
               {photos.map((photo, index) => (
                 <div key={photo.id} className="min-w-full">
                   <div className="relative aspect-[16/10] md:aspect-[20/9]">
-                    <Image
+                    {/* Try Next.js Image first, fallback to regular img */}
+                    <img
                       src={photo.url}
                       alt={photo.description || `Risultato cliente ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      priority={index === 0} // Load first image with priority
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('❌ Errore caricamento immagine:', photo.url);
+                        e.currentTarget.src = '/placeholder-image.jpg'; // Fallback image
+                      }}
+                      onLoad={() => {
+                        console.log('✅ Immagine caricata:', photo.url);
+                      }}
                     />
                     
                     {/* Overlay with description */}
