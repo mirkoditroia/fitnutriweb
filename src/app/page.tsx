@@ -71,6 +71,59 @@ export default async function Home() {
       <AboutSection title={c.aboutTitle} body={c.aboutBody} imageUrl={c.aboutImageUrl} />
       <LandingImages images={c.images} />
       <PackagesCarousel items={featuredFirst} />
+      
+      {/* Sezione Risultati Clienti - se abilitata */}
+      {c.resultsSection?.isEnabled && c.resultsSection.photos && c.resultsSection.photos.length > 0 && (
+        <section 
+          id="results-section" 
+          className="py-20 bg-gradient-to-b from-secondary-bg/30 to-background"
+        >
+          <div className="container max-w-6xl mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                {c.resultsSection.title || "🎯 Risultati dei Nostri Clienti"}
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                {c.resultsSection.subtitle || "Trasformazioni reali di persone reali"}
+              </p>
+            </div>
+            
+            {/* Griglia responsive di foto */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {c.resultsSection.photos?.map((photo, index) => (
+                <div key={photo.id} className="bg-card rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="aspect-[4/3] relative">
+                    <img
+                      src={photo.url}
+                      alt={photo.description || `Risultato cliente ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('❌ Errore caricamento immagine:', photo.url);
+                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltbWFnaW5lIG5vbiBkaXNwb25pYmlsZTwvdGV4dD48L3N2Zz4=';
+                      }}
+                    />
+                    
+                    {/* Badge tipo foto */}
+                    {photo.beforeAfter && photo.beforeAfter !== 'single' && (
+                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
+                        {photo.beforeAfter === 'before' ? 'Prima' : 'Dopo'}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Descrizione */}
+                  {photo.description && (
+                    <div className="p-4">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{photo.description}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+      
       <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
         <h2 className="text-3xl font-bold text-center">Prenota la tua consulenza</h2>
         <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
