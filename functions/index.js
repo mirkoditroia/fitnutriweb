@@ -9,10 +9,14 @@
 
 const { onRequest } = require('firebase-functions/v2/https');
 const { setGlobalOptions } = require('firebase-functions/v2');
+const { defineSecret } = require('firebase-functions/params');
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const { google } = require('googleapis');
 const nodemailer = require('nodemailer');
+
+// Define secrets for secure email configuration
+const smtpPassword = defineSecret('SMTP_PASSWORD');
 
 setGlobalOptions({ maxInstances: 10 });
 
@@ -213,18 +217,31 @@ exports.calendarOperations = onRequest(async (req, res) => {
   }
 });
 
-// Email configuration
+// Email configuration using secure secrets and environment variables
 function getEmailConfig() {
-  // Configurazione email diretta (temporanea per test)
+  // Use secure secrets and environment variables
+  const enabled = process.env.EMAIL_NOTIFICATIONS_ENABLED || 'true';
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT) || 587;
+  const secure = process.env.SMTP_SECURE === 'true' || false;
+  const user = process.env.SMTP_USER || 'fitnutriweb@gmail.com';
+  const password = smtpPassword.value(); // Use secure secret
+  const from = process.env.SMTP_FROM || 'noreply@gznutrition.it';
+  const notificationEmail = process.env.NOTIFICATION_EMAIL || 'mirkoditroia@gmail.com';
+  
+  if (!password) {
+    throw new Error('SMTP_PASSWORD secret is required');
+  }
+
   return {
-    enabled: true,
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    user: 'fitnutriweb@gmail.com',
-    password: 'luvuupdxynysdgxu',
-    from: 'noreply@gznutrition.it',
-    notificationEmail: 'mirkoditroia@gmail.com'
+    enabled: enabled === 'true',
+    host: host,
+    port: port,
+    secure: secure,
+    user: user,
+    password: password,
+    from: from,
+    notificationEmail: notificationEmail
   };
 }
 
@@ -352,7 +369,7 @@ function generateBookingNotificationHTML(booking, packageTitle) {
 }
 
 // Send booking notification email
-exports.sendBookingNotification = onRequest(async (req, res) => {
+exports.sendBookingNotification = onRequest({ secrets: [smtpPassword] }, async (req, res) => {
   // Handle CORS
   if (handleCors(req, res)) return;
   
@@ -411,7 +428,7 @@ exports.sendBookingNotification = onRequest(async (req, res) => {
 });
 
 // Test email configuration
-exports.testEmailConfiguration = onRequest(async (req, res) => {
+exports.testEmailConfiguration = onRequest({ secrets: [smtpPassword] }, async (req, res) => {
   // Handle CORS
   if (handleCors(req, res)) return;
   
