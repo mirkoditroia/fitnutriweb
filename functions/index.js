@@ -215,25 +215,16 @@ exports.calendarOperations = onRequest(async (req, res) => {
 
 // Email configuration
 function getEmailConfig() {
-  const config = functions.config();
-  
-  if (!config.email || !config.email.notifications_enabled) {
-    throw new Error('Email notifications are not enabled');
-  }
-  
-  if (!config.email.smtp_host || !config.email.smtp_user || !config.email.smtp_password) {
-    throw new Error('Missing email configuration. Please set SMTP_HOST, SMTP_USER, and SMTP_PASSWORD.');
-  }
-
+  // Configurazione email diretta (temporanea per test)
   return {
-    enabled: config.email.notifications_enabled === 'true',
-    host: config.email.smtp_host,
-    port: parseInt(config.email.smtp_port) || 587,
-    secure: config.email.smtp_secure === 'true',
-    user: config.email.smtp_user,
-    password: config.email.smtp_password,
-    from: config.email.smtp_from || config.email.smtp_user,
-    notificationEmail: config.email.notification_email
+    enabled: true,
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    user: 'meirks.dev@gmail.com',
+    password: 'Caparra13!',
+    from: 'noreply@gznutrition.it',
+    notificationEmail: 'mirkoditroia@gmail.com'
   };
 }
 
