@@ -68,11 +68,12 @@ export function FreeConsultationPopup({
       />
       
       {/* Popup */}
-      <div className="relative max-w-lg w-full rounded-2xl p-8 shadow-2xl ring-1 ring-foreground/20 bg-white text-black">
+      <div className="relative max-w-lg w-full rounded-2xl p-8 shadow-2xl ring-1 ring-border" style={{ backgroundColor: 'var(--card)', color: 'var(--foreground)' }}>
         {/* Pulsante chiudi */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-black/60 hover:text-black transition-colors"
+          className="absolute top-4 right-4 transition-colors"
+          style={{ color: 'var(--foreground)' }}
           aria-label="Chiudi popup"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,35 +84,47 @@ export function FreeConsultationPopup({
         {/* Contenuto */}
         <div className="text-center space-y-4">
           {/* Icona */}
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto ring-1 ring-green-200">
+          <div 
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto ring-1"
+            style={{ 
+              backgroundColor: 'var(--primary)', 
+              color: 'white',
+              '--tw-ring-color': 'var(--primary)'
+            }}
+          >
             <span className="text-3xl">🎯</span>
           </div>
 
           {/* Titolo */}
-          <h2 className="text-2xl font-extrabold tracking-tight">
+          <h2 className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--foreground)' }}>
             {title}
           </h2>
 
           {/* Sottotitolo */}
-          <p className="text-lg font-semibold text-green-700">
+          <p className="text-lg font-semibold" style={{ color: 'var(--primary)' }}>
             {subtitle}
           </p>
 
           {/* Descrizione */}
-          <p className="text-black/70 leading-relaxed">
+          <p className="leading-relaxed" style={{ color: 'var(--foreground)', opacity: 0.8 }}>
             {description}
           </p>
 
           {/* CTA */}
           <button
             onClick={handleCTAClick}
-            className="w-full bg-primary text-primary-foreground font-semibold py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors shadow focus:outline-none focus:ring-4 focus:ring-[rgba(var(--primary-rgb),0.25)]"
+            className="w-full font-semibold py-3 px-6 rounded-lg transition-colors shadow focus:outline-none focus:ring-4"
+            style={{ 
+              backgroundColor: 'var(--primary)', 
+              color: 'white',
+              '--tw-ring-color': 'rgba(var(--primary-rgb), 0.25)'
+            }}
           >
             {ctaText}
           </button>
 
           {/* Testo informativo */}
-          <p className="text-xs text-black/60">
+          <p className="text-xs" style={{ color: 'var(--foreground)', opacity: 0.6 }}>
             * Solo per nuovi clienti
           </p>
         </div>

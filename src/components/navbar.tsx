@@ -20,6 +20,7 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
   const [scrolled, setScrolled] = useState(false);
 
   const [brand, setBrand] = useState<BrandCfg | null>(initialBrand ?? null);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,7 +43,22 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
         weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
         size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
       };
-      setBrand(cfg);
+      
+      // Preload image if mode is image
+      if (cfg.mode === 'image' && cfg.imageUrl) {
+        const img = new Image();
+        img.onload = () => {
+          setImageLoaded(true);
+          setBrand(cfg);
+        };
+        img.onerror = () => {
+          // Fallback to text mode if image fails to load
+          setBrand({...cfg, mode: 'text'});
+        };
+        img.src = cfg.imageUrl;
+      } else {
+        setBrand(cfg);
+      }
     }).catch(() => {});
   }, []);
 
@@ -61,16 +77,16 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
             <div className="flex h-16 items-center justify-between">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-2">
-                {brand?.mode === "image" && brand?.imageUrl ? (
+                {brand?.mode === "image" && brand?.imageUrl && imageLoaded ? (
                   <img
                     src={brand.imageUrl}
                     alt="Logo"
                     style={{ height: `${brand.height}px` }}
-                    className={`${brand.autoBg ? 'mix-blend-multiply' : ''}`}
+                    className={`${brand.autoBg ? 'mix-blend-multiply' : ''} transition-opacity duration-300`}
                   />
                 ) : (
                   <span
-                    className="tracking-tight"
+                    className={`tracking-tight transition-opacity duration-300 ${brand?.mode === "image" && !imageLoaded ? 'opacity-0' : 'opacity-100'}`}
                     style={{ fontWeight: brand?.weight || 700, fontSize: brand?.size ? `${brand.size}px` : undefined }}
                   >
                     {brand?.text || 'GZnutrition'}
