@@ -38,16 +38,34 @@ export function UploadButton({
       const form = new FormData();
       form.append("file", file);
       form.append("folder", folder);
+      
+      console.log(`[UploadButton] Caricamento file: ${file.name} (${file.size} bytes)`);
       const res = await fetch("/api/upload", { method: "POST", body: form });
-      if (!res.ok) throw new Error(`upload failed: ${res.status}`);
-      const json = (await res.json()) as { url?: string };
-      if (!json.url) throw new Error("no url returned");
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`[UploadButton] Upload fallito: ${res.status} - ${errorText}`);
+        throw new Error(`Upload fallito: ${res.status}`);
+      }
+      
+      const json = (await res.json()) as { url?: string; error?: string };
+      if (json.error) {
+        console.error(`[UploadButton] Errore server:`, json.error);
+        throw new Error(`Errore server: ${json.error}`);
+      }
+      
+      if (!json.url) {
+        console.error(`[UploadButton] Nessun URL ritornato:`, json);
+        throw new Error("Nessun URL ritornato dal server");
+      }
 
+      console.log(`[UploadButton] Upload completato: ${json.url}`);
       toast.success("File caricato con successo!");
       onUploaded(json.url);
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Errore nel caricamento del file");
+      const errorMessage = error instanceof Error ? error.message : "Errore sconosciuto";
+      toast.error(`Errore caricamento: ${errorMessage}`);
     } finally {
       setUploading(false);
       // allow selecting the same file again if needed

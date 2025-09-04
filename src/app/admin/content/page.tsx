@@ -801,26 +801,64 @@ export default function AdminContentPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium text-black">Foto risultati</h3>
-                  <UploadButton
-                    folder="results"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    maxSize={5}
-                    onUploaded={(url) => {
-                      const newPhoto = {
-                        id: Date.now().toString(),
-                        url,
-                        description: "",
-                        beforeAfter: "single" as const
-                      };
-                      setContent({
-                        ...content,
-                        resultsSection: {
-                          ...content.resultsSection,
-                          photos: [...(content.resultsSection?.photos ?? []), newPhoto]
-                        }
-                      });
-                    }}
-                  />
+                  <div className="space-y-3">
+                    <UploadButton
+                      folder="results"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      maxSize={5}
+                      onUploaded={(url) => {
+                        const newPhoto = {
+                          id: Date.now().toString(),
+                          url,
+                          description: "",
+                          beforeAfter: "single" as const
+                        };
+                        setContent({
+                          ...content,
+                          resultsSection: {
+                            ...content.resultsSection,
+                            photos: [...(content.resultsSection?.photos ?? []), newPhoto]
+                          }
+                        });
+                      }}
+                    />
+                    
+                    <div className="text-sm text-gray-600 border-t pt-3">
+                      <p className="font-medium mb-2">💡 Alternativa: Usa URL immagine esterna</p>
+                      <input
+                        type="url"
+                        placeholder="https://esempio.com/immagine.jpg"
+                        className={`${fieldCls} w-full`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const url = (e.target as HTMLInputElement).value.trim();
+                            if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                              const newPhoto = {
+                                id: Date.now().toString(),
+                                url,
+                                description: "",
+                                beforeAfter: "single" as const
+                              };
+                              setContent({
+                                ...content,
+                                resultsSection: {
+                                  ...content.resultsSection,
+                                  photos: [...(content.resultsSection?.photos ?? []), newPhoto]
+                                }
+                              });
+                              (e.target as HTMLInputElement).value = '';
+                            } else {
+                              alert('Inserisci un URL valido che inizia con http:// o https://');
+                            }
+                          }
+                        }}
+                      />
+                      <p className="text-xs mt-1 text-gray-500">
+                        Incolla l'URL di un'immagine online e premi Enter. 
+                        <br />Utile se l'upload non funziona o per immagini da Google Drive, Imgur, etc.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {content.resultsSection?.photos && content.resultsSection.photos.length > 0 && (
