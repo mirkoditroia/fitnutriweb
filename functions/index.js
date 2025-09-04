@@ -17,6 +17,7 @@ const nodemailer = require('nodemailer');
 
 // Define secrets for secure email configuration
 const smtpPassword = defineSecret('SMTP_PASSWORD');
+const recaptchaSecretKey = defineSecret('RECAPTCHA_SECRET_KEY');
 
 // Sanitize error messages to prevent leaking sensitive data
 function sanitizeError(error) {
@@ -486,6 +487,72 @@ exports.testEmailConfiguration = onRequest({ secrets: [smtpPassword] }, async (r
     res.status(500).json({ 
       success: false, 
       message: errorMessage 
+    });
+  }
+});
+
+// Verify reCAPTCHA token
+exports.verifyCaptcha = onRequest({ secrets: [recaptchaSecretKey] }, async (req, res) => {
+  // Handle CORS
+  if (handleCors(req, res)) return;
+
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Token CAPTCHA mancante' 
+      });
+    }
+
+    const secretKey = recaptchaSecretKey.value();
+    if (!secretKey) {
+      console.error('RECAPTCHA_SECRET_KEY not configured');
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Configurazione CAPTCHA mancante' 
+      });
+    }
+
+    // Verify token with Google reCAPTCHA API
+    const verifyResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${secretKey}&response=${token}`
+    });
+
+    const verifyData = await verifyResponse.json();
+    
+    console.log('reCAPTCHA verification result:', { 
+      success: verifyData.success,
+      hostname: verifyData.hostname,
+      score: verifyData.score || 'N/A'
+    });
+
+    if (!verifyData.success) {
+      console.warn('reCAPTCHA verification failed:', verifyData['error-codes']);
+      return res.json({ 
+        success: false, 
+        message: 'Verifica CAPTCHA fallita',
+        errors: verifyData['error-codes']
+      });
+    }
+
+    // For reCAPTCHA v2, just check success
+    // For reCAPTCHA v3, you could also check the score
+    return res.json({ 
+      success: true, 
+      message: 'CAPTCHA verificato con successo',
+      hostname: verifyData.hostname 
+    });
+
+  } catch (error) {
+    console.error('CAPTCHA verification error:', sanitizeError(error));
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Errore interno durante la verifica CAPTCHA',
+      error: sanitizeError(error)
     });
   }
 });

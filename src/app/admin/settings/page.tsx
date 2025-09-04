@@ -189,6 +189,43 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
+        {/* CAPTCHA */}
+        <section className="space-y-4">
+          <h2 className="font-semibold text-lg text-black">🔒 Sicurezza CAPTCHA</h2>
+          <p className="text-sm text-black/70">
+            Proteggi il form di prenotazione da spam e bot con Google reCAPTCHA.
+          </p>
+          
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={content.recaptchaEnabled !== false}
+                onChange={(e) => setContent({...content, recaptchaEnabled: e.target.checked})}
+                className="rounded border-border"
+              />
+              <label className="text-sm font-medium text-black">
+                Abilita verifica CAPTCHA per le prenotazioni
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black mb-2">
+                Site Key reCAPTCHA v2
+              </label>
+              <Input
+                value={content.recaptchaSiteKey || ""}
+                onChange={(e) => setContent({...content, recaptchaSiteKey: e.target.value})}
+                placeholder="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                className="max-w-md font-mono text-xs"
+              />
+              <p className="text-xs text-black/60 mt-1">
+                Ottieni la Site Key da <a href="https://www.google.com/recaptcha/admin" target="_blank" className="text-blue-600 hover:underline">Google reCAPTCHA Console</a>
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Google Calendar Integration */}
         <section className="space-y-4">
           <h2 className="font-semibold text-lg text-black">📅 Integrazione Google Calendar</h2>

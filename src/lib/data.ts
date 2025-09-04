@@ -203,6 +203,10 @@ export interface SiteContent {
   // Email notification settings
   notificationEmail?: string; // Email del nutrizionista per ricevere notifiche
   businessName?: string; // Nome del nutrizionista/studio per le email
+  
+  // CAPTCHA settings
+  recaptchaEnabled?: boolean; // Abilita/disabilita CAPTCHA per le prenotazioni
+  recaptchaSiteKey?: string; // Site key per reCAPTCHA v2
 }
 
 export type Availability = {
@@ -343,8 +347,30 @@ export async function listBookings(): Promise<Booking[]> {
   return snap.docs.map((d) => toBooking(d.id, d.data()));
 }
 
-export async function createBooking(b: Booking): Promise<string> {
+export async function createBooking(b: Booking, captchaToken?: string): Promise<string> {
   if (!db) throw new Error("Firestore not configured");
+  
+  // Verifica CAPTCHA se abilitato
+  const siteContent = await getSiteContent();
+  if (siteContent?.recaptchaEnabled && captchaToken) {
+    try {
+      const response = await fetch('https://us-central1-gznutrition-d5d13.cloudfunctions.net/verifyCaptcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: captchaToken })
+      });
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error("Verifica CAPTCHA fallita. Riprova.");
+      }
+    } catch (error) {
+      console.error("Errore verifica CAPTCHA:", error);
+      throw new Error("Errore nella verifica CAPTCHA. Riprova.");
+    }
+  } else if (siteContent?.recaptchaEnabled && !captchaToken) {
+    throw new Error("Token CAPTCHA mancante. Completa la verifica CAPTCHA.");
+  }
   
   // Validazione: lo slot deve essere obbligatorio e disponibile
   if (!b.slot) {
@@ -955,7 +981,9 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         },
         colorPalette: "gz-default" as const,
         notificationEmail: "mirkoditroia@gmail.com", // Default notification email
-        businessName: "GZ Nutrition" // Default business name
+        businessName: "GZ Nutrition", // Default business name
+        recaptchaEnabled: true, // CAPTCHA abilitato di default per sicurezza
+        recaptchaSiteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Default test key
       };
       
       // Salva il contenuto di default in Firebase
@@ -1045,7 +1073,9 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       },
       colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
       notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com",
-      businessName: data.businessName || "GZ Nutrition"
+      businessName: data.businessName || "GZ Nutrition",
+      recaptchaEnabled: data.recaptchaEnabled !== false, // Default true, esplicito false per disabilitare
+      recaptchaSiteKey: data.recaptchaSiteKey || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
     };
     
     console.log("getSiteContent: Contenuto finale mappato:", siteContent);
@@ -1215,7 +1245,9 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
     },
     colorPalette: (fromFs("colorPalette") as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
     notificationEmail: fromFs("notificationEmail") || "mirkoditroia@gmail.com",
-    businessName: fromFs("businessName") || "GZ Nutrition"
+    businessName: fromFs("businessName") || "GZ Nutrition",
+    recaptchaEnabled: fromFs("recaptchaEnabled") !== false, // Default true
+    recaptchaSiteKey: fromFs("recaptchaSiteKey") || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
   };
 }
 

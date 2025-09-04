@@ -13,6 +13,7 @@ import { type Package } from "@/lib/data";
 import { DateCalendar as SharedDateCalendar } from "@/components/DateCalendar";
 import { getDirectState } from "@/lib/directState";
 import { getPackages } from "@/lib/datasource";
+import ReCAPTCHA from "react-google-recaptcha";
 
 // Schema di validazione
 const schema = z.object({
@@ -208,14 +209,18 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   const [location, setLocation] = useState<"online" | "studio" | null>(null);
   const [studioLocation, setStudioLocation] = useState<string>("");
   const [addresses, setAddresses] = useState<{ name: string }[]>([]);
+  const [siteContent, setSiteContent] = useState<any>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const availableSlotsRef = useRef<string[]>([]);
   const packagesRef = useRef<Package[]>([]);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const sc = await getSiteContent();
         if (mounted) {
+          setSiteContent(sc);
           const addr = (sc?.contactAddresses as { name: string }[] | undefined) ?? [];
           setAddresses(addr);
           // Se esiste solo una sede, pre-selezionala
@@ -433,6 +438,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       return;
     }
 
+    // Verifica CAPTCHA se abilitato (skip per admin)
+    if (!adminMode && siteContent?.recaptchaEnabled && !captchaToken) {
+      alert("Completa la verifica CAPTCHA prima di inviare la prenotazione.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Aggiungi il flag per la consultazione gratuita
@@ -460,7 +471,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           // preferenza canale rimossa
           notes: bookingData.notes,
           isFreeConsultation,
-        });
+        }, captchaToken || undefined);
         // Simula response.ok
         const response = { ok: true } as const;
         if (!response.ok) throw new Error("failed");
@@ -490,6 +501,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         // Reset del pacchetto selezionato per tornare al selettore
         setSelectedPackage(null);
       setValue("packageId", "");
+        // Reset CAPTCHA
+        setCaptchaToken(null);
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset();
+        }
       }
     } catch (error) {
       console.error("Errore:", error);
@@ -813,10 +829,29 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           </p>
         </div>
 
+        {/* CAPTCHA - Solo se abilitato e non in modalità admin */}
+        {!adminMode && siteContent?.recaptchaEnabled && siteContent?.recaptchaSiteKey && (
+          <div className="form-surface p-4">
+            <label className="block text-sm font-medium mb-2 text-black">
+              Verifica di sicurezza *
+            </label>
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={siteContent.recaptchaSiteKey}
+              onChange={(token) => setCaptchaToken(token)}
+              onExpired={() => setCaptchaToken(null)}
+              onError={() => setCaptchaToken(null)}
+            />
+            <p className="text-xs text-black mt-2">
+              Completa la verifica per proteggere il sito da spam e bot
+            </p>
+          </div>
+        )}
+
         {/* Submit */}
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (!adminMode && siteContent?.recaptchaEnabled && !captchaToken)}
           className="w-full"
         >
           {isSubmitting 
