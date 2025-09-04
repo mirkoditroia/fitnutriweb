@@ -242,11 +242,26 @@ export default function LandingClient() {
       
       {/* Sezione Risultati Clienti - se abilitata */}
       {effectiveContent.resultsSection?.isEnabled && effectiveContent.resultsSection.photos && effectiveContent.resultsSection.photos.length > 0 && (
-        <ResultsCarousel
-          title={effectiveContent.resultsSection.title}
-          subtitle={effectiveContent.resultsSection.subtitle}
-          photos={effectiveContent.resultsSection.photos}
-        />
+        <section 
+          id="results-section" 
+          data-testid="results-carousel"
+          className="py-20 bg-gradient-to-b from-secondary-bg/30 to-background"
+        >
+          <div className="container max-w-6xl mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                🎯 DEBUG: Risultati dei Nostri Clienti
+              </h2>
+              <p className="text-lg text-foreground/70 max-w-3xl mx-auto">
+                DEBUG: Sezione risultati caricata correttamente! Foto: {effectiveContent.resultsSection.photos.length}
+              </p>
+            </div>
+            <div className="text-center">
+              <p>Componente ResultsCarousel temporaneamente sostituito per debug</p>
+              <p>Foto disponibili: {JSON.stringify(effectiveContent.resultsSection.photos.map(p => p.id))}</p>
+            </div>
+          </div>
+        </section>
       )}
       
       {/* Sezione Prenota Consulenza */}
