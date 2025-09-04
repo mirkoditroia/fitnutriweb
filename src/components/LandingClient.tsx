@@ -240,8 +240,41 @@ export default function LandingClient() {
       )}
       <PackagesCarousel items={featuredFirst} />
       
+      {/* DEBUG: Sezione sempre visibile */}
+      <section 
+        id="debug-always-visible" 
+        className="py-8 bg-red-100 border border-red-500"
+      >
+        <div className="container">
+          <h2 className="text-xl font-bold text-red-800">🚨 DEBUG: Questa sezione è sempre visibile</h2>
+          <p>Se vedi questo, il rendering React funziona fino a questo punto.</p>
+          <p>resultsSection presente: {effectiveContent.resultsSection ? 'SI' : 'NO'}</p>
+          <p>isEnabled: {String(effectiveContent.resultsSection?.isEnabled)}</p>
+          <p>photos: {effectiveContent.resultsSection?.photos?.length || 0}</p>
+        </div>
+      </section>
+      
       {/* Sezione Risultati Clienti - se abilitata */}
-      {effectiveContent.resultsSection?.isEnabled && effectiveContent.resultsSection.photos && effectiveContent.resultsSection.photos.length > 0 && (
+      {(() => {
+        console.log('🔍 DEBUG RENDERING CONDITION:');
+        console.log('  effectiveContent:', effectiveContent);
+        console.log('  resultsSection:', effectiveContent.resultsSection);
+        console.log('  isEnabled:', effectiveContent.resultsSection?.isEnabled, typeof effectiveContent.resultsSection?.isEnabled);
+        console.log('  photos:', effectiveContent.resultsSection?.photos);
+        console.log('  photos.length:', effectiveContent.resultsSection?.photos?.length);
+        
+        const condition1 = effectiveContent.resultsSection?.isEnabled;
+        const condition2 = effectiveContent.resultsSection?.photos;
+        const condition3 = effectiveContent.resultsSection?.photos?.length > 0;
+        const finalCondition = condition1 && condition2 && condition3;
+        
+        console.log('  condition1 (isEnabled):', condition1);
+        console.log('  condition2 (photos exists):', condition2);
+        console.log('  condition3 (photos.length > 0):', condition3);
+        console.log('  FINAL CONDITION:', finalCondition);
+        
+        return finalCondition;
+      })() && (
         <section 
           id="results-section" 
           data-testid="results-carousel"
