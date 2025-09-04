@@ -82,6 +82,7 @@ export default function AdminBookingsPage() {
   const [items, setItems] = useState<Booking[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingBookingId, setConfirmingBookingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("requests");
   const [calendarId, setCalendarId] = useState<string>("");
   
@@ -176,6 +177,9 @@ export default function AdminBookingsPage() {
   };
 
   const handleConfirm = async (booking: Booking) => {
+    if (!booking.id || confirmingBookingId) return; // Evita click multipli
+    
+    setConfirmingBookingId(booking.id);
     try {
       await updateBooking({ ...booking, status: "confirmed" });
       await loadData(); // Reload to get fresh data
@@ -183,6 +187,8 @@ export default function AdminBookingsPage() {
     } catch (error) {
       console.error("Error confirming booking:", error);
       toast.error("Errore nella conferma della prenotazione");
+    } finally {
+      setConfirmingBookingId(null);
     }
   };
 
@@ -585,9 +591,10 @@ export default function AdminBookingsPage() {
               <Button 
                 size="sm" 
                 onClick={() => handleConfirm(b)}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                disabled={confirmingBookingId === b.id}
+                className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                ✅ Conferma
+                {confirmingBookingId === b.id ? "⏳ Confermando..." : "✅ Conferma"}
               </Button>
               <Button 
                 size="sm" 
@@ -1438,9 +1445,10 @@ export default function AdminBookingsPage() {
                                        <Button 
                                          size="sm" 
                                          onClick={() => handleConfirm(booking)}
-                                         className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1"
+                                         disabled={confirmingBookingId === booking.id}
+                                         className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                        >
-                                         ✅ Conferma
+                                         {confirmingBookingId === booking.id ? "⏳ Confermando..." : "✅ Conferma"}
                                        </Button>
                                                                                <Button 
                                           size="sm" 
