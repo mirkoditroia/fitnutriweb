@@ -477,7 +477,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     
     // Consenti esplicitamente l'invio anche senza pacchetto in Admin
     if (requirePackage && !selectedPackage && !adminMode) {
-      toast.error("⚠️ Seleziona un pacchetto per continuare", {
+      toast.error("Seleziona un pacchetto per continuare", {
         duration: 3000,
         position: 'top-center',
         style: {
@@ -495,7 +495,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
     // Verifica CAPTCHA se abilitato (skip per admin)
     if (!adminMode && siteContent?.recaptchaEnabled && !captchaToken) {
-      toast.error("🔒 Completa la verifica CAPTCHA per continuare", {
+      toast.error("Completa la verifica CAPTCHA per continuare", {
         duration: 3000,
         position: 'top-center',
         style: {
@@ -578,8 +578,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         // ✅ Toast elegante invece di alert browser
         toast.success(
           isFreeConsultation 
-            ? "🎯 Consulenza gratuita prenotata con successo!" 
-            : "📋 Prenotazione inviata con successo!",
+            ? "Consulenza gratuita prenotata con successo!" 
+            : "Prenotazione inviata con successo!",
           {
             duration: 4000,
             position: 'top-center',
@@ -593,27 +593,13 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               boxShadow: `0 20px 40px rgba(${colors.primaryRgb}, 0.4)`,
               border: '1px solid rgba(255, 255, 255, 0.2)'
             },
-            icon: isFreeConsultation ? '🎯' : '🎉',
+            icon: '✓',
             iconTheme: {
               primary: '#ffffff',
               secondary: colors.primary,
             },
           }
         );
-        
-        // ✨ Effetto confetti celebrativo (simulato con emoji)
-        setTimeout(() => {
-          toast('🎊✨🎉', {
-            duration: 2000,
-            position: 'top-center',
-            style: {
-              background: 'transparent',
-              boxShadow: 'none',
-              fontSize: '24px',
-              border: 'none'
-            }
-          });
-        }, 500);
         // Reset del form
       setValue("name", "");
       setValue("email", "");
@@ -635,7 +621,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     } catch (error) {
       console.error("Errore:", error);
       // ✅ Toast elegante per errori
-      toast.error("❌ Errore nell'invio della prenotazione. Riprova.", {
+      toast.error("Errore nell'invio della prenotazione. Riprova.", {
         duration: 4000,
         position: 'top-center',
         style: {
@@ -1060,17 +1046,24 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         >
           {isSubmitting && (
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+              <div 
+                className="w-5 h-5 border-2 rounded-full animate-spin"
+                style={{
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  borderTopColor: 'white',
+                  borderRightColor: 'rgba(255, 255, 255, 0.6)'
+                }}
+              ></div>
             </div>
           )}
           <span className={`font-semibold transition-all duration-300 ${isSubmitting ? "ml-8" : ""}`}>
             {isSubmitting 
-              ? "🚀 Invio in corso..." 
+              ? "Invio in corso..." 
               : !selectedPackage
-                ? "📋 Invia richiesta"
+                ? "Invia richiesta"
                 : showPromotionalBanner 
-                  ? "🎯 Prenota Consultazione Gratuita" 
-                  : "📋 Prenota Consulenza"
+                  ? "Prenota Consultazione Gratuita" 
+                  : "Prenota Consulenza"
             }
           </span>
         </Button>
@@ -1087,35 +1080,42 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     {isSubmitting && (
       <div className="fixed inset-0 bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md z-50 flex items-center justify-center animate-in fade-in duration-300">
         <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl border border-gray-100 animate-in slide-in-from-bottom-4 duration-500">
-          {/* Spinner moderno con pulsazione */}
+          {/* Spinner moderno elegante */}
           <div className="relative mb-6">
-            <div className="w-20 h-20 mx-auto">
-              {/* Cerchio di sfondo pulsante */}
+            <div className="w-16 h-16 mx-auto">
+              {/* Rotellina principale */}
               <div 
-                className="absolute inset-0 rounded-full animate-ping"
-                style={{ backgroundColor: `rgba(${colors.primaryRgb}, 0.1)` }}
+                className="w-full h-full border-4 border-gray-200 rounded-full animate-spin"
+                style={{
+                  borderTopColor: colors.primary,
+                  borderRightColor: colors.accent,
+                  borderBottomColor: 'transparent',
+                  borderLeftColor: 'transparent',
+                  animationDuration: '1s'
+                }}
               ></div>
-              {/* Cerchio principale rotante */}
-              <div className="absolute inset-2 border-4 border-gray-200 rounded-full"></div>
+              {/* Rotellina interna controtendenza */}
               <div 
-                className="absolute inset-2 border-4 border-t-transparent rounded-full animate-spin"
-                style={{ borderColor: `${colors.primary} transparent transparent transparent` }}
+                className="absolute top-2 left-2 w-12 h-12 border-2 border-gray-100 rounded-full animate-spin"
+                style={{
+                  borderTopColor: 'transparent',
+                  borderRightColor: 'transparent',
+                  borderBottomColor: colors.primary,
+                  borderLeftColor: colors.accent,
+                  animationDirection: 'reverse',
+                  animationDuration: '1.5s'
+                }}
               ></div>
               {/* Punto centrale */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div 
-                  className="w-3 h-3 rounded-full animate-pulse"
-                  style={{ backgroundColor: colors.primary }}
-                ></div>
-              </div>
+              <div 
+                className="absolute top-1/2 left-1/2 w-2 h-2 rounded-full transform -translate-x-1/2 -translate-y-1/2"
+                style={{ backgroundColor: colors.primary }}
+              ></div>
             </div>
           </div>
           
-          {/* Messaggio di stato con icona */}
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="w-5 h-5 text-primary">
-              {isFreeConsultation ? "🎯" : "📋"}
-            </div>
+          {/* Messaggio di stato */}
+          <div className="mb-3">
             <h3 className="text-xl font-bold text-gray-800">
               {isFreeConsultation ? "Consulenza Gratuita" : "Nuova Prenotazione"}
             </h3>
