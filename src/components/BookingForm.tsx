@@ -240,6 +240,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   const isFreeConsultation = directState.isFreeConsultation;
   console.log("🎯 BookingForm - isFreeConsultation:", isFreeConsultation);
   console.log("🎯 BookingForm - directState completo:", directState);
+  console.log("📅 BookingForm - selectedDate:", selectedDate);
 
   // Schema di validazione con validazione personalizzata
   const validationSchema = schema.refine((data) => {
@@ -348,8 +349,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     // Se non c'è un pacchetto selezionato, usa slot normali
 
     const generateAvailableDates = async () => {
-      // Genera solo le prossime 14 date invece di 30 per migliorare le performance
-      const allDates = Array.from({ length: 14 }, (_, i) => {
+      // ✅ CORREZIONE: Per consulenze gratuite, estendi il range a 60 giorni per permettere prenotazioni future
+      const numberOfDays = (isFreeConsultation || selectedPackage?.isPromotional === true) ? 60 : 14;
+      console.log(`📅 Generando ${numberOfDays} date per ${isFreeConsultation ? 'consulenza gratuita' : 'consulenza normale'}`);
+      
+      const allDates = Array.from({ length: numberOfDays }, (_, i) => {
         const date = addDays(startOfDay(new Date()), i);
         return format(date, "yyyy-MM-dd");
       });
