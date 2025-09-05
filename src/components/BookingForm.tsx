@@ -282,6 +282,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.log("BookingForm: Caricamento pacchetti...");
         const pkgs = await getPackages();
         console.log("BookingForm: Pacchetti caricati:", pkgs);
+        console.log("🎯 PACCHETTI PROMOZIONALI TROVATI:", pkgs.filter(p => p.isPromotional));
+        console.log("🎯 TUTTI I PACCHETTI CON FLAG PROMOZIONALE:", pkgs.map(p => ({ title: p.title, isPromotional: p.isPromotional })));
         const finalPackages = pkgs || [];
         setPackages(finalPackages);
         packagesRef.current = finalPackages;
@@ -331,6 +333,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
   // Gestisce il cambio di pacchetto
   const handlePackageChange = (newPackage: Package | null) => {
+    console.log("🔄 CAMBIO PACCHETTO:", {
+      old: selectedPackage?.title,
+      new: newPackage?.title,
+      isPromotional: newPackage?.isPromotional,
+      shouldUsePromotionalSlots: newPackage?.isPromotional === true
+    });
     setSelectedPackage(newPackage);
     setValue("packageId", newPackage?.id || "");
     setValue("date", "");
@@ -367,9 +375,17 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           const availability = await getAvailabilityByDate(date);
           if (availability) {
             // Usa gli slot promozionali se è un flusso di consultazione gratuita
-            if (isFreeConsultation || selectedPackage?.isPromotional === true) {
+            const shouldUsePromotionalSlotsForDate = isFreeConsultation || selectedPackage?.isPromotional === true;
+            console.log(`📅 Date ${date} - shouldUsePromotionalSlots:`, shouldUsePromotionalSlotsForDate, 
+                       `isFreeConsultation:`, isFreeConsultation, 
+                       `isPromotional:`, selectedPackage?.isPromotional);
+                       
+            if (shouldUsePromotionalSlotsForDate) {
               if (availability.freeConsultationSlots && availability.freeConsultationSlots.length > 0) {
+                console.log(`✅ Date ${date} - Found promotional slots:`, availability.freeConsultationSlots);
                 return date;
+              } else {
+                console.log(`❌ Date ${date} - No promotional slots available`);
               }
             } else {
               // Per consulenze normali, controlla gli slot standard
@@ -411,12 +427,23 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       try {
         const availability = await getAvailabilityByDate(selectedDate);
         if (availability) {
-          if (isFreeConsultation || selectedPackage?.isPromotional === true) {
+          const shouldUsePromotionalSlots = isFreeConsultation || selectedPackage?.isPromotional === true;
+          console.log("🔍 DEBUG SLOT:", {
+            isFreeConsultation,
+            selectedPackage: selectedPackage?.title,
+            isPromotional: selectedPackage?.isPromotional,
+            shouldUsePromotionalSlots,
+            directState: directState,
+            selectionSource: isFreeConsultation ? "popup consulenze gratuite" : "dropdown form"
+          });
+          
+          if (shouldUsePromotionalSlots) {
             // Per consultazioni gratuite, mostra solo slot promozionali
-            console.log("🎯 CONSULENZA GRATUITA - Caricando slot promozionali:", availability.freeConsultationSlots);
+            console.log("🎯 CONSULENZA GRATUITA/PROMOZIONALE - Caricando slot promozionali:", availability.freeConsultationSlots);
             setAvailableSlots(availability.freeConsultationSlots || []);
           } else {
             // Per consulenze normali, mostra slot in base alla sede
+            console.log("📋 CONSULENZA NORMALE - Caricando slot normali");
             const onlinePool = availability.onlineSlots ?? [];
             const studioPool = availability.studioSlots && studioLocation
               ? (availability.studioSlots[studioLocation] ?? [])
@@ -425,6 +452,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             const pool = location === null
               ? ((onlinePool.length || studioPool.length) ? [...onlinePool, ...studioPool] : legacyPool)
               : (location === "online" ? onlinePool : studioPool);
+            console.log("📋 Pool slot normali selezionato:", pool);
             setAvailableSlots(pool);
           }
         }
@@ -557,6 +585,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
   // Mostra banner informativo per pacchetti promozionali
   const showPromotionalBanner = selectedPackage?.isPromotional;
+  console.log("🎯 SHOW PROMOTIONAL BANNER:", {
+    selectedPackage: selectedPackage?.title,
+    isPromotional: selectedPackage?.isPromotional,
+    showPromotionalBanner,
+    isFreeConsultation
+  });
 
   // DEBUG: Log stato del componente
   console.log("BookingForm: RENDER - selectedPackage:", selectedPackage);
