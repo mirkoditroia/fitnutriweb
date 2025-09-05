@@ -1081,11 +1081,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       <div className="fixed inset-0 bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md z-50 flex items-center justify-center animate-in fade-in duration-300">
         <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl border border-gray-100 animate-in slide-in-from-bottom-4 duration-500">
           {/* Spinner moderno elegante */}
-          <div className="relative mb-6">
-            <div className="w-16 h-16 mx-auto">
+          <div className="relative mb-6 flex justify-center">
+            <div className="relative w-16 h-16">
               {/* Rotellina principale */}
               <div 
-                className="w-full h-full border-4 border-gray-200 rounded-full animate-spin"
+                className="absolute inset-0 border-4 border-gray-200 rounded-full animate-spin"
                 style={{
                   borderTopColor: colors.primary,
                   borderRightColor: colors.accent,
@@ -1094,9 +1094,9 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                   animationDuration: '1s'
                 }}
               ></div>
-              {/* Rotellina interna controtendenza */}
+              {/* Rotellina interna centrata */}
               <div 
-                className="absolute top-2 left-2 w-12 h-12 border-2 border-gray-100 rounded-full animate-spin"
+                className="absolute inset-2 border-2 border-gray-100 rounded-full animate-spin"
                 style={{
                   borderTopColor: 'transparent',
                   borderRightColor: 'transparent',
@@ -1106,10 +1106,13 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                   animationDuration: '1.5s'
                 }}
               ></div>
-              {/* Punto centrale */}
+              {/* Punto centrale perfettamente centrato */}
               <div 
-                className="absolute top-1/2 left-1/2 w-2 h-2 rounded-full transform -translate-x-1/2 -translate-y-1/2"
-                style={{ backgroundColor: colors.primary }}
+                className="absolute top-1/2 left-1/2 w-2 h-2 rounded-full"
+                style={{ 
+                  backgroundColor: colors.primary,
+                  transform: 'translate(-50%, -50%)'
+                }}
               ></div>
             </div>
           </div>
