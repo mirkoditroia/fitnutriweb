@@ -201,6 +201,7 @@ function DateCalendar({
 
 export function BookingForm({ adminMode = false, requirePackage = false, hidePackageSelect = false }: { adminMode?: boolean; requirePackage?: boolean; hidePackageSelect?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingStep, setLoadingStep] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
@@ -439,6 +440,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   // RIMOSSO: Vecchio sistema di eventi sostituito da stato globale
 
   const onSubmit = async (data: FormValues) => {
+    // ✅ Prevenzione doppi click
+    if (isSubmitting) {
+      return;
+    }
+    
     // Consenti esplicitamente l'invio anche senza pacchetto in Admin
     if (requirePackage && !selectedPackage && !adminMode) {
       alert("Seleziona un pacchetto oppure prosegui senza selezione.");
@@ -452,6 +458,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     }
 
     setIsSubmitting(true);
+    setLoadingStep("Preparando prenotazione...");
+    
     try {
       // Aggiungi il flag per la consultazione gratuita
       const bookingData = {
@@ -460,9 +468,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         status: "pending" as const,
       };
 
+      setLoadingStep("Verificando disponibilità...");
+      
       // In produzione (Firebase) usa la funzione datasource ufficiale
       console.log("🚀 Tentativo prenotazione consulenza gratuita:", { isFreeConsultation, selectedPackage });
       try {
+        setLoadingStep("Inviando prenotazione...");
         const { createBooking } = await import("@/lib/datasource");
         const bookingStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
         
@@ -487,12 +498,14 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         
         await createBooking(bookingPayload, captchaToken || undefined);
         
+        setLoadingStep("Completato!");
         console.log("✅ Prenotazione creata con successo!");
         // Simula response.ok
         const response = { ok: true } as const;
         if (!response.ok) throw new Error("failed");
       } catch (e) {
         console.error("❌ Errore createBooking Firebase:", e);
+        setLoadingStep("Tentativo sistema di backup...");
         console.log("🔄 Usando fallback locale...");
         // Fallback locale
         const response = await fetch("/api/localdb/bookings", {
@@ -504,6 +517,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           console.error("❌ Fallback locale fallito anche!");
           throw new Error("failed");
         }
+        setLoadingStep("Backup completato!");
         console.log("✅ Fallback locale riuscito");
       }
       {
@@ -534,6 +548,10 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       alert("Errore nell'invio della prenotazione");
     } finally {
       setIsSubmitting(false);
+      setLoadingStep("");
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+      }
     }
   };
 
@@ -870,16 +888,23 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         <Button
           type="submit"
           disabled={isSubmitting || (!adminMode && siteContent?.recaptchaEnabled && !captchaToken)}
-          className="w-full"
+          className="w-full relative"
         >
-          {isSubmitting 
-            ? "Invio in corso..." 
-            : !selectedPackage
-              ? "Invia richiesta"
-              : showPromotionalBanner 
-                ? "Prenota Consultazione Gratuita" 
-                : "Prenota Consulenza"
-          }
+          {isSubmitting && (
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            </div>
+          )}
+          <span className={isSubmitting ? "ml-6" : ""}>
+            {isSubmitting 
+              ? (loadingStep || "Elaborazione...") 
+              : !selectedPackage
+                ? "Invia richiesta"
+                : showPromotionalBanner 
+                  ? "Prenota Consultazione Gratuita" 
+                  : "Prenota Consulenza"
+            }
+          </span>
         </Button>
 
         {/* Informazioni aggiuntive per consultazione gratuita */}
@@ -889,6 +914,44 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       </div>
         )}
     </form>
+
+    {/* ✅ Overlay di caricamento avanzato */}
+    {isSubmitting && (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg p-8 max-w-sm mx-4 text-center shadow-2xl">
+          {/* Spinner animato */}
+          <div className="relative mb-4">
+            <div className="w-16 h-16 mx-auto">
+              <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
+          
+          {/* Messaggio di stato */}
+          <h3 className="text-lg font-semibold text-black mb-2">
+            {isFreeConsultation ? "Prenotazione Consulenza Gratuita" : "Invio Prenotazione"}
+          </h3>
+          <p className="text-black/70 text-sm">
+            {loadingStep || "Elaborazione in corso..."}
+          </p>
+          
+          {/* Barra di progresso simulata */}
+          <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: loadingStep.includes("Preparando") ? "25%" :
+                       loadingStep.includes("Verificando") ? "50%" :
+                       loadingStep.includes("Inviando") ? "75%" :
+                       loadingStep.includes("Completato") || loadingStep.includes("Backup") ? "100%" :
+                       loadingStep.includes("Tentativo") ? "90%" :
+                       "15%"
+              }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }
