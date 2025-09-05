@@ -375,6 +375,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     isFreeConsultation: b.isFreeConsultation, 
     slot: b.slot, 
     date: b.date,
+    dateFormatted: new Date(b.date).toISOString().split('T')[0],
     packageId: b.packageId 
   });
   
@@ -1191,10 +1192,19 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
 // Availability
 export async function getAvailabilityByDate(date: string): Promise<Availability | null> {
   if (!db) return null;
+  
+  console.log("🔍 getAvailabilityByDate Firebase per data:", date);
   const snap = await getDoc(col.availability(db as Firestore, date));
-  if (!snap.exists()) return null;
+  
+  if (!snap.exists()) {
+    console.log("❌ Nessun documento availability trovato per data:", date);
+    return null;
+  }
+  
   const data = snap.data() as DocumentData;
-  return { 
+  console.log("📊 Dati raw da Firebase per", date, ":", data);
+  
+  const result = { 
     date,
     onlineSlots: Array.isArray(data.onlineSlots) ? data.onlineSlots : (Array.isArray(data.slots) ? data.slots : []),
     inStudioSlots: Array.isArray(data.inStudioSlots) ? data.inStudioSlots : [],
@@ -1202,6 +1212,11 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
     slots: Array.isArray(data.slots) ? data.slots : undefined,
     freeConsultationSlots: Array.isArray(data.freeConsultationSlots) ? data.freeConsultationSlots : []
   };
+  
+  console.log("✅ Availability processata:", result);
+  console.log("🎯 freeConsultationSlots trovati:", result.freeConsultationSlots);
+  
+  return result;
 }
 
 export async function upsertAvailabilityForDate(
