@@ -12,8 +12,10 @@ import { it } from "date-fns/locale";
 import { type Package } from "@/lib/data";
 import { DateCalendar as SharedDateCalendar } from "@/components/DateCalendar";
 import { getDirectState } from "@/lib/directState";
+import { toast } from "react-hot-toast";
 import { getPackages } from "@/lib/datasource";
 import ReCAPTCHA from "react-google-recaptcha";
+import { getPaletteConfig } from "@/lib/palettes";
 
 // Schema di validazione
 const schema = z.object({
@@ -475,13 +477,37 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     
     // Consenti esplicitamente l'invio anche senza pacchetto in Admin
     if (requirePackage && !selectedPackage && !adminMode) {
-      alert("Seleziona un pacchetto oppure prosegui senza selezione.");
+      toast.error("⚠️ Seleziona un pacchetto per continuare", {
+        duration: 3000,
+        position: 'top-center',
+        style: {
+          background: colors.warning,
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 24px',
+          fontSize: '16px',
+          boxShadow: `0 10px 25px ${colors.warning}30`
+        },
+      });
       return;
     }
 
     // Verifica CAPTCHA se abilitato (skip per admin)
     if (!adminMode && siteContent?.recaptchaEnabled && !captchaToken) {
-      alert("Completa la verifica CAPTCHA prima di inviare la prenotazione.");
+      toast.error("🔒 Completa la verifica CAPTCHA per continuare", {
+        duration: 3000,
+        position: 'top-center',
+        style: {
+          background: colors.warning,
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 24px',
+          fontSize: '16px',
+          boxShadow: `0 10px 25px ${colors.warning}30`
+        },
+      });
       return;
     }
 
@@ -549,10 +575,45 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.log("✅ Fallback locale riuscito");
       }
       {
-        alert(isFreeConsultation 
-          ? "Prenotazione per i 10 minuti consultivi gratuiti inviata con successo!" 
-          : "Prenotazione inviata con successo!"
+        // ✅ Toast elegante invece di alert browser
+        toast.success(
+          isFreeConsultation 
+            ? "🎯 Consulenza gratuita prenotata con successo!" 
+            : "📋 Prenotazione inviata con successo!",
+          {
+            duration: 4000,
+            position: 'top-center',
+            style: {
+              background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
+              color: 'white',
+              fontWeight: '600',
+              borderRadius: '16px',
+              padding: '20px 28px',
+              fontSize: '16px',
+              boxShadow: `0 20px 40px rgba(${colors.primaryRgb}, 0.4)`,
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            },
+            icon: isFreeConsultation ? '🎯' : '🎉',
+            iconTheme: {
+              primary: '#ffffff',
+              secondary: colors.primary,
+            },
+          }
         );
+        
+        // ✨ Effetto confetti celebrativo (simulato con emoji)
+        setTimeout(() => {
+          toast('🎊✨🎉', {
+            duration: 2000,
+            position: 'top-center',
+            style: {
+              background: 'transparent',
+              boxShadow: 'none',
+              fontSize: '24px',
+              border: 'none'
+            }
+          });
+        }, 500);
         // Reset del form
       setValue("name", "");
       setValue("email", "");
@@ -573,7 +634,20 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       }
     } catch (error) {
       console.error("Errore:", error);
-      alert("Errore nell'invio della prenotazione");
+      // ✅ Toast elegante per errori
+      toast.error("❌ Errore nell'invio della prenotazione. Riprova.", {
+        duration: 4000,
+        position: 'top-center',
+        style: {
+          background: colors.error,
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 24px',
+          fontSize: '16px',
+          boxShadow: `0 10px 25px ${colors.error}30`
+        },
+      });
     } finally {
       setIsSubmitting(false);
       setLoadingStep("");
@@ -592,7 +666,36 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     isFreeConsultation
   });
 
-  // DEBUG: Log stato del componente
+  // ✅ Ottieni colori dinamici dalla palette selezionata
+  const getPaletteColors = () => {
+    const paletteId = siteContent?.colorPalette || 'gz-default';
+    const palette = getPaletteConfig(paletteId);
+    
+    return {
+      primary: palette.primary,
+      accent: palette.accent,
+      success: palette.primary, // Usa primary per successo
+      error: '#EF4444', // Rosso universale per errori
+      warning: '#F59E0B', // Arancione universale per warning
+      primaryRgb: hexToRgb(palette.primary),
+      accentRgb: hexToRgb(palette.accent)
+    };
+  };
+
+  // Helper per convertire hex a RGB
+  const hexToRgb = (hex: string): string => {
+    const h = hex.replace('#', '');
+    const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+    return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+  };
+
+  const colors = getPaletteColors();
+
+  // DEBUG: Log stato del componente e palette
+  console.log("🎨 PALETTE DINAMICA:", {
+    paletteId: siteContent?.colorPalette || 'gz-default',
+    colors: colors
+  });
   console.log("BookingForm: RENDER - selectedPackage:", selectedPackage);
   console.log("BookingForm: RENDER - packages:", packages);
   console.log("BookingForm: RENDER - packages.length:", packages.length);
@@ -922,21 +1025,52 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         <Button
           type="submit"
           disabled={isSubmitting || (!adminMode && siteContent?.recaptchaEnabled && !captchaToken)}
-          className="w-full relative"
+          className="w-full relative transition-all duration-300"
+          style={{
+            background: isSubmitting 
+              ? `linear-gradient(to right, rgba(${colors.primaryRgb}, 0.8), rgba(${colors.primaryRgb}, 0.9))`
+              : `linear-gradient(to right, ${colors.primary}, rgba(${colors.primaryRgb}, 0.9))`,
+            transform: isSubmitting ? "scale(0.98)" : "scale(1)",
+            boxShadow: isSubmitting 
+              ? `0 10px 20px rgba(${colors.primaryRgb}, 0.3)`
+              : `0 4px 12px rgba(${colors.primaryRgb}, 0.2)`,
+          }}
+          onMouseEnter={(e) => {
+            if (!isSubmitting) {
+              e.currentTarget.style.transform = "scale(1.05)";
+              e.currentTarget.style.boxShadow = `0 15px 30px rgba(${colors.primaryRgb}, 0.4)`;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isSubmitting) {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = `0 4px 12px rgba(${colors.primaryRgb}, 0.2)`;
+            }
+          }}
+          onMouseDown={(e) => {
+            if (!isSubmitting) {
+              e.currentTarget.style.transform = "scale(0.95)";
+            }
+          }}
+          onMouseUp={(e) => {
+            if (!isSubmitting) {
+              e.currentTarget.style.transform = "scale(1.05)";
+            }
+          }}
         >
           {isSubmitting && (
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
             </div>
           )}
-          <span className={isSubmitting ? "ml-6" : ""}>
+          <span className={`font-semibold transition-all duration-300 ${isSubmitting ? "ml-8" : ""}`}>
             {isSubmitting 
-              ? (loadingStep || "Elaborazione...") 
+              ? "🚀 Invio in corso..." 
               : !selectedPackage
-                ? "Invia richiesta"
+                ? "📋 Invia richiesta"
                 : showPromotionalBanner 
-                  ? "Prenota Consultazione Gratuita" 
-                  : "Prenota Consulenza"
+                  ? "🎯 Prenota Consultazione Gratuita" 
+                  : "📋 Prenota Consulenza"
             }
           </span>
         </Button>
@@ -949,31 +1083,54 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         )}
     </form>
 
-    {/* ✅ Overlay di caricamento avanzato */}
+    {/* ✅ Overlay di caricamento moderno e elegante */}
     {isSubmitting && (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-8 max-w-sm mx-4 text-center shadow-2xl">
-          {/* Spinner animato */}
-          <div className="relative mb-4">
-            <div className="w-16 h-16 mx-auto">
-              <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md z-50 flex items-center justify-center animate-in fade-in duration-300">
+        <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl border border-gray-100 animate-in slide-in-from-bottom-4 duration-500">
+          {/* Spinner moderno con pulsazione */}
+          <div className="relative mb-6">
+            <div className="w-20 h-20 mx-auto">
+              {/* Cerchio di sfondo pulsante */}
+              <div 
+                className="absolute inset-0 rounded-full animate-ping"
+                style={{ backgroundColor: `rgba(${colors.primaryRgb}, 0.1)` }}
+              ></div>
+              {/* Cerchio principale rotante */}
+              <div className="absolute inset-2 border-4 border-gray-200 rounded-full"></div>
+              <div 
+                className="absolute inset-2 border-4 border-t-transparent rounded-full animate-spin"
+                style={{ borderColor: `${colors.primary} transparent transparent transparent` }}
+              ></div>
+              {/* Punto centrale */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div 
+                  className="w-3 h-3 rounded-full animate-pulse"
+                  style={{ backgroundColor: colors.primary }}
+                ></div>
+              </div>
             </div>
           </div>
           
-          {/* Messaggio di stato */}
-          <h3 className="text-lg font-semibold text-black mb-2">
-            {isFreeConsultation ? "Prenotazione Consulenza Gratuita" : "Invio Prenotazione"}
-          </h3>
-          <p className="text-black/70 text-sm">
+          {/* Messaggio di stato con icona */}
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="w-5 h-5 text-primary">
+              {isFreeConsultation ? "🎯" : "📋"}
+            </div>
+            <h3 className="text-xl font-bold text-gray-800">
+              {isFreeConsultation ? "Consulenza Gratuita" : "Nuova Prenotazione"}
+            </h3>
+          </div>
+          
+          <p className="text-gray-600 text-sm mb-4 animate-pulse">
             {loadingStep || "Elaborazione in corso..."}
           </p>
           
-          {/* Barra di progresso simulata */}
-          <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
+          {/* Barra di progresso elegante */}
+          <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner">
             <div 
-              className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+              className="h-full rounded-full transition-all duration-700 ease-out shadow-sm relative overflow-hidden"
               style={{
+                background: `linear-gradient(to right, ${colors.primary}, rgba(${colors.primaryRgb}, 0.8))`,
                 width: loadingStep.includes("Preparando") ? "25%" :
                        loadingStep.includes("Verificando") ? "50%" :
                        loadingStep.includes("Inviando") ? "75%" :
@@ -981,7 +1138,20 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                        loadingStep.includes("Tentativo") ? "90%" :
                        "15%"
               }}
-            ></div>
+            >
+              {/* Effetto shimmer */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* Percentuale */}
+          <div className="mt-2 text-xs text-gray-500 font-medium">
+            {loadingStep.includes("Preparando") ? "25%" :
+             loadingStep.includes("Verificando") ? "50%" :
+             loadingStep.includes("Inviando") ? "75%" :
+             loadingStep.includes("Completato") || loadingStep.includes("Backup") ? "100%" :
+             loadingStep.includes("Tentativo") ? "90%" :
+             "15%"} completato
           </div>
         </div>
       </div>
