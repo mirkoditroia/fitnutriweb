@@ -19,6 +19,13 @@ import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCa
 // Funzione per inviare notifica email per nuova prenotazione
 async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string, colorPalette?: string) {
   try {
+    console.log("📤 sendBookingNotification chiamata con:", { 
+      bookingId: booking.id, 
+      isFreeConsultation: booking.isFreeConsultation,
+      packageTitle,
+      notificationEmail 
+    });
+    
     // Usa Firebase Functions per l'invio email
     const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
       method: 'POST',
@@ -35,14 +42,17 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
       }),
     });
 
+    console.log("📬 Risposta Firebase Functions:", response.status);
     const result = await response.json();
+    console.log("📋 Risultato email:", result);
+    
     if (result.success) {
-      console.log('Booking notification sent successfully:', result.sentTo);
+      console.log('✅ Booking notification sent successfully:', result.sentTo);
     } else {
-      console.error('Failed to send booking notification:', result.message);
+      console.error('❌ Failed to send booking notification:', result.message);
     }
   } catch (error) {
-    console.error('Error sending booking notification:', error);
+    console.error('❌ Error sending booking notification:', error);
   }
 }
 import { db } from "@/lib/firebase";
@@ -361,6 +371,13 @@ export async function listBookings(): Promise<Booking[]> {
 }
 
 export async function createBooking(b: Booking, captchaToken?: string): Promise<string> {
+  console.log("🔥 createBooking Firebase iniziato:", { 
+    isFreeConsultation: b.isFreeConsultation, 
+    slot: b.slot, 
+    date: b.date,
+    packageId: b.packageId 
+  });
+  
   if (!db) throw new Error("Firestore not configured");
   
   // Verifica CAPTCHA se abilitato
@@ -393,12 +410,35 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   // Controlla che lo slot sia effettivamente disponibile
   const availability = await getAvailabilityByDate(b.date);
   const location: "online" | "studio" = b.isFreeConsultation ? "online" : (b.location || "online");
-  const pool = location === "online"
-    ? (availability?.onlineSlots ?? availability?.slots ?? [])
-    : (b.studioLocation ? (availability?.studioSlots?.[b.studioLocation] ?? []) : (availability?.inStudioSlots ?? []));
+  
+  let pool: string[] = [];
+  if (b.isFreeConsultation) {
+    // ✅ CORRETO: Per consulenze gratuite, usa SOLO slot promozionali dedicati
+    pool = availability?.freeConsultationSlots ?? [];
+    console.log("🔍 Consulenza gratuita - Slot promozionali disponibili:", pool);
+    console.log("📅 Slot richiesto:", b.slot);
+    if (pool.length === 0) {
+      throw new Error("❌ Nessun slot per consulenze gratuite disponibile per questa data");
+    }
+  } else {
+    // Per prenotazioni normali, usa slot normali
+    pool = location === "online"
+      ? (availability?.onlineSlots ?? availability?.slots ?? [])
+      : (b.studioLocation ? (availability?.studioSlots?.[b.studioLocation] ?? []) : (availability?.inStudioSlots ?? []));
+  }
+  
   if (!availability || !pool.includes(b.slot)) {
+    console.error("❌ Slot non disponibile!", { 
+      availability: !!availability, 
+      poolLength: pool.length, 
+      pool, 
+      requestedSlot: b.slot,
+      isFreeConsultation: b.isFreeConsultation 
+    });
     throw new Error("L'orario selezionato non è più disponibile");
   }
+  
+  console.log("✅ Slot validato correttamente:", b.slot);
   
   // Get package title for calendar event
   let packageTitle: string | undefined;
@@ -417,6 +457,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     }
   }
 
+  console.log("💾 Salvando prenotazione nel database...");
   const added = await addDoc(col.bookings(db as Firestore), {
     clientId: b.clientId ?? null,
     name: b.name,
@@ -435,8 +476,22 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     createdAt: serverTimestamp(),
   });
   
+  console.log("✅ Prenotazione salvata con ID:", added.id);
+  
   // Rimuovi lo slot occupato dalla disponibilità (blocca anche in pending)
-  if (location === "online") {
+  if (b.isFreeConsultation) {
+    // ✅ CORRETTO: Per consulenze gratuite, rimuovi SOLO da slot promozionali
+    const nextFreeSlots = (availability?.freeConsultationSlots ?? []).filter((slot) => slot !== b.slot);
+    console.log("🗑️ Rimuovendo slot promozionale:", b.slot);
+    console.log("📋 Slot promozionali rimanenti:", nextFreeSlots);
+    await upsertAvailabilityForDate(
+      b.date, 
+      availability.onlineSlots ?? availability.slots ?? [], 
+      nextFreeSlots, 
+      availability.inStudioSlots ?? [], 
+      availability.studioSlots ?? {}
+    );
+  } else if (location === "online") {
     const next = (availability.onlineSlots ?? availability.slots ?? []).filter((slot) => slot !== b.slot);
     await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? [], availability.studioSlots ?? {});
   } else {
@@ -517,6 +572,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
 
   // Invia notifica email al nutrizionista per nuova prenotazione
   try {
+    console.log("📧 Preparando invio email notifica...");
     const bookingWithId = { ...b, id: added.id };
     
     // Ottieni l'email di notifica, nome business e palette dalle impostazioni
@@ -525,9 +581,11 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     const businessName = siteContent?.businessName || "GZ Nutrition";
     const colorPalette = siteContent?.colorPalette || "gz-default";
     
+    console.log("📬 Inviando email a:", notificationEmail, "per", packageTitle);
     await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName, colorPalette);
+    console.log("✅ Email inviata con successo!");
   } catch (error) {
-    console.error("Error sending booking notification:", error);
+    console.error("❌ Errore invio email:", error);
     // Don't fail the booking creation if notification fails
   }
 

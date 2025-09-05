@@ -454,11 +454,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       };
 
       // In produzione (Firebase) usa la funzione datasource ufficiale
+      console.log("🚀 Tentativo prenotazione consulenza gratuita:", { isFreeConsultation, selectedPackage });
       try {
         const { createBooking } = await import("@/lib/datasource");
         const bookingStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
-        // Tipi stretti coerenti con `Booking`
-        await createBooking({
+        
+        const bookingPayload = {
           name: bookingData.name,
           email: bookingData.email,
           phone: bookingData.phone || undefined,
@@ -468,21 +469,33 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           location: (isFreeConsultation || selectedPackage?.isPromotional === true) ? "online" : (location as "online" | "studio"),
           studioLocation: location === "studio" ? (studioLocation || undefined) : undefined,
           status: bookingStatus,
-          // preferenza canale rimossa
           notes: bookingData.notes,
           isFreeConsultation,
-        }, captchaToken || undefined);
+        };
+        
+        console.log("📤 Payload prenotazione:", bookingPayload);
+        console.log("🔑 CAPTCHA token:", captchaToken ? "presente" : "assente");
+        
+        await createBooking(bookingPayload, captchaToken || undefined);
+        
+        console.log("✅ Prenotazione creata con successo!");
         // Simula response.ok
         const response = { ok: true } as const;
         if (!response.ok) throw new Error("failed");
       } catch (e) {
+        console.error("❌ Errore createBooking Firebase:", e);
+        console.log("🔄 Usando fallback locale...");
         // Fallback locale
         const response = await fetch("/api/localdb/bookings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(bookingData),
         });
-        if (!response.ok) throw new Error("failed");
+        if (!response.ok) {
+          console.error("❌ Fallback locale fallito anche!");
+          throw new Error("failed");
+        }
+        console.log("✅ Fallback locale riuscito");
       }
       {
         alert(isFreeConsultation 
