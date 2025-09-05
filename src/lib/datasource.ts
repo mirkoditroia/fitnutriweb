@@ -656,14 +656,24 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
 
 export async function getAvailabilityByDate(date: string): Promise<Availability | null> {
   const mode = getDataMode();
-  if (mode === "firebase") return fb_getAvailabilityByDate(date);
+  console.log("🌐 [SITO PUBBLICO] getAvailabilityByDate chiamata per:", date, "modalità:", mode);
+  
+  if (mode === "firebase") {
+    const result = await fb_getAvailabilityByDate(date);
+    console.log("🔥 [SITO PUBBLICO] Risultato da Firebase:", result);
+    return result;
+  }
+  
   if (mode === "demo") return fetchDemo<Availability>(`/demo/availability/${date}.json`, { date, slots: [] });
+  
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
     const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[]; studioSlots?: Record<string, string[]> }>) : {};
     const dateData = all[date];
+    console.log("💾 [SITO PUBBLICO] Dati locali per", date, ":", dateData);
+    
     if (dateData) {
-      return { 
+      const result = { 
         date, 
         onlineSlots: dateData.onlineSlots ?? dateData.slots ?? [],
         inStudioSlots: dateData.inStudioSlots ?? [],
@@ -671,9 +681,15 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
         slots: dateData.slots, 
         freeConsultationSlots: dateData.freeConsultationSlots ?? [] 
       };
+      console.log("✅ [SITO PUBBLICO] Risultato locale processato:", result);
+      return result;
     }
+    console.log("❌ [SITO PUBBLICO] Nessun dato trovato per:", date);
     return { date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] } as Availability;
-  } catch { return { date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] } as Availability; }
+  } catch (error) { 
+    console.error("❌ [SITO PUBBLICO] Errore caricamento dati:", error);
+    return { date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] } as Availability; 
+  }
 }
 
 export async function upsertAvailabilityForDate(date: string, onlineSlots: string[], freeConsultationSlots?: string[], inStudioSlots?: string[], studioSlots?: Record<string, string[]>): Promise<void> {
