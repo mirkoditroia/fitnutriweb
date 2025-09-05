@@ -238,6 +238,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   
   // Derivato dal directState
   const isFreeConsultation = directState.isFreeConsultation;
+  console.log("🎯 BookingForm - isFreeConsultation:", isFreeConsultation);
+  console.log("🎯 BookingForm - directState completo:", directState);
 
   // Schema di validazione con validazione personalizzata
   const validationSchema = schema.refine((data) => {
@@ -406,6 +408,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         if (availability) {
           if (isFreeConsultation || selectedPackage?.isPromotional === true) {
             // Per consultazioni gratuite, mostra solo slot promozionali
+            console.log("🎯 CONSULENZA GRATUITA - Caricando slot promozionali:", availability.freeConsultationSlots);
             setAvailableSlots(availability.freeConsultationSlots || []);
           } else {
             // Per consulenze normali, mostra slot in base alla sede
@@ -475,6 +478,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         
         console.log("📤 Payload prenotazione:", bookingPayload);
         console.log("🔑 CAPTCHA token:", captchaToken ? "presente" : "assente");
+        console.log("🎯 VERIFICA FLAG: isFreeConsultation nel payload =", bookingPayload.isFreeConsultation);
+        console.log("🎯 VERIFICA FLAG: variabile locale isFreeConsultation =", isFreeConsultation);
         
         await createBooking(bookingPayload, captchaToken || undefined);
         
