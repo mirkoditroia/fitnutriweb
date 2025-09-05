@@ -24,6 +24,65 @@ import {
 import { getDataMode } from "@/lib/datamode";
 export type { Package, Booking, ClientCard, SiteContent, Availability } from "@/lib/data";
 
+// Helper function per inviare notifiche email in modalità local
+async function sendLocalBookingNotification(booking: Booking): Promise<void> {
+  try {
+    // Ottieni l'email di notifica, nome business e palette dalle impostazioni
+    const siteContent = await getSiteContent();
+    const notificationEmail = siteContent?.notificationEmail || "mirkoditroia@gmail.com";
+    const businessName = siteContent?.businessName || "GZ Nutrition";
+    const colorPalette = siteContent?.colorPalette || "gz-default";
+    
+    // Get package title for calendar event
+    let packageTitle: string | undefined;
+    if (booking.packageId) {
+      try {
+        const packages = await getPackages();
+        const pkg = packages.find(p => p.id === booking.packageId);
+        if (pkg) {
+          packageTitle = pkg.title;
+        }
+      } catch (error) {
+        console.error("Error getting package title for calendar event:", error);
+      }
+    }
+    
+    // Set title for free consultation
+    if (booking.isFreeConsultation) {
+      packageTitle = "Consultazione Gratuita (10 minuti)";
+    }
+    
+    // Usa Firebase Functions per l'invio email
+    const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'new-booking',
+        booking,
+        packageTitle,
+        notificationEmail,
+        businessName,
+        colorPalette
+      }),
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      console.log('✅ Booking notification sent successfully:', result.sentTo);
+      if (booking.isFreeConsultation) {
+        console.log('📧 Email sent for free consultation booking');
+      }
+    } else {
+      console.error('❌ Failed to send booking notification:', result.message);
+    }
+  } catch (error) {
+    console.error("❌ Error sending booking notification:", error);
+    // Don't fail the booking creation if notification fails
+  }
+}
+
 // Local storage helpers
 const isBrowser = typeof window !== "undefined";
 const mem: Record<string, unknown> = {};
@@ -154,6 +213,10 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
       }
     }
     
+    // ✅ AGGIUNTO: Invio email di notifica anche in modalità local
+    const bookingWithId = { ...b, id, createdAt };
+    await sendLocalBookingNotification(bookingWithId);
+    
     return id;
   } catch {
     // fallback write new list
@@ -170,6 +233,10 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     } catch (error) {
       console.error("Error updating availability in fallback:", error);
     }
+    
+    // ✅ AGGIUNTO: Invio email di notifica anche nel fallback
+    const bookingWithId = { ...b, id, createdAt };
+    await sendLocalBookingNotification(bookingWithId);
     
     return id;
   }

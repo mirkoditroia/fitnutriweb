@@ -402,7 +402,11 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   
   // Get package title for calendar event
   let packageTitle: string | undefined;
-  if (b.packageId) {
+  
+  // ✅ CORREZIONE: Gestisci le consulenze gratuite
+  if (b.isFreeConsultation) {
+    packageTitle = "Consultazione Gratuita (10 minuti)";
+  } else if (b.packageId) {
     try {
       const packageDoc = await getDoc(doc(db as Firestore, "packages", b.packageId));
       if (packageDoc.exists()) {
@@ -426,6 +430,8 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     status: b.status || "confirmed",
     priority: !!b.priority,
     channelPreference: b.channelPreference ?? null,
+    isFreeConsultation: !!b.isFreeConsultation, // ✅ AGGIUNTO: Salva flag consulenza gratuita
+    notes: b.notes ?? null, // ✅ AGGIUNTO: Salva note del cliente
     createdAt: serverTimestamp(),
   });
   
@@ -1187,6 +1193,8 @@ function toBooking(id: string, data: DocumentData): Booking {
     status: data.status,
     priority: !!data.priority,
     channelPreference: data.channelPreference ?? undefined,
+    isFreeConsultation: !!data.isFreeConsultation, // ✅ AGGIUNTO: Mapping flag consulenza gratuita
+    notes: data.notes ?? undefined, // ✅ AGGIUNTO: Mapping note del cliente
     createdAt: tsToIso(data.createdAt),
     googleCalendarEventId: data.googleCalendarEventId ?? undefined,
   };
