@@ -56,14 +56,44 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
   }
 }
 
-// ✅ TEMPORANEA: Funzione placeholder per email cliente diretta
-async function sendClientEmailDirect(booking: Booking, packageTitle?: string, businessName?: string, colorPalette?: string, siteContent?: SiteContent) {
-  console.log("📧 sendClientEmailDirect chiamata - funzionalità temporaneamente disabilitata");
-  console.log("⚠️ Motivo: Firebase Functions inviano stessa email del nutrizionista al cliente");
-  console.log("🔧 Soluzione: Aggiornare Firebase Functions per gestire template cliente separato");
-  
-  // Per ora disabilitata per evitare email duplicate
-  throw new Error("Email cliente temporaneamente disabilitata - template da separare");
+// ✅ NUOVA: Funzione per inviare email cliente via API Route personalizzata
+async function sendClientEmailViaAPI(booking: Booking, packageTitle?: string, businessName?: string, colorPalette?: string, siteContent?: SiteContent) {
+  try {
+    console.log("📤 sendClientEmailViaAPI chiamata per:", booking.email);
+    
+    const response = await fetch('/api/email/client-confirmation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        booking,
+        packageTitle,
+        businessName,
+        colorPalette,
+        customMessage: siteContent?.clientConfirmationEmail?.customMessage,
+        siteContent: {
+          contactPhone: siteContent?.contactPhone,
+          contactEmail: siteContent?.contactEmail,
+          contactAddresses: siteContent?.contactAddresses,
+          businessName: siteContent?.businessName || businessName
+        }
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('✅ Email cliente inviata via API:', result.emailId);
+      return result;
+    } else {
+      console.error('❌ API email cliente fallita:', result.message);
+      throw new Error(result.message || 'Email API failed');
+    }
+  } catch (error) {
+    console.error('❌ Errore chiamata API email cliente:', error);
+    throw error;
+  }
 }
 
 // ✅ ORIGINALE: Funzione per inviare email di conferma al cliente (DA RIMUOVERE quando Firebase Functions supporta template separati)
@@ -704,14 +734,13 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
       console.log("📧 Preparando invio email di conferma al cliente...");
       console.log("📬 Inviando email di conferma a:", bookingWithId.email);
       
-      // ✅ SOLUZIONE TEMPORANEA: Usa EmailJS per email cliente indipendente
+      // ✅ NUOVA SOLUZIONE: API Route personalizzata per email cliente
       try {
-        await sendClientEmailDirect(bookingWithId, packageTitle, businessName, colorPalette, siteContent || undefined);
+        await sendClientEmailViaAPI(bookingWithId, packageTitle, businessName, colorPalette, siteContent || undefined);
         console.log("✅ Email di conferma al cliente inviata con successo!");
       } catch (error) {
         console.error("❌ Errore invio email cliente:", error);
-        // ⚠️ TEMPORARY DISABLED: Firebase Functions inviano stessa email del nutrizionista
-        console.log("⚠️ Email cliente temporaneamente disabilitata - Firebase Functions da aggiornare");
+        console.log("ℹ️ Email cliente fallita ma prenotazione salvata correttamente");
       }
     } else {
       console.log("📧 Email di conferma al cliente disabilitata nelle impostazioni");
