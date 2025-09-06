@@ -66,28 +66,71 @@ async function sendClientConfirmationEmail(booking: Booking, packageTitle?: stri
       packageTitle 
     });
     
-    // Usa Firebase Functions per l'invio email di conferma al cliente
-    const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: 'new-booking',
-        isClientConfirmation: true, // ✅ FLAG per distinguere email cliente da dottore
-        booking,
-        packageTitle,
-        businessName, 
-        colorPalette,
-        customMessage: siteContent?.clientConfirmationEmail?.customMessage,
-        siteContent: {
-          contactPhone: siteContent?.contactPhone,
-          contactEmail: siteContent?.contactEmail,
-          contactAddresses: siteContent?.contactAddresses,
-          businessName: siteContent?.businessName || businessName
-        }
-      }),
-    });
+    // ✅ SOLUZIONE ROBUSTA: Try client-booking-confirmation, fallback to modified new-booking
+    let response;
+    try {
+      // Prova prima con il tipo specifico per clienti
+      response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'client-booking-confirmation', // ✅ TIPO SPECIFICO per email cliente
+          booking,
+          packageTitle,
+          businessName, 
+          colorPalette,
+          customMessage: siteContent?.clientConfirmationEmail?.customMessage || "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli.",
+          siteContent: {
+            contactPhone: siteContent?.contactPhone,
+            contactEmail: siteContent?.contactEmail,
+            contactAddresses: siteContent?.contactAddresses,
+            businessName: siteContent?.businessName || businessName
+          }
+        }),
+      });
+      
+      // Controlla se la risposta è OK
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Email failed');
+      }
+    } catch (error) {
+      console.log("⚠️ Tipo client-booking-confirmation non supportato, uso fallback...");
+      // Fallback: usa new-booking con payload modificato per il cliente
+      response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'new-booking',
+          // ✅ MODIFICA booking per inviare email al cliente invece che al nutrizionista
+          booking: {
+            ...booking,
+            email: booking.email, // Email del cliente (destinatario)
+            name: booking.name,   // Nome del cliente
+          },
+          packageTitle,
+          notificationEmail: booking.email, // ✅ OVERRIDE: Invia al cliente invece che al nutrizionista
+          businessName, 
+          colorPalette,
+          isClientEmail: true, // ✅ FLAG per template diverso
+          clientMessage: siteContent?.clientConfirmationEmail?.customMessage || "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli.",
+          siteContent: {
+            contactPhone: siteContent?.contactPhone,
+            contactEmail: siteContent?.contactEmail,
+            contactAddresses: siteContent?.contactAddresses,
+            businessName: siteContent?.businessName || businessName
+          }
+        }),
+      });
+    }
 
     console.log("📬 Risposta Firebase Functions (cliente):", response.status);
     const result = await response.json();

@@ -86,27 +86,68 @@ async function sendLocalBookingNotification(booking: Booking): Promise<void> {
     if (clientEmailEnabled) {
       console.log("📧 Inviando email di conferma al cliente (locale)...");
       try {
-        const clientResponse = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            type: 'new-booking',
-            isClientConfirmation: true, // ✅ FLAG per distinguere email cliente da dottore
-            booking,
-            packageTitle,
-            businessName,
-            colorPalette,
-            customMessage: siteContent?.clientConfirmationEmail?.customMessage,
-            siteContent: {
-              contactPhone: siteContent?.contactPhone,
-              contactEmail: siteContent?.contactEmail,
-              contactAddresses: siteContent?.contactAddresses,
-              businessName: siteContent?.businessName || businessName
-            }
-          }),
-        });
+        let clientResponse;
+        try {
+          // Prova prima con il tipo specifico per clienti
+          clientResponse = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'client-booking-confirmation', // ✅ TIPO SPECIFICO per email cliente
+              booking,
+              packageTitle,
+              businessName,
+              colorPalette,
+              customMessage: siteContent?.clientConfirmationEmail?.customMessage || "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli.",
+              siteContent: {
+                contactPhone: siteContent?.contactPhone,
+                contactEmail: siteContent?.contactEmail,
+                contactAddresses: siteContent?.contactAddresses,
+                businessName: siteContent?.businessName || businessName
+              }
+            }),
+          });
+          
+          if (!clientResponse.ok) {
+            throw new Error(`HTTP ${clientResponse.status}`);
+          }
+          
+          const clientResult = await clientResponse.json();
+          if (!clientResult.success) {
+            throw new Error(clientResult.message || 'Email failed');
+          }
+        } catch (error) {
+          console.log("⚠️ Tipo client-booking-confirmation non supportato (locale), uso fallback...");
+          // Fallback: usa new-booking con payload modificato per il cliente
+          clientResponse = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'new-booking',
+              booking: {
+                ...booking,
+                email: booking.email, // Email del cliente (destinatario)
+                name: booking.name,   // Nome del cliente
+              },
+              packageTitle,
+              notificationEmail: booking.email, // ✅ OVERRIDE: Invia al cliente invece che al nutrizionista
+              businessName,
+              colorPalette,
+              isClientEmail: true, // ✅ FLAG per template diverso
+              clientMessage: siteContent?.clientConfirmationEmail?.customMessage || "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli.",
+              siteContent: {
+                contactPhone: siteContent?.contactPhone,
+                contactEmail: siteContent?.contactEmail,
+                contactAddresses: siteContent?.contactAddresses,
+                businessName: siteContent?.businessName || businessName
+              }
+            }),
+          });
+        }
 
         const clientResult = await clientResponse.json();
         if (clientResult.success) {
