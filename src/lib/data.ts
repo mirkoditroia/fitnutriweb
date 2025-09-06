@@ -408,8 +408,14 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     throw new Error("Lo slot orario è obbligatorio per la prenotazione");
   }
   
+  // ✅ STANDARDIZZA FORMATO DATA prima della validazione
+  const dateString = b.date.includes('T') ? b.date.split('T')[0] : b.date;
+  console.log("🔍 FORMATO DATA DEBUG:");
+  console.log("📅 Data originale dal form:", b.date);
+  console.log("📅 Data standardizzata per query:", dateString);
+  
   // Controlla che lo slot sia effettivamente disponibile
-  const availability = await getAvailabilityByDate(b.date);
+  const availability = await getAvailabilityByDate(dateString);
   const location: "online" | "studio" = b.isFreeConsultation ? "online" : (b.location || "online");
   
   let pool: string[] = [];
@@ -486,7 +492,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     console.log("🗑️ Rimuovendo slot promozionale:", b.slot);
     console.log("📋 Slot promozionali rimanenti:", nextFreeSlots);
     await upsertAvailabilityForDate(
-      b.date, 
+      dateString, 
       availability.onlineSlots ?? availability.slots ?? [], 
       nextFreeSlots, 
       availability.inStudioSlots ?? [], 
@@ -494,13 +500,13 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     );
   } else if (location === "online") {
     const next = (availability.onlineSlots ?? availability.slots ?? []).filter((slot) => slot !== b.slot);
-    await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? [], availability.studioSlots ?? {});
+    await upsertAvailabilityForDate(dateString, next, availability.freeConsultationSlots, availability.inStudioSlots ?? [], availability.studioSlots ?? {});
   } else {
     if (b.studioLocation) {
       const studioMap = { ...(availability.studioSlots ?? {}) };
       studioMap[b.studioLocation] = (studioMap[b.studioLocation] ?? []).filter((slot) => slot !== b.slot);
       await upsertAvailabilityForDate(
-        b.date,
+        dateString,
         availability.onlineSlots ?? availability.slots ?? [],
         availability.freeConsultationSlots,
         availability.inStudioSlots ?? [],
@@ -508,7 +514,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
       );
     } else {
       const nextStudio = (availability.inStudioSlots ?? []).filter((slot) => slot !== b.slot);
-      await upsertAvailabilityForDate(b.date, availability.onlineSlots ?? availability.slots ?? [], availability.freeConsultationSlots, nextStudio, availability.studioSlots ?? {});
+      await upsertAvailabilityForDate(dateString, availability.onlineSlots ?? availability.slots ?? [], availability.freeConsultationSlots, nextStudio, availability.studioSlots ?? {});
     }
   }
   
