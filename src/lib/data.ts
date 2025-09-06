@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
 
-// Funzione per inviare notifica email per nuova prenotazione
+// Funzione per inviare notifica email per nuova prenotazione al dottore
 async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string, colorPalette?: string) {
   try {
     console.log("📤 sendBookingNotification chiamata con:", { 
@@ -53,6 +53,51 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
     }
   } catch (error) {
     console.error('❌ Error sending booking notification:', error);
+  }
+}
+
+// ✅ NUOVA: Funzione per inviare email di conferma al cliente
+async function sendClientConfirmationEmail(booking: Booking, packageTitle?: string, businessName?: string, colorPalette?: string, siteContent?: SiteContent) {
+  try {
+    console.log("📤 sendClientConfirmationEmail chiamata con:", { 
+      bookingId: booking.id, 
+      clientEmail: booking.email,
+      isFreeConsultation: booking.isFreeConsultation,
+      packageTitle 
+    });
+    
+    // Usa Firebase Functions per l'invio email di conferma al cliente
+    const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'client-confirmation',
+        booking,
+        packageTitle,
+        businessName, 
+        colorPalette,
+        siteContent: {
+          contactPhone: siteContent?.contactPhone,
+          contactEmail: siteContent?.contactEmail,
+          contactAddresses: siteContent?.contactAddresses,
+          businessName: siteContent?.businessName || businessName
+        }
+      }),
+    });
+
+    console.log("📬 Risposta Firebase Functions (cliente):", response.status);
+    const result = await response.json();
+    console.log("📋 Risultato email cliente:", result);
+    
+    if (result.success) {
+      console.log('✅ Client confirmation email sent successfully:', result.sentTo);
+    } else {
+      console.error('❌ Failed to send client confirmation email:', result.message);
+    }
+  } catch (error) {
+    console.error('❌ Error sending client confirmation email:', error);
   }
 }
 import { db } from "@/lib/firebase";
@@ -590,7 +635,14 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     
     console.log("📬 Inviando email a:", notificationEmail, "per", packageTitle);
     await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName, colorPalette);
-    console.log("✅ Email inviata con successo!");
+    console.log("✅ Email al dottore inviata con successo!");
+    
+    // ✅ NUOVA FEATURE: Invia email di conferma al cliente
+    console.log("📧 Preparando invio email di conferma al cliente...");
+    console.log("📬 Inviando email di conferma a:", bookingWithId.email);
+    await sendClientConfirmationEmail(bookingWithId, packageTitle, businessName, colorPalette, siteContent || undefined);
+    console.log("✅ Email di conferma al cliente inviata con successo!");
+    
   } catch (error) {
     console.error("❌ Errore invio email:", error);
     // Don't fail the booking creation if notification fails

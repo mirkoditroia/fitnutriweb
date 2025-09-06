@@ -73,13 +73,47 @@ async function sendLocalBookingNotification(booking: Booking): Promise<void> {
 
     const result = await response.json();
     if (result.success) {
-      console.log('✅ Booking notification sent successfully:', result.sentTo);
+      console.log('✅ Booking notification (dottore) sent successfully:', result.sentTo);
       if (booking.isFreeConsultation) {
         console.log('📧 Email sent for free consultation booking');
       }
     } else {
       console.error('❌ Failed to send booking notification:', result.message);
     }
+    
+    // ✅ NUOVA FEATURE: Invia email di conferma al cliente anche in modalità locale  
+    console.log("📧 Inviando email di conferma al cliente (locale)...");
+    try {
+      const clientResponse = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'client-confirmation',
+          booking,
+          packageTitle,
+          businessName,
+          colorPalette,
+          siteContent: {
+            contactPhone: siteContent?.contactPhone,
+            contactEmail: siteContent?.contactEmail,
+            contactAddresses: siteContent?.contactAddresses,
+            businessName: siteContent?.businessName || businessName
+          }
+        }),
+      });
+
+      const clientResult = await clientResponse.json();
+      if (clientResult.success) {
+        console.log('✅ Client confirmation email sent successfully:', clientResult.sentTo);
+      } else {
+        console.error('❌ Failed to send client confirmation email:', clientResult.message);
+      }
+    } catch (clientError) {
+      console.error('❌ Error sending client confirmation email:', clientError);
+    }
+    
   } catch (error) {
     console.error("❌ Error sending booking notification:", error);
     // Don't fail the booking creation if notification fails
