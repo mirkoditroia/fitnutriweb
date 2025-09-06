@@ -73,11 +73,13 @@ async function sendClientConfirmationEmail(booking: Booking, packageTitle?: stri
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        type: 'client-confirmation',
+        type: 'new-booking',
+        isClientConfirmation: true, // ✅ FLAG per distinguere email cliente da dottore
         booking,
         packageTitle,
         businessName, 
         colorPalette,
+        customMessage: siteContent?.clientConfirmationEmail?.customMessage,
         siteContent: {
           contactPhone: siteContent?.contactPhone,
           contactEmail: siteContent?.contactEmail,
@@ -274,6 +276,12 @@ export interface SiteContent {
       url: string;
       description?: string; // Descrizione opzionale del risultato
     }>;
+  };
+  
+  // ✅ NUOVA IMPOSTAZIONE: Email di conferma al cliente
+  clientConfirmationEmail?: {
+    enabled?: boolean; // Se abilitare l'invio email di conferma al cliente (default: true)
+    customMessage?: string; // Messaggio personalizzato (opzionale)
   };
 }
 
@@ -637,11 +645,16 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName, colorPalette);
     console.log("✅ Email al dottore inviata con successo!");
     
-    // ✅ NUOVA FEATURE: Invia email di conferma al cliente
-    console.log("📧 Preparando invio email di conferma al cliente...");
-    console.log("📬 Inviando email di conferma a:", bookingWithId.email);
-    await sendClientConfirmationEmail(bookingWithId, packageTitle, businessName, colorPalette, siteContent || undefined);
-    console.log("✅ Email di conferma al cliente inviata con successo!");
+    // ✅ NUOVA FEATURE: Invia email di conferma al cliente (se abilitata)
+    const clientEmailEnabled = siteContent?.clientConfirmationEmail?.enabled ?? true; // Default: true
+    if (clientEmailEnabled) {
+      console.log("📧 Preparando invio email di conferma al cliente...");
+      console.log("📬 Inviando email di conferma a:", bookingWithId.email);
+      await sendClientConfirmationEmail(bookingWithId, packageTitle, businessName, colorPalette, siteContent || undefined);
+      console.log("✅ Email di conferma al cliente inviata con successo!");
+    } else {
+      console.log("📧 Email di conferma al cliente disabilitata nelle impostazioni");
+    }
     
   } catch (error) {
     console.error("❌ Errore invio email:", error);

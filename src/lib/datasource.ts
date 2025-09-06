@@ -81,37 +81,44 @@ async function sendLocalBookingNotification(booking: Booking): Promise<void> {
       console.error('❌ Failed to send booking notification:', result.message);
     }
     
-    // ✅ NUOVA FEATURE: Invia email di conferma al cliente anche in modalità locale  
-    console.log("📧 Inviando email di conferma al cliente (locale)...");
-    try {
-      const clientResponse = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'client-confirmation',
-          booking,
-          packageTitle,
-          businessName,
-          colorPalette,
-          siteContent: {
-            contactPhone: siteContent?.contactPhone,
-            contactEmail: siteContent?.contactEmail,
-            contactAddresses: siteContent?.contactAddresses,
-            businessName: siteContent?.businessName || businessName
-          }
-        }),
-      });
+    // ✅ NUOVA FEATURE: Invia email di conferma al cliente anche in modalità locale (se abilitata)
+    const clientEmailEnabled = siteContent?.clientConfirmationEmail?.enabled ?? true; // Default: true
+    if (clientEmailEnabled) {
+      console.log("📧 Inviando email di conferma al cliente (locale)...");
+      try {
+        const clientResponse = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'new-booking',
+            isClientConfirmation: true, // ✅ FLAG per distinguere email cliente da dottore
+            booking,
+            packageTitle,
+            businessName,
+            colorPalette,
+            customMessage: siteContent?.clientConfirmationEmail?.customMessage,
+            siteContent: {
+              contactPhone: siteContent?.contactPhone,
+              contactEmail: siteContent?.contactEmail,
+              contactAddresses: siteContent?.contactAddresses,
+              businessName: siteContent?.businessName || businessName
+            }
+          }),
+        });
 
-      const clientResult = await clientResponse.json();
-      if (clientResult.success) {
-        console.log('✅ Client confirmation email sent successfully:', clientResult.sentTo);
-      } else {
-        console.error('❌ Failed to send client confirmation email:', clientResult.message);
+        const clientResult = await clientResponse.json();
+        if (clientResult.success) {
+          console.log('✅ Client confirmation email sent successfully:', clientResult.sentTo);
+        } else {
+          console.error('❌ Failed to send client confirmation email:', clientResult.message);
+        }
+      } catch (clientError) {
+        console.error('❌ Error sending client confirmation email:', clientError);
       }
-    } catch (clientError) {
-      console.error('❌ Error sending client confirmation email:', clientError);
+    } else {
+      console.log("📧 Email di conferma al cliente disabilitata nelle impostazioni (locale)");
     }
     
   } catch (error) {
