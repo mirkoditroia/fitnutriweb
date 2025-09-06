@@ -33,11 +33,10 @@ export default function AdminContentPage() {
   const save = async () => {
     await upsertSiteContent(content);
     
-    // Save palette to localStorage for immediate effect
+    // ✅ FORZARE REFRESH PAGINA per caricare la palette dal server
+    // Eliminiamo localStorage che causava problemi di sincronizzazione
     if (content.colorPalette) {
-      localStorage.setItem('gz-palette', content.colorPalette);
-      
-      // Apply complete palette immediately
+      // Apply complete palette immediately  
       const paletteConfig = getPaletteConfig(content.colorPalette);
       const root = document.documentElement;
       
@@ -64,7 +63,9 @@ export default function AdminContentPage() {
       root.style.setProperty('--secondary-fg', paletteConfig.secondaryText, 'important');
     }
     
-    toast.success("🎉 Contenuti e palette salvati con successo!");
+    toast.success("🎉 Contenuti salvati! Per sincronizzare su tutti i dispositivi, ricarica la pagina.", {
+      duration: 6000
+    });
   };
 
   const addImg = () => setContent({ ...content, images: [...(content.images ?? []), { key: "", url: "" }] });
@@ -134,21 +135,16 @@ export default function AdminContentPage() {
                   root.style.setProperty('--secondary-bg', paletteConfig.secondaryBg, 'important');
                   root.style.setProperty('--secondary-fg', paletteConfig.secondaryText, 'important');
                   
-                  // Also update localStorage for immediate effect across the site
-                  try {
-                    localStorage.setItem('gz-palette', paletteId);
-                    // Toast per anteprima palette con colore dinamico
-                    toast(`🎨 Anteprima palette "${palette.name}" applicata! Clicca "Salva contenuti" per confermare.`, {
-                      icon: '🎨',
-                      style: {
-                        background: paletteConfig.primary,
-                        color: 'white',
-                        border: `2px solid ${paletteConfig.accent}`,
-                      },
-                    });
-                  } catch (e) {
-                    // Ignore if localStorage is not available
-                  }
+                  // ✅ RIMOSSO localStorage - solo anteprima temporanea in admin
+                  // Toast per anteprima palette con colore dinamico
+                  toast(`🎨 Anteprima palette "${palette.name}" applicata! Clicca "Salva contenuti" per rendere permanente su tutti i dispositivi.`, {
+                    icon: '🎨',
+                    style: {
+                      background: paletteConfig.primary,
+                      color: 'white',
+                      border: `2px solid ${paletteConfig.accent}`,
+                    },
+                  });
                 }}
               >
                 <div className="space-y-3">
