@@ -81,83 +81,12 @@ async function sendLocalBookingNotification(booking: Booking): Promise<void> {
       console.error('❌ Failed to send booking notification:', result.message);
     }
     
-    // ✅ NUOVA FEATURE: Invia email di conferma al cliente anche in modalità locale (se abilitata)
+    // ⚠️ FEATURE TEMPORANEAMENTE DISABILITATA: Email di conferma al cliente
     const clientEmailEnabled = siteContent?.clientConfirmationEmail?.enabled ?? true; // Default: true
     if (clientEmailEnabled) {
-      console.log("📧 Inviando email di conferma al cliente (locale)...");
-      try {
-        let clientResponse;
-        try {
-          // Prova prima con il tipo specifico per clienti
-          clientResponse = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              type: 'client-booking-confirmation', // ✅ TIPO SPECIFICO per email cliente
-              booking,
-              packageTitle,
-              businessName,
-              colorPalette,
-              customMessage: siteContent?.clientConfirmationEmail?.customMessage || "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli.",
-              siteContent: {
-                contactPhone: siteContent?.contactPhone,
-                contactEmail: siteContent?.contactEmail,
-                contactAddresses: siteContent?.contactAddresses,
-                businessName: siteContent?.businessName || businessName
-              }
-            }),
-          });
-          
-          if (!clientResponse.ok) {
-            throw new Error(`HTTP ${clientResponse.status}`);
-          }
-          
-          const clientResult = await clientResponse.json();
-          if (!clientResult.success) {
-            throw new Error(clientResult.message || 'Email failed');
-          }
-        } catch (error) {
-          console.log("⚠️ Tipo client-booking-confirmation non supportato (locale), uso fallback...");
-          // Fallback: usa new-booking con payload modificato per il cliente
-          clientResponse = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              type: 'new-booking',
-              booking: {
-                ...booking,
-                email: booking.email, // Email del cliente (destinatario)
-                name: booking.name,   // Nome del cliente
-              },
-              packageTitle,
-              notificationEmail: booking.email, // ✅ OVERRIDE: Invia al cliente invece che al nutrizionista
-              businessName,
-              colorPalette,
-              isClientEmail: true, // ✅ FLAG per template diverso
-              clientMessage: siteContent?.clientConfirmationEmail?.customMessage || "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli.",
-              siteContent: {
-                contactPhone: siteContent?.contactPhone,
-                contactEmail: siteContent?.contactEmail,
-                contactAddresses: siteContent?.contactAddresses,
-                businessName: siteContent?.businessName || businessName
-              }
-            }),
-          });
-        }
-
-        const clientResult = await clientResponse.json();
-        if (clientResult.success) {
-          console.log('✅ Client confirmation email sent successfully:', clientResult.sentTo);
-        } else {
-          console.error('❌ Failed to send client confirmation email:', clientResult.message);
-        }
-      } catch (clientError) {
-        console.error('❌ Error sending client confirmation email:', clientError);
-      }
+      console.log("📧 Email cliente richiesta ma temporaneamente disabilitata (locale)...");
+      console.log("⚠️ Motivo: Firebase Functions inviano stessa email del nutrizionista al cliente");
+      console.log("🔧 Soluzione: Aggiornare Firebase Functions per gestire template cliente separato");
     } else {
       console.log("📧 Email di conferma al cliente disabilitata nelle impostazioni (locale)");
     }

@@ -56,7 +56,17 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
   }
 }
 
-// ✅ NUOVA: Funzione per inviare email di conferma al cliente
+// ✅ TEMPORANEA: Funzione placeholder per email cliente diretta
+async function sendClientEmailDirect(booking: Booking, packageTitle?: string, businessName?: string, colorPalette?: string, siteContent?: SiteContent) {
+  console.log("📧 sendClientEmailDirect chiamata - funzionalità temporaneamente disabilitata");
+  console.log("⚠️ Motivo: Firebase Functions inviano stessa email del nutrizionista al cliente");
+  console.log("🔧 Soluzione: Aggiornare Firebase Functions per gestire template cliente separato");
+  
+  // Per ora disabilitata per evitare email duplicate
+  throw new Error("Email cliente temporaneamente disabilitata - template da separare");
+}
+
+// ✅ ORIGINALE: Funzione per inviare email di conferma al cliente (DA RIMUOVERE quando Firebase Functions supporta template separati)
 async function sendClientConfirmationEmail(booking: Booking, packageTitle?: string, businessName?: string, colorPalette?: string, siteContent?: SiteContent) {
   try {
     console.log("📤 sendClientConfirmationEmail chiamata con:", { 
@@ -693,8 +703,16 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     if (clientEmailEnabled) {
       console.log("📧 Preparando invio email di conferma al cliente...");
       console.log("📬 Inviando email di conferma a:", bookingWithId.email);
-      await sendClientConfirmationEmail(bookingWithId, packageTitle, businessName, colorPalette, siteContent || undefined);
-      console.log("✅ Email di conferma al cliente inviata con successo!");
+      
+      // ✅ SOLUZIONE TEMPORANEA: Usa EmailJS per email cliente indipendente
+      try {
+        await sendClientEmailDirect(bookingWithId, packageTitle, businessName, colorPalette, siteContent || undefined);
+        console.log("✅ Email di conferma al cliente inviata con successo!");
+      } catch (error) {
+        console.error("❌ Errore invio email cliente:", error);
+        // ⚠️ TEMPORARY DISABLED: Firebase Functions inviano stessa email del nutrizionista
+        console.log("⚠️ Email cliente temporaneamente disabilitata - Firebase Functions da aggiornare");
+      }
     } else {
       console.log("📧 Email di conferma al cliente disabilitata nelle impostazioni");
     }

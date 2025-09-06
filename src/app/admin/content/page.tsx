@@ -946,56 +946,55 @@ export default function AdminContentPage() {
               <input
                 type="checkbox"
                 id="clientEmailEnabled"
-                checked={content.clientConfirmationEmail?.enabled ?? true}
-                onChange={(e) => setContent({
-                  ...content,
-                  clientConfirmationEmail: {
-                    ...content.clientConfirmationEmail,
-                    enabled: e.target.checked
-                  }
-                })}
-                className="text-primary"
+                checked={false}
+                disabled={true}
+                className="text-primary opacity-50 cursor-not-allowed"
               />
-              <label htmlFor="clientEmailEnabled" className="font-medium">
-                Invia email di conferma automatica al cliente dopo la prenotazione
+              <label htmlFor="clientEmailEnabled" className="font-medium text-black/50">
+                Invia email di conferma automatica al cliente dopo la prenotazione (Temporaneamente Disabilitata)
               </label>
             </div>
             
+            <div className="text-sm p-3 bg-orange-50 rounded-lg border border-orange-200">
+              <strong>⚠️ FEATURE TEMPORANEAMENTE DISABILITATA</strong>
+              <div className="mt-2 space-y-2">
+                <p><strong>Problema identificato:</strong> L'email di conferma al cliente viene inviata con lo stesso contenuto dell'email del nutrizionista.</p>
+                <p><strong>Soluzione in corso:</strong> Le Firebase Functions devono essere aggiornate per gestire template email separati per cliente e nutrizionista.</p>
+                <p><strong>Cosa succede ora:</strong> Solo il nutrizionista riceve l'email di notifica (come prima), il cliente non riceve email per evitare confusione.</p>
+              </div>
+            </div>
+            
             <div className="text-sm text-black/70 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <strong>ℹ️ Come funziona:</strong>
+              <strong>ℹ️ Come funzionerà quando sarà riattivata:</strong>
               <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>Dopo ogni prenotazione confermata, il cliente riceve automaticamente un'email</li>
-                <li>L'email include i dettagli della prenotazione e i contatti dello studio</li>
-                <li>Il messaggio comunica che sarà ricontattato al più presto per ulteriori dettagli</li>
-                <li>Lo stile dell'email è coerente con la palette colori del sito</li>
+                <li>Dopo ogni prenotazione confermata, il cliente riceverà automaticamente un'email personalizzata</li>
+                <li>L'email includerà i dettagli della prenotazione e i contatti dello studio</li>
+                <li>Il messaggio comunicherà che sarà ricontattato al più presto per ulteriori dettagli</li>
+                <li>Lo stile dell'email sarà coerente con la palette colori del sito</li>
               </ul>
             </div>
 
+            {/* TEMPORANEAMENTE NASCOSTA - Feature disabilitata
             {content.clientConfirmationEmail?.enabled !== false && (
-              <div className="space-y-4 p-4 border border-border rounded-lg">
+              <div className="space-y-4 p-4 border border-border rounded-lg opacity-50">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-black">
-                    Messaggio personalizzato (opzionale)
+                  <label className="block text-sm font-medium mb-2 text-black/50">
+                    Messaggio personalizzato (opzionale) - Non disponibile
                   </label>
                   <textarea
                     rows={3}
-                    value={content.clientConfirmationEmail?.customMessage ?? ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      clientConfirmationEmail: {
-                        ...content.clientConfirmationEmail,
-                        customMessage: e.target.value
-                      }
-                    })}
-                    placeholder="Aggiungi un messaggio personalizzato che apparirà nell'email di conferma... (lascia vuoto per il messaggio predefinito)"
-                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    disabled={true}
+                    value=""
+                    placeholder="Disponibile quando la feature sarà riattivata..."
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls} opacity-50 cursor-not-allowed`}
                   />
-                  <p className="text-xs text-black/60 mt-1">
-                    Se lasci vuoto, verrà usato il messaggio predefinito: "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli."
+                  <p className="text-xs text-black/40 mt-1">
+                    Messaggio personalizzato sarà disponibile quando la feature verrà riattivata.
                   </p>
                 </div>
               </div>
             )}
+            */}
           </div>
         </section>
         </div>
