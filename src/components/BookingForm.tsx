@@ -239,6 +239,20 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   // NUOVO SISTEMA DIRETTO - SEMPLICE E AFFIDABILE
   const [directState, setDirectStateLocal] = useState(getDirectState());
   
+  // ✅ ASCOLTA CAMBIAMENTI DELLO STATO DIRETTO
+  useEffect(() => {
+    const handleDirectStateChange = (event: CustomEvent) => {
+      console.log("🔄 DirectState cambiato:", event.detail);
+      setDirectStateLocal(event.detail);
+    };
+
+    window.addEventListener('directStateChange', handleDirectStateChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('directStateChange', handleDirectStateChange as EventListener);
+    };
+  }, []);
+  
   // Derivato dal directState
   const isFreeConsultation = directState.isFreeConsultation;
   console.log("🎯 BookingForm - isFreeConsultation:", isFreeConsultation);

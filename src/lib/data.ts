@@ -422,8 +422,9 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   if (b.isFreeConsultation) {
     // ✅ CORRETO: Per consulenze gratuite, usa SOLO slot promozionali dedicati
     pool = availability?.freeConsultationSlots ?? [];
-    console.log("🔍 Consulenza gratuita - Slot promozionali disponibili:", pool);
+    console.log("🔍 Consulenza gratuita - Slot promozionali disponibili:", pool.length, "slot");
     console.log("📅 Slot richiesto:", b.slot);
+    
     if (pool.length === 0) {
       throw new Error("❌ Nessun slot per consulenze gratuite disponibile per questa data");
     }
@@ -435,13 +436,12 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   }
   
   if (!availability || !pool.includes(b.slot)) {
-    console.error("❌ Slot non disponibile!", { 
-      availability: !!availability, 
-      poolLength: pool.length, 
-      pool, 
-      requestedSlot: b.slot,
-      isFreeConsultation: b.isFreeConsultation 
-    });
+    console.error("❌ VALIDAZIONE SLOT FALLITA!");
+    console.error("  - availability presente:", !!availability);
+    console.error("  - pool.length:", pool.length);
+    console.error("  - slot richiesto:", b.slot);
+    console.error("  - isFreeConsultation:", b.isFreeConsultation);
+    
     throw new Error("L'orario selezionato non è più disponibile");
   }
   
