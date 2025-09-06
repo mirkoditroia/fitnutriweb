@@ -253,10 +253,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     };
   }, []);
   
-  // Derivato dal directState
-  const isFreeConsultation = directState.isFreeConsultation;
+  // ✅ LOGICA COMPLETA: isFreeConsultation da directState O da pacchetto promozionale
+  const isFreeConsultation = directState.isFreeConsultation || selectedPackage?.isPromotional === true;
   console.log("🎯 BookingForm - isFreeConsultation:", isFreeConsultation);
   console.log("🎯 BookingForm - directState completo:", directState);
+  console.log("🎯 BookingForm - selectedPackage promozionale:", selectedPackage?.isPromotional);
+  console.log("🎯 BookingForm - fonte consulenza gratuita:", directState.isFreeConsultation ? "popup" : selectedPackage?.isPromotional ? "dropdown pacchetto promozionale" : "nessuna");
   console.log("📅 BookingForm - selectedDate:", selectedDate);
 
   // Schema di validazione con validazione personalizzata
