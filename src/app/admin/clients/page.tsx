@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { listClients, upsertClient, deleteClient, getPackages, createClientFromPendingBooking, listBookings, type ClientCard, type Package, type Booking } from "@/lib/datasource";
+import { listClients, upsertClient, deleteClient, getPackages, listBookings, type ClientCard, type Package, type Booking } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
@@ -99,23 +99,6 @@ export default function AdminClientsPage() {
     }
   };
 
-  const handleCreateClientsFromPendingBookings = async () => {
-    const pendingBookings = bookings.filter(b => b.status === "pending");
-    
-    if (pendingBookings.length === 0) {
-      toast("Nessuna prenotazione in attesa trovata");
-      return;
-    }
-
-    try {
-      await Promise.all(pendingBookings.map(createClientFromPendingBooking));
-      toast.success(`${pendingBookings.length} clienti creati/aggiornati dalle prenotazioni in attesa!`);
-      await loadData();
-    } catch (error) {
-      console.error("Error creating clients from pending bookings:", error);
-      toast.error("Errore nella creazione di alcuni clienti");
-    }
-  };
 
   const handleDocumentUpload = (clientId: string, documentType: string, url: string) => {
     if (!selectedClient) return;
@@ -187,20 +170,6 @@ export default function AdminClientsPage() {
           <option value="inactive">Inattivo</option>
         </select>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button 
-            onClick={handleCreateClientsFromPendingBookings}
-            className="bg-blue-600 hover:bg-blue-700 text-white button-responsive"
-            disabled={bookings.filter(b => b.status === "pending").length === 0}
-          >
-            <span className="flex flex-col items-center justify-center gap-1 text-center">
-              <span className="flex items-center gap-2">
-                <span>👥</span>
-                <span className="hidden sm:inline">Crea da Prenotazioni</span>
-                <span className="sm:hidden">Crea da Prenotazioni</span>
-              </span>
-              <span className="font-medium text-center">({bookings.filter(b => b.status === "pending").length})</span>
-            </span>
-          </Button>
           <Button onClick={handleCreateNew} className="button-responsive">
             <span className="flex items-center justify-center gap-2 text-center">
               <span>➕</span>
