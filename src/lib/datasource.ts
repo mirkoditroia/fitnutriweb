@@ -24,6 +24,9 @@ import {
 import { getDataMode } from "@/lib/datamode";
 export type { Package, Booking, ClientCard, SiteContent, Availability } from "@/lib/data";
 
+// ✅ ESPORTA getDataMode per debugging client-side
+export { getDataMode };
+
 // Helper function per inviare notifiche email in modalità local
 async function sendLocalBookingNotification(booking: Booking): Promise<void> {
   try {

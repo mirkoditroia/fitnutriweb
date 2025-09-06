@@ -524,11 +524,15 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
       setLoadingStep("Verificando disponibilità...");
       
-      // In produzione (Firebase) usa la funzione datasource ufficiale
+      // ✅ DEBUGGING: Verifica modalità data e importa funzioni
       console.log("🚀 Tentativo prenotazione consulenza gratuita:", { isFreeConsultation, selectedPackage });
       try {
         setLoadingStep("Inviando prenotazione...");
-        const { createBooking } = await import("@/lib/datasource");
+        const { createBooking, getDataMode } = await import("@/lib/datasource");
+        const currentDataMode = getDataMode();
+        console.log("🔍 MODALITÀ DATA ATTIVA:", currentDataMode);
+        console.log("🌐 NODE_ENV:", process.env.NODE_ENV);
+        console.log("🔥 Firebase Config Present:", !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
         const bookingStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
         
         const bookingPayload = {
@@ -550,33 +554,43 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.log("🎯 VERIFICA FLAG: isFreeConsultation nel payload =", bookingPayload.isFreeConsultation);
         console.log("🎯 VERIFICA FLAG: variabile locale isFreeConsultation =", isFreeConsultation);
         
-        await createBooking(bookingPayload, captchaToken || undefined);
+        const bookingId = await createBooking(bookingPayload, captchaToken || undefined);
         
         setLoadingStep("Completato!");
-        console.log("✅ Prenotazione creata con successo!");
-        // Simula response.ok
-        const response = { ok: true } as const;
-        if (!response.ok) throw new Error("failed");
+        console.log("✅ Prenotazione creata con successo! ID:", bookingId);
+        console.log("🔍 Modalità data utilizzata per questa prenotazione:", process.env.NODE_ENV === 'production' ? 'Firebase' : 'Local');
+        
+        // ✅ RIMOSSA simulazione falsa - ora gestiamo la vera risposta
+        if (!bookingId) throw new Error("Prenotazione fallita - nessun ID ricevuto");
       } catch (e) {
-        console.error("❌ Errore createBooking Firebase:", e);
-        setLoadingStep("Tentativo sistema di backup...");
-        console.log("🔄 Usando fallback locale...");
-        // Fallback locale
-        const response = await fetch("/api/localdb/bookings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bookingData),
-        });
-        if (!response.ok) {
-          console.error("❌ Fallback locale fallito anche!");
-          throw new Error("failed");
+        console.error("❌ Errore createBooking principale:", e);
+        console.error("❌ Dettaglio errore:", (e as Error).message);
+        
+        // ✅ Solo usare fallback se siamo in modalità locale, non Firebase
+        const currentDataMode = (await import("@/lib/datasource")).getDataMode();
+        if (currentDataMode === "local") {
+          setLoadingStep("Tentativo sistema di backup locale...");
+          console.log("🔄 Usando fallback locale in modalità dev...");
+          // Fallback locale
+          const response = await fetch("/api/localdb/bookings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(bookingData),
+          });
+          if (!response.ok) {
+            console.error("❌ Fallback locale fallito anche!");
+            throw new Error("Prenotazione fallita completamente");
+          }
+          setLoadingStep("Backup locale completato!");
+          console.log("✅ Fallback locale riuscito");
+        } else {
+          // In modalità Firebase, rilancia l'errore originale
+          throw new Error(`Prenotazione fallita in modalità ${currentDataMode}: ${(e as Error).message}`);
         }
-        setLoadingStep("Backup completato!");
-        console.log("✅ Fallback locale riuscito");
       }
-      {
-        // ✅ Toast elegante invece di alert browser
-        toast.success(
+      
+      // ✅ Toast elegante invece di alert browser
+      toast.success(
           isFreeConsultation 
             ? "Consulenza gratuita prenotata con successo!" 
             : "Prenotazione inviata con successo!",
@@ -600,23 +614,23 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             },
           }
         );
-        // Reset del form
+        
+      // Reset del form
       setValue("name", "");
       setValue("email", "");
       setValue("phone", "");
       setValue("date", "");
       setValue("slot", "");
-        setValue("notes", "");
-        setSelectedDate("");
-        setAvailableSlots([]);
-        // Reset del pacchetto selezionato per tornare al selettore
-        setSelectedPackage(null);
+      setValue("notes", "");
+      setSelectedDate("");
+      setAvailableSlots([]);
+      // Reset del pacchetto selezionato per tornare al selettore
+      setSelectedPackage(null);
       setValue("packageId", "");
-        // Reset CAPTCHA
-        setCaptchaToken(null);
-        if (recaptchaRef.current) {
-          recaptchaRef.current.reset();
-        }
+      // Reset CAPTCHA
+      setCaptchaToken(null);
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
       }
     } catch (error) {
       console.error("Errore:", error);
