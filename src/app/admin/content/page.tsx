@@ -112,7 +112,8 @@ export default function AdminContentPage() {
       });
       return; // Esce se c'è errore
     }
-    
+     2
+     
     // ✅ FORZARE REFRESH PAGINA per caricare la palette dal server
     // Eliminiamo localStorage che causava problemi di sincronizzazione
     if (content.colorPalette) {
@@ -1174,7 +1175,7 @@ export default function AdminContentPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2 text-black">
                       Nome Business Google
@@ -1194,32 +1195,71 @@ export default function AdminContentPage() {
                     />
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-black">
-                      Google Place ID (opzionale)
-                    </label>
-                    <input
-                      type="text"
-                      value={content.googleReviews?.placeId ?? ""}
-                      onChange={(e) => setContent({
-                        ...content,
-                        googleReviews: {
-                          ...content.googleReviews,
-                          placeId: e.target.value
-                        }
-                      })}
-                      placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
-                      className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Trova il tuo Place ID su: https://developers.google.com/maps/documentation/places/web-service/place-id
-                    </p>
+                  {/* ✅ OPZIONE SEMPLICE: Google Reviews Widget Embed */}
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                    <h4 className="font-medium text-black mb-3">🎯 Opzione 1: Widget Google Reviews (SENZA API)</h4>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-black">
+                        📌 Google My Business - Codice Embed Widget
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={content.googleReviews?.embedCode ?? ""}
+                        onChange={(e) => setContent({
+                          ...content,
+                          googleReviews: {
+                            ...content.googleReviews,
+                            embedCode: e.target.value
+                          }
+                        })}
+                        placeholder='<div class="elfsight-app-abc123"></div><script src="https://static.elfsight.com/platform/platform.js"></script>'
+                        className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls} font-mono text-sm`}
+                      />
+                      <div className="mt-2 text-sm text-black/70">
+                        <strong>📋 Come ottenere:</strong>
+                        <ul className="list-disc list-inside mt-1 space-y-1">
+                          <li><strong>Opzione A:</strong> Google My Business → Marketing → Recensioni → Ottieni widget</li>
+                          <li><strong>Opzione B:</strong> Elfsight.com → Google Reviews Widget (gratuito)</li>
+                          <li><strong>Opzione C:</strong> Trustmary.com → Google Reviews Widget</li>
+                          <li><strong>✅ Risultato:</strong> Recensioni vere senza API, auto-aggiornate</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* ✅ OPZIONE MANUALE: Place ID per link diretto */}
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <h4 className="font-medium text-black mb-3">🎯 Opzione 2: Link Diretto (SENZA API)</h4>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-black">
+                        🔗 Google Place ID (per link "Vedi tutte le recensioni")
+                      </label>
+                      <input
+                        type="text"
+                        value={content.googleReviews?.placeId ?? ""}
+                        onChange={(e) => setContent({
+                          ...content,
+                          googleReviews: {
+                            ...content.googleReviews,
+                            placeId: e.target.value
+                          }
+                        })}
+                        placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
+                        className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        <strong>Come trovarlo:</strong> Google Maps → Cerca la tua attività → Condividi → Copia link → Cerca "place_id="
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* ✅ NUOVA SEZIONE: Configurazione API Google */}
-                <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <h4 className="font-medium text-black">🌐 Recensioni Google Automatiche</h4>
+                {/* ✅ SEZIONE API (solo se non si usa widget embed) */}
+                {(!content.googleReviews?.embedCode || content.googleReviews?.embedCode.trim() === '') && (
+                  <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-medium text-black">🌐 Opzione 3: Google API per recensioni automatiche</h4>
                   
                   <div>
                     <label className="block text-sm font-medium mb-2 text-black">
@@ -1273,6 +1313,7 @@ export default function AdminContentPage() {
                     </ul>
                   </div>
                 </div>
+                )}
 
                 {/* Gestione recensioni manuali (ora fallback) */}
                 <div>

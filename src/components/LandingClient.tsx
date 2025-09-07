@@ -368,19 +368,20 @@ export default function LandingClient() {
       </div>
       
       {/* Recensioni Google */}
-      <GoogleReviews
-        title={effectiveContent.googleReviews?.title}
-        subtitle={effectiveContent.googleReviews?.subtitle}
-        businessName={effectiveContent.googleReviews?.businessName}
-        placeId={effectiveContent.googleReviews?.placeId}
-        googleApiKey={effectiveContent.googleReviews?.googleApiKey}
-        useRealReviews={effectiveContent.googleReviews?.useRealReviews}
-        fallbackReviews={effectiveContent.googleReviews?.fallbackReviews}
-        lastFetched={effectiveContent.googleReviews?.lastFetched}
-        reviews={effectiveContent.googleReviews?.reviews}
-        colorPalette={effectiveContent.colorPalette}
-        enabled={effectiveContent.googleReviews?.enabled}
-      />
+        <GoogleReviews
+          title={effectiveContent.googleReviews?.title}
+          subtitle={effectiveContent.googleReviews?.subtitle}
+          businessName={effectiveContent.googleReviews?.businessName}
+          placeId={effectiveContent.googleReviews?.placeId}
+          embedCode={effectiveContent.googleReviews?.embedCode}
+          googleApiKey={effectiveContent.googleReviews?.googleApiKey}
+          useRealReviews={effectiveContent.googleReviews?.useRealReviews}
+          fallbackReviews={effectiveContent.googleReviews?.fallbackReviews}
+          lastFetched={effectiveContent.googleReviews?.lastFetched}
+          reviews={effectiveContent.googleReviews?.reviews}
+          colorPalette={effectiveContent.colorPalette}
+          enabled={effectiveContent.googleReviews?.enabled}
+        />
     </main>
   );
 }

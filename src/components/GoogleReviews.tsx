@@ -8,6 +8,7 @@ interface GoogleReviewsProps {
   subtitle?: string;
   businessName?: string;
   placeId?: string;
+  embedCode?: string;
   googleApiKey?: string;
   useRealReviews?: boolean;
   fallbackReviews?: GoogleReview[];
@@ -45,6 +46,7 @@ export default function GoogleReviews({
   subtitle = "Cosa dicono i nostri clienti",
   businessName = "GZ Nutrition",
   placeId,
+  embedCode,
   googleApiKey,
   useRealReviews = true,
   fallbackReviews = [],
@@ -59,24 +61,33 @@ export default function GoogleReviews({
   // State per gestire recensioni e loading
   const [currentReviews, setCurrentReviews] = useState<GoogleReview[]>(reviews);
   const [loading, setLoading] = useState(false);
-  const [reviewSource, setReviewSource] = useState<'google' | 'fallback' | 'unknown'>('unknown');
+  const [reviewSource, setReviewSource] = useState<'google' | 'fallback' | 'embed' | 'unknown'>('unknown');
 
   // Ottieni colori della palette
   const paletteConfig = getPaletteConfig(colorPalette);
   const primary = paletteConfig?.primary || "#0B5E0B";
   const accent = paletteConfig?.accent || "#00D084";
 
-  // ✅ Carica recensioni da Google Places API
+  // ✅ Carica recensioni: Priorità Widget > API > Fallback
   useEffect(() => {
     async function loadReviews() {
       console.log("🔄 GoogleReviews: Caricamento recensioni...", {
+        hasEmbedCode: !!embedCode,
         useRealReviews,
         placeId,
         hasApiKey: !!googleApiKey,
         hasExistingReviews: currentReviews.length > 0
       });
 
-      // Se non dobbiamo usare Google API, usa fallback
+      // 🎯 PRIORITÀ 1: Widget Embed (senza API)
+      if (embedCode && embedCode.trim()) {
+        console.log("🎨 Uso Widget Google Reviews (embed code)");
+        setReviewSource('embed');
+        setCurrentReviews([]); // Widget si gestisce da solo
+        return;
+      }
+
+      // 🎯 PRIORITÀ 2: Google API
       if (!useRealReviews || !placeId) {
         console.log("📝 Uso recensioni fallback (API disabilitata o senza Place ID)");
         setCurrentReviews(fallbackReviews);
@@ -120,7 +131,7 @@ export default function GoogleReviews({
     }
 
     loadReviews();
-  }, [placeId, googleApiKey, useRealReviews, fallbackReviews]);
+  }, [embedCode, placeId, googleApiKey, useRealReviews, fallbackReviews]);
 
   // URL per aprire Google Reviews
   const googleReviewsUrl = placeId 
@@ -145,7 +156,22 @@ export default function GoogleReviews({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {/* Google Rating Badge con fonte */}
             <div className="flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg border">
-              {reviewSource === 'google' ? (
+              {reviewSource === 'embed' ? (
+                <>
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
+                    alt="Google" 
+                    className="w-6 h-6"
+                  />
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={5} color={primary} />
+                    <span className="text-sm text-gray-500">Google Reviews</span>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                      🎨 Widget
+                    </span>
+                  </div>
+                </>
+              ) : reviewSource === 'google' ? (
                 <>
                   <img 
                     src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
@@ -156,7 +182,7 @@ export default function GoogleReviews({
                     <StarRating rating={5} color={primary} />
                     <span className="text-sm text-gray-500">recensioni Google</span>
                     <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                      ✅ Live
+                      ✅ Live API
                     </span>
                   </div>
                 </>
@@ -192,6 +218,26 @@ export default function GoogleReviews({
           </div>
         </div>
 
+        {/* ✅ Widget Embed Google Reviews (senza API) */}
+        {reviewSource === 'embed' && embedCode && (
+          <div className="max-w-4xl mx-auto">
+            <div 
+              className="google-reviews-widget"
+              dangerouslySetInnerHTML={{ __html: embedCode }}
+            />
+            <div className="text-center mt-6 text-sm text-gray-500">
+              <span className="inline-flex items-center gap-2">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
+                  alt="Google" 
+                  className="w-4 h-4"
+                />
+                Recensioni vere da Google Business - Aggiornamento automatico
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-12">
@@ -202,8 +248,8 @@ export default function GoogleReviews({
           </div>
         )}
 
-        {/* Reviews Grid */}
-        {!loading && (
+        {/* Reviews Grid (solo se non usiamo widget embed) */}
+        {!loading && reviewSource !== 'embed' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentReviews.map((review) => (
             <div 
@@ -264,8 +310,8 @@ export default function GoogleReviews({
           </div>
         )}
 
-        {/* Nessuna recensione */}
-        {!loading && currentReviews.length === 0 && (
+        {/* Nessuna recensione (solo se non usiamo widget embed) */}
+        {!loading && reviewSource !== 'embed' && currentReviews.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">⭐</div>
             <h3 className="text-xl font-semibold text-gray-700 mb-2">
