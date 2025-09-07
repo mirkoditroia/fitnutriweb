@@ -1195,129 +1195,13 @@ export default function AdminContentPage() {
                     />
                   </div>
                   
-                  {/* ✅ OPZIONE SEMPLICE: Google Reviews Widget Embed */}
-                  <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
-                    <h4 className="font-medium text-black mb-3">🎯 Opzione 1: Widget Google Reviews (SENZA API)</h4>
-                    
-                    {/* ✅ CONTROLLO: Widget vs Manuali */}
-                    <div className="mb-4 p-3 bg-white rounded border">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            id="useWidget"
-                            name="reviewSource"
-                            checked={content.googleReviews?.useWidget === true}
-                            onChange={() => setContent({
-                              ...content,
-                              googleReviews: {
-                                ...content.googleReviews,
-                                useWidget: true
-                              }
-                            })}
-                            className="text-primary"
-                          />
-                          <label htmlFor="useWidget" className="text-sm font-medium text-black">
-                            🎨 Usa Widget Google Reviews
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="radio"
-                            id="useManual"
-                            name="reviewSource"
-                            checked={content.googleReviews?.useWidget === false}
-                            onChange={() => setContent({
-                              ...content,
-                              googleReviews: {
-                                ...content.googleReviews,
-                                useWidget: false
-                              }
-                            })}
-                            className="text-primary"
-                          />
-                          <label htmlFor="useManual" className="text-sm font-medium text-black">
-                            📝 Usa Recensioni Manuali
-                          </label>
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        <strong>Widget:</strong> Recensioni vere da Google Business | <strong>Manuali:</strong> Recensioni inserite da admin
-                      </p>
-                    </div>
-                    
-                    {content.googleReviews?.useWidget && (
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-black">
-                          📌 Google My Business - Codice Embed Widget
-                        </label>
-                        <textarea
-                          rows={6}
-                          value={content.googleReviews?.embedCode ?? ""}
-                          onChange={(e) => setContent({
-                            ...content,
-                            googleReviews: {
-                              ...content.googleReviews,
-                              embedCode: e.target.value
-                            }
-                          })}
-                          placeholder='<!-- Trustmary Google Reviews Widget -->
-<script>(function (w,d,s,o,r,js,fjs) {
-    w[r]=w[r]||function() {(w[r].q = w[r].q || []).push(arguments)}
-    w[r]("app", "GXpMNA-WFX");
-    if(d.getElementById(o)) return;
-    js = d.createElement(s), fjs = d.getElementsByTagName(s)[0];
-    js.id = o; js.src = "https://embed.trustmary.com/embed.js";
-    js.async = 1; fjs.parentNode.insertBefore(js, fjs);
-  }(window, document, "script", "trustmary-embed", "tmary"));
-</script>'
-                          className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls} font-mono text-sm`}
-                        />
-                        
-                        {/* ✅ Debug del codice inserito */}
-                        {content.googleReviews?.embedCode && (
-                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded text-sm">
-                            <strong>✅ Codice Widget Inserito:</strong>
-                            <br />• Script Trustmary: {content.googleReviews.embedCode.includes('embed.trustmary.com') ? '✅ Presente' : '❌ Manca'}
-                            <br />• App ID: {content.googleReviews.embedCode.includes('GXpMNA-WFX') ? '✅ Presente' : '❌ Manca'}
-                            <br />• Trustmary function: {content.googleReviews.embedCode.includes('tmary') ? '✅ Presente' : '❌ Manca'}
-                            <br />• Script ID: {content.googleReviews.embedCode.includes('trustmary-embed') ? '✅ Presente' : '❌ Manca'}
-                            <br />• Lunghezza codice: {content.googleReviews.embedCode.length} caratteri
-                          </div>
-                        )}
-                        
-                        <div className="mt-2 text-sm text-black/70">
-                          <strong>📋 Come ottenere:</strong>
-                          <ul className="list-disc list-inside mt-1 space-y-1">
-                            <li><strong>Opzione A:</strong> Google My Business → Marketing → Recensioni → Ottieni widget</li>
-                            <li><strong>Opzione B:</strong> Elfsight.com → Google Reviews Widget (gratuito)</li>
-                            <li><strong>Opzione C:</strong> Trustmary.com → Google Reviews Widget</li>
-                            <li><strong>✅ Risultato:</strong> Recensioni vere senza API, auto-aggiornate</li>
-                          </ul>
-                        </div>
-                        
-                        <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded text-sm">
-                          <strong>⚠️ Se il widget non appare:</strong>
-                          <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
-                            <li>Verifica che il dominio sia autorizzato su Elfsight</li>
-                            <li>Controlla la connessione internet</li>
-                            <li>Il widget potrebbe impiegare 5-10 secondi per caricarsi</li>
-                            <li>Prova a ricaricare la pagina</li>
-                            <li>Verifica che il codice sia completo (script + div)</li>
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* ✅ OPZIONE MANUALE: Place ID per link diretto */}
+                  {/* ✅ OPZIONE SEMPLICE: Place ID per link diretto */}
                   <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                    <h4 className="font-medium text-black mb-3">🎯 Opzione 2: Link Diretto (SENZA API)</h4>
+                    <h4 className="font-medium text-black mb-3">🔗 Link Google Reviews</h4>
                     
                     <div>
                       <label className="block text-sm font-medium mb-2 text-black">
-                        🔗 Google Place ID (per link "Vedi tutte le recensioni")
+                        Google Place ID (per link "Vedi tutte le recensioni")
                       </label>
                       <input
                         type="text"
@@ -1339,72 +1223,12 @@ export default function AdminContentPage() {
                   </div>
                 </div>
 
-                {/* ✅ SEZIONE API (solo se non si usa widget embed) */}
-                {(!content.googleReviews?.useWidget && (!content.googleReviews?.embedCode || content.googleReviews?.embedCode.trim() === '')) && (
-                  <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                    <h4 className="font-medium text-black">🌐 Opzione 3: Google API per recensioni automatiche</h4>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-black">
-                      Google Places API Key (per recensioni vere)
-                    </label>
-                    <input
-                      type="password"
-                      value={content.googleReviews?.googleApiKey ?? ""}
-                      onChange={(e) => setContent({
-                        ...content,
-                        googleReviews: {
-                          ...content.googleReviews,
-                          googleApiKey: e.target.value
-                        }
-                      })}
-                      placeholder="AIzaSyC..."
-                      className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Necessaria per recensioni Google automatiche. Ottienila da Google Cloud Console → APIs & Services.
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="useRealReviews"
-                      checked={content.googleReviews?.useRealReviews ?? true}
-                      onChange={(e) => setContent({
-                        ...content,
-                        googleReviews: {
-                          ...content.googleReviews,
-                          useRealReviews: e.target.checked
-                        }
-                      })}
-                      className="text-primary"
-                    />
-                    <label htmlFor="useRealReviews" className="font-medium">
-                      ✅ Carica recensioni vere da Google Business automaticamente
-                    </label>
-                  </div>
-                  
-                  <div className="text-sm text-black/70 p-3 bg-white rounded border">
-                    <strong>📖 Come funziona:</strong>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
-                      <li><strong>✅ Abilitato + API Key:</strong> Carica recensioni vere da Google Business</li>
-                      <li><strong>❌ Disabilitato:</strong> Usa solo recensioni manuali sottostanti</li>
-                      <li><strong>🔄 Cache intelligente:</strong> Aggiorna ogni ora automaticamente</li>
-                      <li><strong>🛡️ Fallback robusto:</strong> Se API fallisce, usa recensioni manuali</li>
-                      <li><strong>⚡ Zero configurazione:</strong> Inserisci Place ID + API Key e funziona</li>
-                    </ul>
-                  </div>
-                </div>
-                )}
-
                 {/* Gestione recensioni manuali */}
-                {content.googleReviews?.useWidget === false && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <label className="text-sm font-medium text-black">
-                        📝 Recensioni Manuali (gestite da admin)
-                      </label>
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="text-sm font-medium text-black">
+                      📝 Recensioni Manuali (gestite da admin)
+                    </label>
                     <button
                       type="button"
                       onClick={() => {
@@ -1515,7 +1339,7 @@ export default function AdminContentPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              const updatedReviews = (content.googleReviews?.reviews || []).filter((_, i) => i !== index);
+                              const updatedReviews = (content.googleReviews?.fallbackReviews || []).filter((_, i) => i !== index);
                               setContent({
                                 ...content,
                                 googleReviews: {
@@ -1539,8 +1363,7 @@ export default function AdminContentPage() {
                       <p className="text-sm">Usa "Aggiungi Recensione" per iniziare o verranno mostrate quelle di default.</p>
                     </div>
                   )}
-                  </div>
-                )}
+                </div>
               </div>
             )}
           </div>

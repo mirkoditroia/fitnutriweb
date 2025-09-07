@@ -184,13 +184,7 @@ export default async function Home() {
         subtitle={c.googleReviews?.subtitle}
         businessName={c.googleReviews?.businessName}
         placeId={c.googleReviews?.placeId}
-        embedCode={c.googleReviews?.embedCode}
-        useWidget={c.googleReviews?.useWidget}
-        googleApiKey={c.googleReviews?.googleApiKey}
-        useRealReviews={c.googleReviews?.useRealReviews}
         fallbackReviews={c.googleReviews?.fallbackReviews}
-        lastFetched={c.googleReviews?.lastFetched}
-        reviews={c.googleReviews?.reviews}
         colorPalette={c.colorPalette}
         enabled={c.googleReviews?.enabled}
       />

@@ -250,14 +250,8 @@ export interface SiteContent {
     title?: string; // Titolo sezione (default: "⭐ Recensioni Google")
     subtitle?: string; // Sottotitolo
     businessName?: string; // Nome business per link Google
-    placeId?: string; // Google Place ID per recupero automatico recensioni
-    embedCode?: string; // Codice embed widget Google Reviews (senza API)
-    useWidget?: boolean; // Se usare widget embed invece di recensioni manuali (default: false)
-    googleApiKey?: string; // API Key Google Places (opzionale)
-    useRealReviews?: boolean; // Se usare Google Places API (default: true)
-    fallbackReviews?: GoogleReview[]; // Recensioni fallback se API non disponibile
-    lastFetched?: string; // Timestamp ultimo fetch API (per cache)
-    reviews?: GoogleReview[]; // Recensioni caricate (da API o fallback)
+    placeId?: string; // Google Place ID per link diretto alle recensioni
+    fallbackReviews?: GoogleReview[]; // Recensioni manuali gestite da admin
   };
 }
 
@@ -1225,19 +1219,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         subtitle: data.googleReviews.subtitle || "Cosa dicono i nostri clienti",
         businessName: data.googleReviews.businessName || "GZ Nutrition",
         placeId: data.googleReviews.placeId || undefined,
-        embedCode: data.googleReviews.embedCode || undefined,
-        useWidget: data.googleReviews.useWidget === true, // Default false
-        googleApiKey: data.googleReviews.googleApiKey || undefined,
-        useRealReviews: data.googleReviews.useRealReviews !== false, // Default true
         fallbackReviews: Array.isArray(data.googleReviews.fallbackReviews) 
           ? data.googleReviews.fallbackReviews.map((review: any) => ({
-              ...review,
-              source: review.source || 'fallback' // Assicura source sempre presente
-            }))
-          : [],
-        lastFetched: data.googleReviews.lastFetched || undefined,
-        reviews: Array.isArray(data.googleReviews.reviews) 
-          ? data.googleReviews.reviews.map((review: any) => ({
               ...review,
               source: review.source || 'fallback' // Assicura source sempre presente
             }))
