@@ -373,6 +373,10 @@ export default function LandingClient() {
         subtitle={effectiveContent.googleReviews?.subtitle}
         businessName={effectiveContent.googleReviews?.businessName}
         placeId={effectiveContent.googleReviews?.placeId}
+        googleApiKey={effectiveContent.googleReviews?.googleApiKey}
+        useRealReviews={effectiveContent.googleReviews?.useRealReviews}
+        fallbackReviews={effectiveContent.googleReviews?.fallbackReviews}
+        lastFetched={effectiveContent.googleReviews?.lastFetched}
         reviews={effectiveContent.googleReviews?.reviews}
         colorPalette={effectiveContent.colorPalette}
         enabled={effectiveContent.googleReviews?.enabled}

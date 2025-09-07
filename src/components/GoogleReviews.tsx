@@ -1,5 +1,7 @@
 "use client";
+import { useState, useEffect } from "react";
 import { getPaletteConfig } from "@/lib/palettes";
+import { getGoogleReviewsWithCache } from "@/lib/googlePlaces";
 
 interface GoogleReview {
   id: string;
@@ -8,6 +10,7 @@ interface GoogleReview {
   text: string;
   date?: string;
   avatar?: string;
+  source?: 'google' | 'fallback';
 }
 
 interface GoogleReviewsProps {
@@ -15,6 +18,10 @@ interface GoogleReviewsProps {
   subtitle?: string;
   businessName?: string;
   placeId?: string;
+  googleApiKey?: string;
+  useRealReviews?: boolean;
+  fallbackReviews?: GoogleReview[];
+  lastFetched?: string;
   reviews?: GoogleReview[];
   colorPalette?: string;
   enabled?: boolean;
@@ -41,47 +48,89 @@ const StarRating = ({ rating, color }: { rating: number; color: string }) => {
   );
 };
 
-// Reviews di default se non configurate
-const defaultReviews: GoogleReview[] = [
-  {
-    id: "1",
-    name: "Luca M.",
-    rating: 5,
-    text: "Risultati concreti in 6 settimane! Il dott. Gianmarco mi ha seguito passo dopo passo con un piano nutrizionale perfetto per i miei obiettivi. Consigliato!",
-    date: "2 settimane fa"
-  },
-  {
-    id: "2", 
-    name: "Sara T.",
-    rating: 5,
-    text: "Piano sostenibile e supporto costante. Finalmente ho trovato un approccio che funziona davvero per il mio stile di vita. Professionalità assoluta.",
-    date: "1 mese fa"
-  },
-  {
-    id: "3",
-    name: "Marco R.",
-    rating: 5,
-    text: "Allenamenti intelligenti e performance migliorata del 30%! L'approccio scientifico del dottore ha fatto la differenza per la mia preparazione sportiva.",
-    date: "3 settimane fa"
-  }
-];
+// ✅ Componente ora usa Google Places API per recensioni vere
 
 export default function GoogleReviews({
   title = "⭐ Recensioni Google",
   subtitle = "Cosa dicono i nostri clienti",
   businessName = "GZ Nutrition",
   placeId,
-  reviews = defaultReviews,
+  googleApiKey,
+  useRealReviews = true,
+  fallbackReviews = [],
+  lastFetched,
+  reviews = [],
   colorPalette = "gz-default",
   enabled = true
 }: GoogleReviewsProps) {
   // Non renderizzare se disabilitato
   if (!enabled) return null;
 
+  // State per gestire recensioni e loading
+  const [currentReviews, setCurrentReviews] = useState<GoogleReview[]>(reviews);
+  const [loading, setLoading] = useState(false);
+  const [reviewSource, setReviewSource] = useState<'google' | 'fallback' | 'unknown'>('unknown');
+
   // Ottieni colori della palette
   const paletteConfig = getPaletteConfig(colorPalette);
   const primary = paletteConfig?.primary || "#0B5E0B";
   const accent = paletteConfig?.accent || "#00D084";
+
+  // ✅ Carica recensioni da Google Places API
+  useEffect(() => {
+    async function loadReviews() {
+      console.log("🔄 GoogleReviews: Caricamento recensioni...", {
+        useRealReviews,
+        placeId,
+        hasApiKey: !!googleApiKey,
+        hasExistingReviews: currentReviews.length > 0
+      });
+
+      // Se non dobbiamo usare Google API, usa fallback
+      if (!useRealReviews || !placeId) {
+        console.log("📝 Uso recensioni fallback (API disabilitata o senza Place ID)");
+        setCurrentReviews(fallbackReviews);
+        setReviewSource('fallback');
+        return;
+      }
+
+      // Se abbiamo già recensioni e non serve refresh, non ricaricare
+      if (currentReviews.length > 0 && lastFetched) {
+        const lastFetchTime = new Date(lastFetched).getTime();
+        const oneHour = 60 * 60 * 1000;
+        if (Date.now() - lastFetchTime < oneHour) {
+          console.log("📂 Uso recensioni in cache (meno di 1 ora)");
+          setReviewSource(currentReviews[0]?.source === 'google' ? 'google' : 'fallback');
+          return;
+        }
+      }
+
+      setLoading(true);
+      
+      try {
+        const result = await getGoogleReviewsWithCache(
+          placeId, 
+          googleApiKey, 
+          lastFetched, 
+          currentReviews
+        );
+
+        console.log("✅ Recensioni caricate:", result.reviews.length, "fonte:", result.reviews[0]?.source);
+        setCurrentReviews(result.reviews);
+        setReviewSource(result.reviews[0]?.source === 'google' ? 'google' : 'fallback');
+        
+      } catch (error) {
+        console.error("❌ Errore caricamento recensioni:", error);
+        console.log("🔄 Fallback alle recensioni predefinite");
+        setCurrentReviews(fallbackReviews.length > 0 ? fallbackReviews : []);
+        setReviewSource('fallback');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadReviews();
+  }, [placeId, googleApiKey, useRealReviews, fallbackReviews]);
 
   // URL per aprire Google Reviews
   const googleReviewsUrl = placeId 
@@ -104,17 +153,37 @@ export default function GoogleReviews({
           
           {/* Google Badge e CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {/* Google Rating Badge */}
+            {/* Google Rating Badge con fonte */}
             <div className="flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg border">
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
-                alt="Google" 
-                className="w-6 h-6"
-              />
-              <div className="flex items-center gap-2">
-                <StarRating rating={5} color={primary} />
-                <span className="text-sm text-gray-500">su Google</span>
-              </div>
+              {reviewSource === 'google' ? (
+                <>
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
+                    alt="Google" 
+                    className="w-6 h-6"
+                  />
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={5} color={primary} />
+                    <span className="text-sm text-gray-500">recensioni Google</span>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                      ✅ Live
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                    <span className="text-gray-600 text-xs">★</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={5} color={primary} />
+                    <span className="text-sm text-gray-500">recensioni clienti</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                      📝 Demo
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
             
             {/* CTA Recensioni */}
@@ -133,9 +202,20 @@ export default function GoogleReviews({
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: primary }}></div>
+              <span className="text-gray-600">Caricamento recensioni Google...</span>
+            </div>
+          </div>
+        )}
+
         {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reviews.map((review) => (
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentReviews.map((review) => (
             <div 
               key={review.id} 
               className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
@@ -191,7 +271,21 @@ export default function GoogleReviews({
               </blockquote>
             </div>
           ))}
-        </div>
+          </div>
+        )}
+
+        {/* Nessuna recensione */}
+        {!loading && currentReviews.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">⭐</div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              Recensioni in arrivo
+            </h3>
+            <p className="text-gray-500">
+              Le prime recensioni dei nostri clienti appariranno presto qui.
+            </p>
+          </div>
+        )}
 
         {/* Footer con link Google */}
         <div className="text-center mt-12">

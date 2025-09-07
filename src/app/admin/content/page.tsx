@@ -1217,11 +1217,68 @@ export default function AdminContentPage() {
                   </div>
                 </div>
 
-                {/* Gestione recensioni */}
+                {/* ✅ NUOVA SEZIONE: Configurazione API Google */}
+                <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h4 className="font-medium text-black">🌐 Recensioni Google Automatiche</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-black">
+                      Google Places API Key (per recensioni vere)
+                    </label>
+                    <input
+                      type="password"
+                      value={content.googleReviews?.googleApiKey ?? ""}
+                      onChange={(e) => setContent({
+                        ...content,
+                        googleReviews: {
+                          ...content.googleReviews,
+                          googleApiKey: e.target.value
+                        }
+                      })}
+                      placeholder="AIzaSyC..."
+                      className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Necessaria per recensioni Google automatiche. Ottienila da Google Cloud Console → APIs & Services.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="useRealReviews"
+                      checked={content.googleReviews?.useRealReviews ?? true}
+                      onChange={(e) => setContent({
+                        ...content,
+                        googleReviews: {
+                          ...content.googleReviews,
+                          useRealReviews: e.target.checked
+                        }
+                      })}
+                      className="text-primary"
+                    />
+                    <label htmlFor="useRealReviews" className="font-medium">
+                      ✅ Carica recensioni vere da Google Business automaticamente
+                    </label>
+                  </div>
+                  
+                  <div className="text-sm text-black/70 p-3 bg-white rounded border">
+                    <strong>📖 Come funziona:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li><strong>✅ Abilitato + API Key:</strong> Carica recensioni vere da Google Business</li>
+                      <li><strong>❌ Disabilitato:</strong> Usa solo recensioni manuali sottostanti</li>
+                      <li><strong>🔄 Cache intelligente:</strong> Aggiorna ogni ora automaticamente</li>
+                      <li><strong>🛡️ Fallback robusto:</strong> Se API fallisce, usa recensioni manuali</li>
+                      <li><strong>⚡ Zero configurazione:</strong> Inserisci Place ID + API Key e funziona</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Gestione recensioni manuali (ora fallback) */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <label className="text-sm font-medium text-black">
-                      Recensioni personalizzate
+                      📝 Recensioni Fallback (se Google API non disponibile)
                     </label>
                     <button
                       type="button"
@@ -1231,13 +1288,14 @@ export default function AdminContentPage() {
                           name: "",
                           rating: 5,
                           text: "",
-                          date: ""
+                          date: "",
+                          source: "fallback" as const
                         };
                         setContent({
                           ...content,
                           googleReviews: {
                             ...content.googleReviews,
-                            reviews: [...(content.googleReviews?.reviews || []), newReview]
+                            fallbackReviews: [...(content.googleReviews?.fallbackReviews || []), newReview]
                           }
                         });
                       }}
@@ -1248,20 +1306,20 @@ export default function AdminContentPage() {
                   </div>
 
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {(content.googleReviews?.reviews || []).map((review, index) => (
+                    {(content.googleReviews?.fallbackReviews || []).map((review, index) => (
                       <div key={review.id} className="border border-gray-200 rounded-lg p-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                           <input
                             type="text"
                             value={review.name}
                             onChange={(e) => {
-                              const updatedReviews = [...(content.googleReviews?.reviews || [])];
+                              const updatedReviews = [...(content.googleReviews?.fallbackReviews || [])];
                               updatedReviews[index] = { ...review, name: e.target.value };
                               setContent({
                                 ...content,
                                 googleReviews: {
                                   ...content.googleReviews,
-                                  reviews: updatedReviews
+                                  fallbackReviews: updatedReviews
                                 }
                               });
                             }}
@@ -1272,13 +1330,13 @@ export default function AdminContentPage() {
                           <select
                             value={review.rating}
                             onChange={(e) => {
-                              const updatedReviews = [...(content.googleReviews?.reviews || [])];
+                              const updatedReviews = [...(content.googleReviews?.fallbackReviews || [])];
                               updatedReviews[index] = { ...review, rating: Number(e.target.value) };
                               setContent({
                                 ...content,
                                 googleReviews: {
                                   ...content.googleReviews,
-                                  reviews: updatedReviews
+                                  fallbackReviews: updatedReviews
                                 }
                               });
                             }}
@@ -1295,13 +1353,13 @@ export default function AdminContentPage() {
                             type="text"
                             value={review.date || ""}
                             onChange={(e) => {
-                              const updatedReviews = [...(content.googleReviews?.reviews || [])];
+                              const updatedReviews = [...(content.googleReviews?.fallbackReviews || [])];
                               updatedReviews[index] = { ...review, date: e.target.value };
                               setContent({
                                 ...content,
                                 googleReviews: {
                                   ...content.googleReviews,
-                                  reviews: updatedReviews
+                                  fallbackReviews: updatedReviews
                                 }
                               });
                             }}
@@ -1314,13 +1372,13 @@ export default function AdminContentPage() {
                           <textarea
                             value={review.text}
                             onChange={(e) => {
-                              const updatedReviews = [...(content.googleReviews?.reviews || [])];
+                              const updatedReviews = [...(content.googleReviews?.fallbackReviews || [])];
                               updatedReviews[index] = { ...review, text: e.target.value };
                               setContent({
                                 ...content,
                                 googleReviews: {
                                   ...content.googleReviews,
-                                  reviews: updatedReviews
+                                  fallbackReviews: updatedReviews
                                 }
                               });
                             }}
@@ -1337,7 +1395,7 @@ export default function AdminContentPage() {
                                 ...content,
                                 googleReviews: {
                                   ...content.googleReviews,
-                                  reviews: updatedReviews
+                                  fallbackReviews: updatedReviews
                                 }
                               });
                             }}
@@ -1350,7 +1408,7 @@ export default function AdminContentPage() {
                     ))}
                   </div>
 
-                  {(!content.googleReviews?.reviews || content.googleReviews.reviews.length === 0) && (
+                  {(!content.googleReviews?.fallbackReviews || content.googleReviews.fallbackReviews.length === 0) && (
                     <div className="text-center py-8 text-gray-500">
                       <p>Nessuna recensione configurata.</p>
                       <p className="text-sm">Usa "Aggiungi Recensione" per iniziare o verranno mostrate quelle di default.</p>

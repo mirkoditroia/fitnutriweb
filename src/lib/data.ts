@@ -249,14 +249,26 @@ export interface SiteContent {
     title?: string; // Titolo sezione (default: "⭐ Recensioni Google")
     subtitle?: string; // Sottotitolo
     businessName?: string; // Nome business per link Google
-    placeId?: string; // Google Place ID per link diretto
-    reviews?: Array<{
+    placeId?: string; // Google Place ID per recupero automatico recensioni
+    googleApiKey?: string; // API Key Google Places (opzionale)
+    useRealReviews?: boolean; // Se usare Google Places API (default: true)
+    fallbackReviews?: Array<{ // Recensioni fallback se API non disponibile
       id: string;
       name: string;
       rating: number; // 1-5 stelle
       text: string;
       date?: string; // Data recensione
       avatar?: string; // URL avatar (opzionale)
+    }>;
+    lastFetched?: string; // Timestamp ultimo fetch API (per cache)
+    reviews?: Array<{ // Recensioni caricate (da API o fallback)
+      id: string;
+      name: string;
+      rating: number; // 1-5 stelle
+      text: string;
+      date?: string; // Data recensione
+      avatar?: string; // URL avatar (opzionale)
+      source: 'google' | 'fallback'; // Fonte della recensione
     }>;
   };
 }
@@ -1209,10 +1221,35 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         title: "🎯 Risultati dei Nostri Clienti",
         subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
         photos: []
-      }
+      },
+
+      // ✅ AGGIUNTA MAPPATURA: BMI Calculator
+      bmiCalculator: data.bmiCalculator && typeof data.bmiCalculator === 'object' ? {
+        enabled: data.bmiCalculator.enabled === true,
+        title: data.bmiCalculator.title || "📊 Calcola il tuo BMI",
+        subtitle: data.bmiCalculator.subtitle || "Scopri il tuo Indice di Massa Corporea"
+      } : undefined,
+
+      // ✅ AGGIUNTA MAPPATURA: Google Reviews  
+      googleReviews: data.googleReviews && typeof data.googleReviews === 'object' ? {
+        enabled: data.googleReviews.enabled !== false, // Default true
+        title: data.googleReviews.title || "⭐ Recensioni Google",
+        subtitle: data.googleReviews.subtitle || "Cosa dicono i nostri clienti",
+        businessName: data.googleReviews.businessName || "GZ Nutrition",
+        placeId: data.googleReviews.placeId || undefined,
+        googleApiKey: data.googleReviews.googleApiKey || undefined,
+        useRealReviews: data.googleReviews.useRealReviews !== false, // Default true
+        fallbackReviews: Array.isArray(data.googleReviews.fallbackReviews) ? data.googleReviews.fallbackReviews : [],
+        lastFetched: data.googleReviews.lastFetched || undefined,
+        reviews: Array.isArray(data.googleReviews.reviews) ? data.googleReviews.reviews : []
+      } : undefined
     };
     
     console.log("getSiteContent: Contenuto finale mappato:", siteContent);
+    console.log("🔍 getSiteContent: BMI raw da DB:", data.bmiCalculator);
+    console.log("🔍 getSiteContent: BMI mappato finale:", siteContent.bmiCalculator);
+    console.log("🔍 getSiteContent: Reviews raw da DB:", data.googleReviews);
+    console.log("🔍 getSiteContent: Reviews mappate finale:", siteContent.googleReviews);
     return siteContent;
   } catch (error) {
     console.error("getSiteContent: Errore nel caricamento da Firebase:", error);
