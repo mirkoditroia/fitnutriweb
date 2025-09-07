@@ -937,77 +937,7 @@ export default function AdminContentPage() {
           </div>
         </section>
         
-        {/* ✅ NUOVA SEZIONE: Email di Conferma al Cliente */}
-        <section className="space-y-4 mt-8">
-          <h2 className="font-semibold text-black">📧 Email di Conferma al Cliente</h2>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="clientEmailEnabled"
-                checked={content.clientConfirmationEmail?.enabled ?? true}
-                onChange={(e) => setContent({
-                  ...content,
-                  clientConfirmationEmail: {
-                    ...content.clientConfirmationEmail,
-                    enabled: e.target.checked
-                  }
-                })}
-                className="text-primary"
-              />
-              <label htmlFor="clientEmailEnabled" className="font-medium">
-                Invia email di conferma automatica al cliente dopo la prenotazione ✅
-              </label>
-            </div>
-            
-            <div className="text-sm p-3 bg-green-50 rounded-lg border border-green-200">
-              <strong>✅ FEATURE ATTIVA E FUNZIONANTE</strong>
-              <div className="mt-2 space-y-2">
-                <p><strong>Problema risolto:</strong> Implementata API personalizzata per email cliente separate da quelle del nutrizionista.</p>
-                <p><strong>Soluzione adottata:</strong> Sistema email indipendente con template HTML dedicato per il cliente.</p>
-                <p><strong>Cosa succede ora:</strong> Il cliente riceve un'email di conferma personalizzata, mentre il nutrizionista continua a ricevere la sua notifica tramite Firebase Functions.</p>
-              </div>
-            </div>
-            
-            <div className="text-sm text-black/70 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <strong>ℹ️ Come funziona:</strong>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>Dopo ogni prenotazione confermata, il cliente riceve automaticamente un'email personalizzata</li>
-                <li>L'email include i dettagli della prenotazione e i contatti dello studio</li>
-                <li>Il messaggio comunica che sarà ricontattato al più presto per ulteriori dettagli</li>
-                <li>Lo stile dell'email è coerente con la palette colori del sito</li>
-                <li>Il sistema usa un'API dedicata completamente indipendente dalle Firebase Functions</li>
-              </ul>
-            </div>
-
-            {content.clientConfirmationEmail?.enabled !== false && (
-              <div className="space-y-4 p-4 border border-border rounded-lg">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-black">
-                    Messaggio personalizzato (opzionale)
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={content.clientConfirmationEmail?.customMessage ?? ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      clientConfirmationEmail: {
-                        ...content.clientConfirmationEmail,
-                        customMessage: e.target.value
-                      }
-                    })}
-                    placeholder="Aggiungi un messaggio personalizzato che apparirà nell'email di conferma... (lascia vuoto per il messaggio predefinito)"
-                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
-                  />
-                  <p className="text-xs text-black/60 mt-1">
-                    Se lasci vuoto, verrà usato il messaggio predefinito: "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli."
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
+        {/* Email cliente rimossa - sistema troppo complesso */}
         </div>
 
         {/* Pulsante salva */}

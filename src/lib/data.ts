@@ -56,135 +56,8 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
   }
 }
 
-// ✅ NUOVA: Funzione per inviare email cliente via API Route personalizzata
-async function sendClientEmailViaAPI(booking: Booking, packageTitle?: string, businessName?: string, colorPalette?: string, siteContent?: SiteContent) {
-  try {
-    console.log("📤 sendClientEmailViaAPI chiamata per:", booking.email);
-    
-    const response = await fetch('/api/email/client-confirmation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        booking,
-        packageTitle,
-        businessName,
-        colorPalette,
-        customMessage: siteContent?.clientConfirmationEmail?.customMessage,
-        siteContent: {
-          contactPhone: siteContent?.contactPhone,
-          contactEmail: siteContent?.contactEmail,
-          contactAddresses: siteContent?.contactAddresses,
-          businessName: siteContent?.businessName || businessName
-        }
-      }),
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log('✅ Email cliente inviata via API:', result.emailId);
-      return result;
-    } else {
-      console.error('❌ API email cliente fallita:', result.message);
-      throw new Error(result.message || 'Email API failed');
-    }
-  } catch (error) {
-    console.error('❌ Errore chiamata API email cliente:', error);
-    throw error;
-  }
-}
-
-// ✅ ORIGINALE: Funzione per inviare email di conferma al cliente (DA RIMUOVERE quando Firebase Functions supporta template separati)
-async function sendClientConfirmationEmail(booking: Booking, packageTitle?: string, businessName?: string, colorPalette?: string, siteContent?: SiteContent) {
-  try {
-    console.log("📤 sendClientConfirmationEmail chiamata con:", { 
-      bookingId: booking.id, 
-      clientEmail: booking.email,
-      isFreeConsultation: booking.isFreeConsultation,
-      packageTitle 
-    });
-    
-    // ✅ SOLUZIONE ROBUSTA: Try client-booking-confirmation, fallback to modified new-booking
-    let response;
-    try {
-      // Prova prima con il tipo specifico per clienti
-      response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'client-booking-confirmation', // ✅ TIPO SPECIFICO per email cliente
-          booking,
-          packageTitle,
-          businessName, 
-          colorPalette,
-          customMessage: siteContent?.clientConfirmationEmail?.customMessage || "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli.",
-          siteContent: {
-            contactPhone: siteContent?.contactPhone,
-            contactEmail: siteContent?.contactEmail,
-            contactAddresses: siteContent?.contactAddresses,
-            businessName: siteContent?.businessName || businessName
-          }
-        }),
-      });
-      
-      // Controlla se la risposta è OK
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || 'Email failed');
-      }
-    } catch (error) {
-      console.log("⚠️ Tipo client-booking-confirmation non supportato, uso fallback...");
-      // Fallback: usa new-booking con payload modificato per il cliente
-      response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'new-booking',
-          // ✅ MODIFICA booking per inviare email al cliente invece che al nutrizionista
-          booking: {
-            ...booking,
-            email: booking.email, // Email del cliente (destinatario)
-            name: booking.name,   // Nome del cliente
-          },
-          packageTitle,
-          notificationEmail: booking.email, // ✅ OVERRIDE: Invia al cliente invece che al nutrizionista
-          businessName, 
-          colorPalette,
-          isClientEmail: true, // ✅ FLAG per template diverso
-          clientMessage: siteContent?.clientConfirmationEmail?.customMessage || "Grazie per la prenotazione! Sarà ricontattato al più presto per ulteriori dettagli.",
-          siteContent: {
-            contactPhone: siteContent?.contactPhone,
-            contactEmail: siteContent?.contactEmail,
-            contactAddresses: siteContent?.contactAddresses,
-            businessName: siteContent?.businessName || businessName
-          }
-        }),
-      });
-    }
-
-    console.log("📬 Risposta Firebase Functions (cliente):", response.status);
-    const result = await response.json();
-    console.log("📋 Risultato email cliente:", result);
-    
-    if (result.success) {
-      console.log('✅ Client confirmation email sent successfully:', result.sentTo);
-    } else {
-      console.error('❌ Failed to send client confirmation email:', result.message);
-    }
-  } catch (error) {
-    console.error('❌ Error sending client confirmation email:', error);
-  }
-}
+// ✅ Email cliente rimossa - troppo complessa
+// Sistema email nutrizionista funziona perfettamente tramite Firebase Functions
 import { db } from "@/lib/firebase";
 import type { Firestore } from "firebase/firestore";
 
@@ -361,11 +234,7 @@ export interface SiteContent {
     }>;
   };
   
-  // ✅ NUOVA IMPOSTAZIONE: Email di conferma al cliente
-  clientConfirmationEmail?: {
-    enabled?: boolean; // Se abilitare l'invio email di conferma al cliente (default: true)
-    customMessage?: string; // Messaggio personalizzato (opzionale)
-  };
+  // Email cliente rimossa - troppo complessa
 }
 
 export type Availability = {
@@ -728,23 +597,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName, colorPalette);
     console.log("✅ Email al dottore inviata con successo!");
     
-    // ✅ NUOVA FEATURE: Invia email di conferma al cliente (se abilitata)
-    const clientEmailEnabled = siteContent?.clientConfirmationEmail?.enabled ?? true; // Default: true
-    if (clientEmailEnabled) {
-      console.log("📧 Preparando invio email di conferma al cliente...");
-      console.log("📬 Inviando email di conferma a:", bookingWithId.email);
-      
-      // ✅ NUOVA SOLUZIONE: API Route personalizzata per email cliente
-      try {
-        await sendClientEmailViaAPI(bookingWithId, packageTitle, businessName, colorPalette, siteContent || undefined);
-        console.log("✅ Email di conferma al cliente inviata con successo!");
-      } catch (error) {
-        console.error("❌ Errore invio email cliente:", error);
-        console.log("ℹ️ Email cliente fallita ma prenotazione salvata correttamente");
-      }
-    } else {
-      console.log("📧 Email di conferma al cliente disabilitata nelle impostazioni");
-    }
+    // Email al nutrizionista completata - sistema funzionante
     
   } catch (error) {
     console.error("❌ Errore invio email:", error);

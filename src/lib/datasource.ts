@@ -81,43 +81,7 @@ async function sendLocalBookingNotification(booking: Booking): Promise<void> {
       console.error('❌ Failed to send booking notification:', result.message);
     }
     
-    // ✅ RIATTIVATA: Email di conferma al cliente via API personalizzata
-    const clientEmailEnabled = siteContent?.clientConfirmationEmail?.enabled ?? true; // Default: true
-    if (clientEmailEnabled) {
-      console.log("📧 Inviando email di conferma al cliente (locale via API)...");
-      try {
-        const response = await fetch('/api/email/client-confirmation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            booking,
-            packageTitle,
-            businessName,
-            colorPalette,
-            customMessage: siteContent?.clientConfirmationEmail?.customMessage,
-            siteContent: {
-              contactPhone: siteContent?.contactPhone,
-              contactEmail: siteContent?.contactEmail,
-              contactAddresses: siteContent?.contactAddresses,
-              businessName: siteContent?.businessName || businessName
-            }
-          }),
-        });
-
-        const clientResult = await response.json();
-        if (clientResult.success) {
-          console.log('✅ Email cliente inviata via API (locale):', clientResult.emailId);
-        } else {
-          console.error('❌ API email cliente fallita (locale):', clientResult.message);
-        }
-      } catch (clientError) {
-        console.error('❌ Errore chiamata API email cliente (locale):', clientError);
-      }
-    } else {
-      console.log("📧 Email di conferma al cliente disabilitata nelle impostazioni (locale)");
-    }
+    // Email cliente rimossa - sistema nutrizionista funziona perfettamente
     
   } catch (error) {
     console.error("❌ Error sending booking notification:", error);
