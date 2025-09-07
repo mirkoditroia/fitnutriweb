@@ -90,24 +90,25 @@ export default function GoogleReviews({
         
         // Controlla se il widget si è caricato dopo 3 secondi
         setTimeout(() => {
-          const widgetElement = document.querySelector('#trustmary-widget-pqM_f1k1w');
-          const scriptElement = document.querySelector('script[src*="widget.trustmary.com"]');
+          const scriptElement = document.querySelector('script[src*="embed.trustmary.com"]');
+          const trustmaryElement = document.querySelector('[data-trustmary]') || document.querySelector('.trustmary-widget');
           
           console.log("🔍 Debug Widget Trustmary:", {
-            widgetElement: !!widgetElement,
-            widgetChildren: widgetElement?.children.length || 0,
             scriptElement: !!scriptElement,
-            scriptLoaded: scriptElement?.getAttribute('src') || 'N/A'
+            scriptLoaded: scriptElement?.getAttribute('src') || 'N/A',
+            trustmaryElement: !!trustmaryElement,
+            trustmaryChildren: trustmaryElement?.children.length || 0,
+            windowTmary: typeof window.tmary !== 'undefined'
           });
           
-          if (widgetElement && widgetElement.children.length > 0) {
+          if (scriptElement && (trustmaryElement || typeof window.tmary !== 'undefined')) {
             console.log("✅ Widget Trustmary caricato correttamente");
             setWidgetLoaded(true);
           } else {
             console.log("❌ Widget Trustmary non caricato - Possibili cause:");
             console.log("1. Dominio non autorizzato su Trustmary");
             console.log("2. Script non caricato correttamente");
-            console.log("3. Widget ID errato");
+            console.log("3. App ID errato (GXpMNA-WFX)");
             console.log("4. Problemi di rete");
             setWidgetLoaded(false);
           }
@@ -294,6 +295,7 @@ export default function GoogleReviews({
                         <br />• Vai su trustmary.com → Il tuo widget → Settings
                         <br />• Aggiungi: <code className="bg-gray-100 px-1 rounded">localhost:3000</code>
                         <br />• Aggiungi: <code className="bg-gray-100 px-1 rounded">tuodominio.com</code>
+                        <br />• Verifica App ID: <code className="bg-gray-100 px-1 rounded">GXpMNA-WFX</code>
                       </li>
                       <li><strong>Verifica il codice embed</strong> nell'admin</li>
                       <li><strong>Ricarica la pagina</strong> dopo aver autorizzato il dominio</li>

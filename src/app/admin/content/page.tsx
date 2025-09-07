@@ -1263,8 +1263,15 @@ export default function AdminContentPage() {
                             }
                           })}
                           placeholder='<!-- Trustmary Google Reviews Widget -->
-<script src="https://widget.trustmary.com/pqM_f1k1w"></script>
-<div id="trustmary-widget-pqM_f1k1w"></div>'
+<script>(function (w,d,s,o,r,js,fjs) {
+    w[r]=w[r]||function() {(w[r].q = w[r].q || []).push(arguments)}
+    w[r]("app", "GXpMNA-WFX");
+    if(d.getElementById(o)) return;
+    js = d.createElement(s), fjs = d.getElementsByTagName(s)[0];
+    js.id = o; js.src = "https://embed.trustmary.com/embed.js";
+    js.async = 1; fjs.parentNode.insertBefore(js, fjs);
+  }(window, document, "script", "trustmary-embed", "tmary"));
+</script>'
                           className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls} font-mono text-sm`}
                         />
                         
@@ -1272,9 +1279,10 @@ export default function AdminContentPage() {
                         {content.googleReviews?.embedCode && (
                           <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded text-sm">
                             <strong>✅ Codice Widget Inserito:</strong>
-                            <br />• Script Trustmary: {content.googleReviews.embedCode.includes('widget.trustmary.com') ? '✅ Presente' : '❌ Manca'}
-                            <br />• Div widget: {content.googleReviews.embedCode.includes('trustmary-widget-') ? '✅ Presente' : '❌ Manca'}
-                            <br />• Widget ID: {content.googleReviews.embedCode.includes('pqM_f1k1w') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Script Trustmary: {content.googleReviews.embedCode.includes('embed.trustmary.com') ? '✅ Presente' : '❌ Manca'}
+                            <br />• App ID: {content.googleReviews.embedCode.includes('GXpMNA-WFX') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Trustmary function: {content.googleReviews.embedCode.includes('tmary') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Script ID: {content.googleReviews.embedCode.includes('trustmary-embed') ? '✅ Presente' : '❌ Manca'}
                             <br />• Lunghezza codice: {content.googleReviews.embedCode.length} caratteri
                           </div>
                         )}
