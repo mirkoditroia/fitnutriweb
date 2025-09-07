@@ -60,6 +60,7 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
 // Sistema email nutrizionista funziona perfettamente tramite Firebase Functions
 import { db } from "@/lib/firebase";
 import type { Firestore } from "firebase/firestore";
+import type { GoogleReview } from "@/lib/googlePlaces";
 
 // Types
 export type Package = {
@@ -252,24 +253,9 @@ export interface SiteContent {
     placeId?: string; // Google Place ID per recupero automatico recensioni
     googleApiKey?: string; // API Key Google Places (opzionale)
     useRealReviews?: boolean; // Se usare Google Places API (default: true)
-    fallbackReviews?: Array<{ // Recensioni fallback se API non disponibile
-      id: string;
-      name: string;
-      rating: number; // 1-5 stelle
-      text: string;
-      date?: string; // Data recensione
-      avatar?: string; // URL avatar (opzionale)
-    }>;
+    fallbackReviews?: GoogleReview[]; // Recensioni fallback se API non disponibile
     lastFetched?: string; // Timestamp ultimo fetch API (per cache)
-    reviews?: Array<{ // Recensioni caricate (da API o fallback)
-      id: string;
-      name: string;
-      rating: number; // 1-5 stelle
-      text: string;
-      date?: string; // Data recensione
-      avatar?: string; // URL avatar (opzionale)
-      source: 'google' | 'fallback'; // Fonte della recensione
-    }>;
+    reviews?: GoogleReview[]; // Recensioni caricate (da API o fallback)
   };
 }
 
@@ -1239,9 +1225,19 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         placeId: data.googleReviews.placeId || undefined,
         googleApiKey: data.googleReviews.googleApiKey || undefined,
         useRealReviews: data.googleReviews.useRealReviews !== false, // Default true
-        fallbackReviews: Array.isArray(data.googleReviews.fallbackReviews) ? data.googleReviews.fallbackReviews : [],
+        fallbackReviews: Array.isArray(data.googleReviews.fallbackReviews) 
+          ? data.googleReviews.fallbackReviews.map((review: any) => ({
+              ...review,
+              source: review.source || 'fallback' // Assicura source sempre presente
+            }))
+          : [],
         lastFetched: data.googleReviews.lastFetched || undefined,
-        reviews: Array.isArray(data.googleReviews.reviews) ? data.googleReviews.reviews : []
+        reviews: Array.isArray(data.googleReviews.reviews) 
+          ? data.googleReviews.reviews.map((review: any) => ({
+              ...review,
+              source: review.source || 'fallback' // Assicura source sempre presente
+            }))
+          : []
       } : undefined
     };
     

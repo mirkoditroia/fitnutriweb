@@ -1,7 +1,7 @@
 // ✅ INTEGRAZIONE GOOGLE PLACES API per recensioni vere
 // Recupera automaticamente recensioni reali da Google Business
 
-interface GoogleReview {
+export interface GoogleReview {
   id: string;
   name: string;
   rating: number;

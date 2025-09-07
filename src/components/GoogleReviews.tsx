@@ -1,17 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { getPaletteConfig } from "@/lib/palettes";
-import { getGoogleReviewsWithCache } from "@/lib/googlePlaces";
-
-interface GoogleReview {
-  id: string;
-  name: string;
-  rating: number;
-  text: string;
-  date?: string;
-  avatar?: string;
-  source?: 'google' | 'fallback';
-}
+import { getGoogleReviewsWithCache, type GoogleReview } from "@/lib/googlePlaces";
 
 interface GoogleReviewsProps {
   title?: string;
