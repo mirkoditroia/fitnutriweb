@@ -90,12 +90,25 @@ export default function GoogleReviews({
         
         // Controlla se il widget si è caricato dopo 3 secondi
         setTimeout(() => {
-          const widgetElement = document.querySelector('.elfsight-app-ab2df3f0-117f-41ea-a938-86f3cf1c596b');
+          const widgetElement = document.querySelector('#trustmary-widget-pqM_f1k1w');
+          const scriptElement = document.querySelector('script[src*="widget.trustmary.com"]');
+          
+          console.log("🔍 Debug Widget Trustmary:", {
+            widgetElement: !!widgetElement,
+            widgetChildren: widgetElement?.children.length || 0,
+            scriptElement: !!scriptElement,
+            scriptLoaded: scriptElement?.getAttribute('src') || 'N/A'
+          });
+          
           if (widgetElement && widgetElement.children.length > 0) {
-            console.log("✅ Widget Elfsight caricato correttamente");
+            console.log("✅ Widget Trustmary caricato correttamente");
             setWidgetLoaded(true);
           } else {
-            console.log("❌ Widget Elfsight non caricato");
+            console.log("❌ Widget Trustmary non caricato - Possibili cause:");
+            console.log("1. Dominio non autorizzato su Trustmary");
+            console.log("2. Script non caricato correttamente");
+            console.log("3. Widget ID errato");
+            console.log("4. Problemi di rete");
             setWidgetLoaded(false);
           }
         }, 3000);
@@ -269,16 +282,37 @@ export default function GoogleReviews({
             
             {/* Fallback se widget non carica dopo 5 secondi */}
             {!widgetLoaded && (
-              <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded text-center">
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>⚠️ Widget non visibile?</strong>
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded text-center">
+                <p className="text-sm text-red-700 mb-3">
+                  <strong>🚨 Widget Trustmary non caricato</strong>
                 </p>
-                <div className="text-xs text-gray-500 space-y-1">
-                  <p>• Verifica che il codice embed sia corretto</p>
-                  <p>• Controlla la connessione internet</p>
-                  <p>• Il widget potrebbe impiegare alcuni secondi per caricarsi</p>
-                  <p>• Se persiste, prova a ricaricare la pagina</p>
-                  <p>• Assicurati che il dominio sia autorizzato su Elfsight</p>
+                <div className="text-xs text-red-600 space-y-2">
+                  <div className="bg-white p-3 rounded border">
+                    <strong>🔧 SOLUZIONI IMMEDIATE:</strong>
+                    <ol className="list-decimal list-inside mt-1 space-y-1">
+                      <li><strong>Autorizza il dominio su Trustmary:</strong>
+                        <br />• Vai su trustmary.com → Il tuo widget → Settings
+                        <br />• Aggiungi: <code className="bg-gray-100 px-1 rounded">localhost:3000</code>
+                        <br />• Aggiungi: <code className="bg-gray-100 px-1 rounded">tuodominio.com</code>
+                      </li>
+                      <li><strong>Verifica il codice embed</strong> nell'admin</li>
+                      <li><strong>Ricarica la pagina</strong> dopo aver autorizzato il dominio</li>
+                    </ol>
+                  </div>
+                  
+                  <div className="bg-yellow-50 p-3 rounded border">
+                    <strong>🔄 FALLBACK TEMPORANEO:</strong>
+                    <p className="mt-1">Mentre risolvi, puoi usare le recensioni manuali:</p>
+                    <button 
+                      onClick={() => {
+                        // Cambia a recensioni manuali
+                        window.location.href = '/admin/content';
+                      }}
+                      className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                    >
+                      Vai alle Impostazioni
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

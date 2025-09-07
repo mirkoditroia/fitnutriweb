@@ -1262,9 +1262,9 @@ export default function AdminContentPage() {
                               embedCode: e.target.value
                             }
                           })}
-                          placeholder='<!-- Elfsight Google Reviews | Untitled Google Reviews -->
-<script src="https://elfsightcdn.com/platform.js" async></script>
-<div class="elfsight-app-ab2df3f0-117f-41ea-a938-86f3cf1c596b" data-elfsight-app-lazy></div>'
+                          placeholder='<!-- Trustmary Google Reviews Widget -->
+<script src="https://widget.trustmary.com/pqM_f1k1w"></script>
+<div id="trustmary-widget-pqM_f1k1w"></div>'
                           className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls} font-mono text-sm`}
                         />
                         
@@ -1272,9 +1272,9 @@ export default function AdminContentPage() {
                         {content.googleReviews?.embedCode && (
                           <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded text-sm">
                             <strong>✅ Codice Widget Inserito:</strong>
-                            <br />• Script Elfsight: {content.googleReviews.embedCode.includes('elfsightcdn.com') ? '✅ Presente' : '❌ Manca'}
-                            <br />• Div widget: {content.googleReviews.embedCode.includes('elfsight-app-') ? '✅ Presente' : '❌ Manca'}
-                            <br />• Lazy loading: {content.googleReviews.embedCode.includes('data-elfsight-app-lazy') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Script Trustmary: {content.googleReviews.embedCode.includes('widget.trustmary.com') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Div widget: {content.googleReviews.embedCode.includes('trustmary-widget-') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Widget ID: {content.googleReviews.embedCode.includes('pqM_f1k1w') ? '✅ Presente' : '❌ Manca'}
                             <br />• Lunghezza codice: {content.googleReviews.embedCode.length} caratteri
                           </div>
                         )}
