@@ -4,13 +4,29 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 // removed client content fetch for mode
 
-const navigationItems = [
+const baseNavigationItems = [
   { name: "Chi sono", href: "#chi-sono" },
   { name: "Pacchetti", href: "#pacchetti" },
   { name: "Prenota", href: "#booking" },
   { name: "Contatti", href: "#contatti" },
   { name: "Recensioni", href: "#recensioni" },
 ];
+
+// Funzione per generare navigationItems dinamici
+const getNavigationItems = (siteContent: any) => {
+  const items = [...baseNavigationItems];
+  
+  // Aggiungi BMI se attivato
+  if (siteContent?.bmiCalculator?.enabled) {
+    // Inserisci BMI dopo "Prenota" e prima di "Contatti"
+    const prenotaIndex = items.findIndex(item => item.href === "#booking");
+    if (prenotaIndex !== -1) {
+      items.splice(prenotaIndex + 1, 0, { name: "BMI", href: "#bmi-calculator" });
+    }
+  }
+  
+  return items;
+};
 
 import { getSiteContent } from "@/lib/datasource";
 type BrandCfg = { mode: "image"|"text"; imageUrl?: string; height?: number; autoBg?: boolean; text?: string; color?: string; weight?: number; size?: number };
@@ -23,6 +39,7 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
   const [imageLoaded, setImageLoaded] = useState(
     initialBrand ? (initialBrand.mode === 'image' ? !!initialBrand.imageUrl : true) : false
   );
+  const [siteContent, setSiteContent] = useState<any>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,6 +88,8 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
       } else {
         setBrand(cfg);
       }
+      
+      setSiteContent(c);
     }).catch(() => {});
   }, [initialBrand]);
 
@@ -126,7 +145,7 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
               {/* Desktop Navigation */}
               <nav className="hidden md:flex items-center gap-1">
                 <div className={`flex items-center gap-1 backdrop-blur-lg rounded-full p-2 border bg-white/10 border-white/20`} style={{ color: 'var(--navbar-text)' }}>
-                  {navigationItems.map((item) => (
+                  {getNavigationItems(siteContent).map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
@@ -170,7 +189,7 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
                 style={{ color: 'var(--navbar-text)' }}
               >
                 <nav className="p-4 space-y-2">
-                  {navigationItems.map((item, index) => (
+                  {getNavigationItems(siteContent).map((item, index) => (
                     <Link
                       key={item.name}
                       href={item.href}

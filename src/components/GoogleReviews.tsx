@@ -87,38 +87,39 @@ export default function GoogleReviews({
             </p>
           )}
           
-          {/* Google Badge e CTA */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {/* Google Rating Badge */}
-            <div className="flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg border">
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
-                alt="Google" 
-                className="w-6 h-6"
-              />
-              <div className="flex items-center gap-2">
-                <StarRating rating={5} color={primary} />
-                <span className="text-sm text-gray-500">Recensioni Google</span>
-                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                  ⭐ Verificate
-                </span>
+          {/* Google Badge e CTA - Solo se c'è collegamento Google */}
+          {placeId && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Google Rating Badge */}
+              <div className="flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg border">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
+                  alt="Google" 
+                  className="w-6 h-6"
+                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Recensioni Google</span>
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                    ⭐ Verificate
+                  </span>
+                </div>
               </div>
+              
+              {/* CTA Recensioni */}
+              <a
+                href={googleReviewsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-medium transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                style={{ backgroundColor: primary }}
+              >
+                <span>📝 Scrivi una recensione</span>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </a>
             </div>
-            
-            {/* CTA Recensioni */}
-            <a
-              href={googleReviewsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-medium transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-              style={{ backgroundColor: primary }}
-            >
-              <span>📝 Scrivi una recensione</span>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </a>
-          </div>
+          )}
         </div>
 
         {/* Reviews Grid */}
