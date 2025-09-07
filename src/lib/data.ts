@@ -252,6 +252,7 @@ export interface SiteContent {
     businessName?: string; // Nome business per link Google
     placeId?: string; // Google Place ID per recupero automatico recensioni
     embedCode?: string; // Codice embed widget Google Reviews (senza API)
+    useWidget?: boolean; // Se usare widget embed invece di recensioni manuali (default: false)
     googleApiKey?: string; // API Key Google Places (opzionale)
     useRealReviews?: boolean; // Se usare Google Places API (default: true)
     fallbackReviews?: GoogleReview[]; // Recensioni fallback se API non disponibile
@@ -1225,6 +1226,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         businessName: data.googleReviews.businessName || "GZ Nutrition",
         placeId: data.googleReviews.placeId || undefined,
         embedCode: data.googleReviews.embedCode || undefined,
+        useWidget: data.googleReviews.useWidget === true, // Default false
         googleApiKey: data.googleReviews.googleApiKey || undefined,
         useRealReviews: data.googleReviews.useRealReviews !== false, // Default true
         fallbackReviews: Array.isArray(data.googleReviews.fallbackReviews) 

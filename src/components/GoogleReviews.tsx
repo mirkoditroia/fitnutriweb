@@ -9,6 +9,7 @@ interface GoogleReviewsProps {
   businessName?: string;
   placeId?: string;
   embedCode?: string;
+  useWidget?: boolean;
   googleApiKey?: string;
   useRealReviews?: boolean;
   fallbackReviews?: GoogleReview[];
@@ -47,6 +48,7 @@ export default function GoogleReviews({
   businessName = "GZ Nutrition",
   placeId,
   embedCode,
+  useWidget = false,
   googleApiKey,
   useRealReviews = true,
   fallbackReviews = [],
@@ -80,10 +82,10 @@ export default function GoogleReviews({
       });
 
       // 🎯 PRIORITÀ 1: Widget Embed (senza API)
-      if (embedCode && embedCode.trim() && embedCode.trim() !== "<!-- Inserisci qui il codice del widget -->") {
+      if (useWidget && embedCode && embedCode.trim()) {
         console.log("🎨 Uso Widget Google Reviews (embed code)");
         setReviewSource('embed');
-        setCurrentReviews([]); // Widget si gestisce da solo, non mostrare recensioni manuali
+        setCurrentReviews([]); // Widget si gestisce da solo
         return;
       }
 
@@ -131,7 +133,7 @@ export default function GoogleReviews({
     }
 
     loadReviews();
-  }, [embedCode, placeId, googleApiKey, useRealReviews, fallbackReviews]);
+  }, [useWidget, embedCode, placeId, googleApiKey, useRealReviews, fallbackReviews]);
 
   // URL per aprire Google Reviews
   const googleReviewsUrl = placeId 

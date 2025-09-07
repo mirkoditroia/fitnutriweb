@@ -374,6 +374,7 @@ export default function LandingClient() {
           businessName={effectiveContent.googleReviews?.businessName}
           placeId={effectiveContent.googleReviews?.placeId}
           embedCode={effectiveContent.googleReviews?.embedCode}
+          useWidget={effectiveContent.googleReviews?.useWidget}
           googleApiKey={effectiveContent.googleReviews?.googleApiKey}
           useRealReviews={effectiveContent.googleReviews?.useRealReviews}
           fallbackReviews={effectiveContent.googleReviews?.fallbackReviews}

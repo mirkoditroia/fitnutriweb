@@ -185,6 +185,7 @@ export default async function Home() {
         businessName={c.googleReviews?.businessName}
         placeId={c.googleReviews?.placeId}
         embedCode={c.googleReviews?.embedCode}
+        useWidget={c.googleReviews?.useWidget}
         googleApiKey={c.googleReviews?.googleApiKey}
         useRealReviews={c.googleReviews?.useRealReviews}
         fallbackReviews={c.googleReviews?.fallbackReviews}
