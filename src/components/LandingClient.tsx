@@ -5,7 +5,7 @@ import { Hero } from "@/components/Hero";
 import { AboutSection } from "@/components/AboutSection";
 import { PackagesCarousel } from "@/components/PackagesCarousel";
 import { ResultsCarousel } from "@/components/ResultsCarousel";
-import { TrustpilotWall } from "@/components/TrustpilotWall";
+import GoogleReviews from "@/components/GoogleReviews";
 import { BookingForm } from "@/components/BookingForm";
 import { LandingImages } from "@/components/LandingImages";
 import { ContactSection } from "@/components/ContactSection";
@@ -367,8 +367,16 @@ export default function LandingClient() {
         />
       </div>
       
-      {/* Recensioni Trustpilot */}
-      <TrustpilotWall />
+      {/* Recensioni Google */}
+      <GoogleReviews
+        title={effectiveContent.googleReviews?.title}
+        subtitle={effectiveContent.googleReviews?.subtitle}
+        businessName={effectiveContent.googleReviews?.businessName}
+        placeId={effectiveContent.googleReviews?.placeId}
+        reviews={effectiveContent.googleReviews?.reviews}
+        colorPalette={effectiveContent.colorPalette}
+        enabled={effectiveContent.googleReviews?.enabled}
+      />
     </main>
   );
 }

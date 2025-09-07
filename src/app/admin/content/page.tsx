@@ -14,16 +14,54 @@ export default function AdminContentPage() {
 
   useEffect(() => {
           getSiteContent().then((c) => {
-              setContent(
-        c ?? { 
-          heroTitle: "", 
-          heroSubtitle: "", 
-          heroCta: "Prenota ora", 
-          heroBackgroundImage: "", 
-          images: [],
-          colorPalette: "gz-default" as const
-        }
-      );
+            console.log("🔄 CARICAMENTO INIZIALE contenuti:", c);
+            console.log("📊 BMI config caricato:", c?.bmiCalculator);
+            console.log("⭐ Reviews config caricato:", c?.googleReviews);
+            
+            // ✅ FALLBACK MIGLIORATO: se contenuto esiste ma mancano le nuove feature, le aggiungiamo
+            const finalContent = c ? {
+              ...c,
+              // Aggiungi BMI se non esiste
+              bmiCalculator: c.bmiCalculator ?? {
+                enabled: false,
+                title: "📊 Calcola il tuo BMI",
+                subtitle: "Scopri il tuo Indice di Massa Corporea"
+              },
+              // Aggiungi Reviews se non esiste  
+              googleReviews: c.googleReviews ?? {
+                enabled: true,
+                title: "⭐ Recensioni Google",
+                subtitle: "Cosa dicono i nostri clienti",
+                businessName: "GZ Nutrition",
+                reviews: []
+              }
+            } : { 
+              heroTitle: "", 
+              heroSubtitle: "", 
+              heroCta: "Prenota ora", 
+              heroBackgroundImage: "", 
+              images: [],
+              colorPalette: "gz-default" as const,
+              bmiCalculator: {
+                enabled: false,
+                title: "📊 Calcola il tuo BMI",
+                subtitle: "Scopri il tuo Indice di Massa Corporea"
+              },
+              googleReviews: {
+                enabled: true,
+                title: "⭐ Recensioni Google",
+                subtitle: "Cosa dicono i nostri clienti",
+                businessName: "GZ Nutrition",
+                reviews: []
+              }
+            };
+            
+            console.log("✅ CONTENUTO FINALE nello stato:", finalContent);
+            console.log("📊 BMI finale:", finalContent.bmiCalculator);
+            console.log("⭐ Reviews finale:", finalContent.googleReviews);
+            
+            setContent(finalContent);
+      
         setLoading(false);
       });
   }, []);
@@ -31,7 +69,49 @@ export default function AdminContentPage() {
   if (loading || !content) return <main className="container py-8">Caricamento...</main>;
 
   const save = async () => {
-    await upsertSiteContent(content);
+    // ✅ DEBUG: Log completo del contenuto prima del salvataggio
+    console.log("🔍 SALVATAGGIO CONTENUTI - Oggetto completo:", content);
+    console.log("📊 BMI Calculator config:", content.bmiCalculator);
+    console.log("⭐ Google Reviews config:", content.googleReviews);
+    
+    try {
+      await upsertSiteContent(content);
+      
+      // ✅ CONFERMA SALVATAGGIO con dettagli
+      toast.success(`✅ Contenuti salvati con successo!${content.bmiCalculator?.enabled ? " (BMI: ✅)" : ""}${content.googleReviews?.enabled !== false ? " (Reviews: ⭐)" : ""}`, {
+        duration: 4000,
+        style: {
+          background: '#10B981',
+          color: 'white',
+        }
+      });
+      
+      console.log("✅ SALVATAGGIO COMPLETATO con successo");
+      
+      // ✅ VERIFICA: Ricarica i contenuti dal database per confermare il salvataggio
+      setTimeout(async () => {
+        try {
+          const reloadedContent = await getSiteContent();
+          console.log("🔄 CONTENUTI RICARICATI dal database:", reloadedContent);
+          console.log("🔍 BMI dopo ricaricamento:", reloadedContent?.bmiCalculator);
+          console.log("🔍 Reviews dopo ricaricamento:", reloadedContent?.googleReviews);
+          
+          if (reloadedContent?.bmiCalculator?.enabled !== content.bmiCalculator?.enabled) {
+            console.warn("⚠️ MISMATCH BMI: salvato =", content.bmiCalculator?.enabled, "ricaricato =", reloadedContent?.bmiCalculator?.enabled);
+            toast.error("⚠️ Problema rilevato: configurazione BMI non sincronizzata!");
+          }
+        } catch (error) {
+          console.error("❌ Errore durante la verifica ricaricamento:", error);
+        }
+      }, 2000);
+      
+    } catch (error) {
+      console.error("❌ ERRORE durante il salvataggio:", error);
+      toast.error("❌ Errore durante il salvataggio. Controlla la console per dettagli.", {
+        duration: 6000
+      });
+      return; // Esce se c'è errore
+    }
     
     // ✅ FORZARE REFRESH PAGINA per caricare la palette dal server
     // Eliminiamo localStorage che causava problemi di sincronizzazione
@@ -1015,10 +1095,290 @@ export default function AdminContentPage() {
             )}
           </div>
         </section>
+
+        {/* ✅ NUOVA SEZIONE: Google Reviews (sostituisce Trustpilot) */}
+        <section className="space-y-4 mt-8">
+          <h2 className="font-semibold text-black">⭐ Recensioni Google</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="googleReviewsEnabled"
+                checked={content.googleReviews?.enabled ?? true}
+                onChange={(e) => setContent({
+                  ...content,
+                  googleReviews: {
+                    ...content.googleReviews,
+                    enabled: e.target.checked
+                  }
+                })}
+                className="text-primary"
+              />
+              <label htmlFor="googleReviewsEnabled" className="font-medium">
+                Mostra sezione recensioni Google nella landing page
+              </label>
+            </div>
+            
+            <div className="text-sm text-black/70 p-3 bg-green-50 rounded-lg border border-green-200">
+              <strong>⭐ Google Reviews:</strong>
+              <ul className="list-disc list-inside mt-1 space-y-1">
+                <li>Sostituisce le recensioni Trustpilot con Google Reviews</li>
+                <li>Design moderno con stelle, badge Google e link diretto</li>
+                <li>Configurazione semplice: aggiungi recensioni manualmente</li>
+                <li>Include CTA per "Scrivi una recensione" che apre Google</li>
+                <li>Abilitato di default per massima credibilità</li>
+              </ul>
+            </div>
+
+            {content.googleReviews?.enabled !== false && (
+              <div className="space-y-6 p-4 border border-border rounded-lg">
+                {/* Configurazione base */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-black">
+                      Titolo sezione
+                    </label>
+                    <input
+                      type="text"
+                      value={content.googleReviews?.title ?? ""}
+                      onChange={(e) => setContent({
+                        ...content,
+                        googleReviews: {
+                          ...content.googleReviews,
+                          title: e.target.value
+                        }
+                      })}
+                      placeholder="⭐ Recensioni Google"
+                      className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-black">
+                      Sottotitolo
+                    </label>
+                    <input
+                      type="text"
+                      value={content.googleReviews?.subtitle ?? ""}
+                      onChange={(e) => setContent({
+                        ...content,
+                        googleReviews: {
+                          ...content.googleReviews,
+                          subtitle: e.target.value
+                        }
+                      })}
+                      placeholder="Cosa dicono i nostri clienti"
+                      className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-black">
+                      Nome Business Google
+                    </label>
+                    <input
+                      type="text"
+                      value={content.googleReviews?.businessName ?? ""}
+                      onChange={(e) => setContent({
+                        ...content,
+                        googleReviews: {
+                          ...content.googleReviews,
+                          businessName: e.target.value
+                        }
+                      })}
+                      placeholder="GZ Nutrition"
+                      className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-black">
+                      Google Place ID (opzionale)
+                    </label>
+                    <input
+                      type="text"
+                      value={content.googleReviews?.placeId ?? ""}
+                      onChange={(e) => setContent({
+                        ...content,
+                        googleReviews: {
+                          ...content.googleReviews,
+                          placeId: e.target.value
+                        }
+                      })}
+                      placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
+                      className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Trova il tuo Place ID su: https://developers.google.com/maps/documentation/places/web-service/place-id
+                    </p>
+                  </div>
+                </div>
+
+                {/* Gestione recensioni */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="text-sm font-medium text-black">
+                      Recensioni personalizzate
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newReview = {
+                          id: Date.now().toString(),
+                          name: "",
+                          rating: 5,
+                          text: "",
+                          date: ""
+                        };
+                        setContent({
+                          ...content,
+                          googleReviews: {
+                            ...content.googleReviews,
+                            reviews: [...(content.googleReviews?.reviews || []), newReview]
+                          }
+                        });
+                      }}
+                      className="px-3 py-1 bg-primary text-white rounded text-sm hover:bg-primary/90"
+                    >
+                      + Aggiungi Recensione
+                    </button>
+                  </div>
+
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {(content.googleReviews?.reviews || []).map((review, index) => (
+                      <div key={review.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                          <input
+                            type="text"
+                            value={review.name}
+                            onChange={(e) => {
+                              const updatedReviews = [...(content.googleReviews?.reviews || [])];
+                              updatedReviews[index] = { ...review, name: e.target.value };
+                              setContent({
+                                ...content,
+                                googleReviews: {
+                                  ...content.googleReviews,
+                                  reviews: updatedReviews
+                                }
+                              });
+                            }}
+                            placeholder="Nome recensore"
+                            className={`px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                          />
+                          
+                          <select
+                            value={review.rating}
+                            onChange={(e) => {
+                              const updatedReviews = [...(content.googleReviews?.reviews || [])];
+                              updatedReviews[index] = { ...review, rating: Number(e.target.value) };
+                              setContent({
+                                ...content,
+                                googleReviews: {
+                                  ...content.googleReviews,
+                                  reviews: updatedReviews
+                                }
+                              });
+                            }}
+                            className={`px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                          >
+                            <option value={5}>⭐⭐⭐⭐⭐ (5 stelle)</option>
+                            <option value={4}>⭐⭐⭐⭐ (4 stelle)</option>
+                            <option value={3}>⭐⭐⭐ (3 stelle)</option>
+                            <option value={2}>⭐⭐ (2 stelle)</option>
+                            <option value={1}>⭐ (1 stella)</option>
+                          </select>
+                          
+                          <input
+                            type="text"
+                            value={review.date || ""}
+                            onChange={(e) => {
+                              const updatedReviews = [...(content.googleReviews?.reviews || [])];
+                              updatedReviews[index] = { ...review, date: e.target.value };
+                              setContent({
+                                ...content,
+                                googleReviews: {
+                                  ...content.googleReviews,
+                                  reviews: updatedReviews
+                                }
+                              });
+                            }}
+                            placeholder="Es: 2 settimane fa"
+                            className={`px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                          />
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <textarea
+                            value={review.text}
+                            onChange={(e) => {
+                              const updatedReviews = [...(content.googleReviews?.reviews || [])];
+                              updatedReviews[index] = { ...review, text: e.target.value };
+                              setContent({
+                                ...content,
+                                googleReviews: {
+                                  ...content.googleReviews,
+                                  reviews: updatedReviews
+                                }
+                              });
+                            }}
+                            placeholder="Testo della recensione..."
+                            rows={3}
+                            className={`flex-1 px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                          />
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedReviews = (content.googleReviews?.reviews || []).filter((_, i) => i !== index);
+                              setContent({
+                                ...content,
+                                googleReviews: {
+                                  ...content.googleReviews,
+                                  reviews: updatedReviews
+                                }
+                              });
+                            }}
+                            className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {(!content.googleReviews?.reviews || content.googleReviews.reviews.length === 0) && (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>Nessuna recensione configurata.</p>
+                      <p className="text-sm">Usa "Aggiungi Recensione" per iniziare o verranno mostrate quelle di default.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
         </div>
 
         {/* Pulsante salva */}
-        <div className="flex justify-end pt-6 border-t border-foreground/10 mt-8">
+        <div className="flex justify-between items-center pt-6 border-t border-foreground/10 mt-8">
+          {/* Debug button */}
+          <Button 
+            onClick={() => {
+              console.log("🔍 DEBUG - Stato attuale content:", content);
+              console.log("📊 DEBUG - BMI config:", content.bmiCalculator);
+              console.log("⭐ DEBUG - Reviews config:", content.googleReviews);
+              toast.success("🔍 Debug info logged to console");
+            }}
+            variant="outline"
+            className="text-xs px-4 py-2"
+          >
+            🔍 Debug State
+          </Button>
+          
           <Button onClick={save} className="bg-primary hover:bg-primary/90 px-6 py-2">
             💾 Salva Contenuti
           </Button>

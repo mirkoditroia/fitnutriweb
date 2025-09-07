@@ -7,7 +7,7 @@ import { Hero } from "@/components/Hero";
 import { AboutSection } from "@/components/AboutSection";
 import { LandingImages } from "@/components/LandingImages";
 import { PackagesCarousel } from "@/components/PackagesCarousel";
-import { TrustpilotWall } from "@/components/TrustpilotWall";
+import GoogleReviews from "@/components/GoogleReviews";
 import { BookingForm } from "@/components/BookingForm";
 import { ContactSection } from "@/components/ContactSection";
 import { FreeConsultationPopup } from "@/components/FreeConsultationPopup";
@@ -179,7 +179,15 @@ export default async function Home() {
           }}
         />
       </div>
-      <TrustpilotWall />
+      <GoogleReviews
+        title={c.googleReviews?.title}
+        subtitle={c.googleReviews?.subtitle}
+        businessName={c.googleReviews?.businessName}
+        placeId={c.googleReviews?.placeId}
+        reviews={c.googleReviews?.reviews}
+        colorPalette={c.colorPalette}
+        enabled={c.googleReviews?.enabled}
+      />
     </main>
   );
 }

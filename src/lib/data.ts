@@ -242,6 +242,23 @@ export interface SiteContent {
     title?: string; // Titolo personalizzato (default: "📊 Calcola il tuo BMI")
     subtitle?: string; // Sottotitolo personalizzato 
   };
+  
+  // ✅ NUOVA FEATURE: Google Reviews (sostituisce Trustpilot)
+  googleReviews?: {
+    enabled?: boolean; // Se abilitare le recensioni Google (default: true)
+    title?: string; // Titolo sezione (default: "⭐ Recensioni Google")
+    subtitle?: string; // Sottotitolo
+    businessName?: string; // Nome business per link Google
+    placeId?: string; // Google Place ID per link diretto
+    reviews?: Array<{
+      id: string;
+      name: string;
+      rating: number; // 1-5 stelle
+      text: string;
+      date?: string; // Data recensione
+      avatar?: string; // URL avatar (opzionale)
+    }>;
+  };
 }
 
 export type Availability = {
@@ -1205,9 +1222,21 @@ export async function getSiteContent(): Promise<SiteContent | null> {
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
+  
+  console.log("🔥 [Firebase] upsertSiteContent chiamato");
+  console.log("🔥 [Firebase] Content originale:", content);
+  console.log("🔥 [Firebase] BMI config:", content.bmiCalculator);
+  console.log("🔥 [Firebase] Reviews config:", content.googleReviews);
+  
   // Firestore non accetta valori undefined: rimuoviamoli in modo sicuro
   const sanitized = JSON.parse(JSON.stringify(content));
+  console.log("🔥 [Firebase] Content sanitizzato:", sanitized);
+  console.log("🔥 [Firebase] BMI sanitizzato:", sanitized.bmiCalculator);
+  console.log("🔥 [Firebase] Reviews sanitizzato:", sanitized.googleReviews);
+  
+  console.log("🔥 [Firebase] Chiamando setDoc...");
   await setDoc(col.content(db as Firestore), sanitized, { merge: true });
+  console.log("🔥 [Firebase] ✅ setDoc completato con successo");
 }
 
 // Availability

@@ -503,10 +503,15 @@ export async function getSiteContent(): Promise<SiteContent | null> {
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
   const mode = getDataMode();
   console.log("[upsertSiteContent] Current mode:", mode);
+  console.log("[upsertSiteContent] 📊 BMI config being saved:", content.bmiCalculator);
+  console.log("[upsertSiteContent] ⭐ Reviews config being saved:", content.googleReviews);
   
   if (mode === "firebase") {
     console.log("[upsertSiteContent] Using Firebase");
-    return fb_upsertSiteContent(content);
+    console.log("[upsertSiteContent] 🔥 Calling Firebase upsert...");
+    await fb_upsertSiteContent(content);
+    console.log("[upsertSiteContent] ✅ Firebase upsert completed");
+    return;
   }
   
   if (mode === "demo") {
@@ -515,7 +520,12 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
   }
   
   console.log("[upsertSiteContent] Using local API");
-  await fetch("/api/localdb/siteContent", { method: "POST", body: JSON.stringify(content) });
+  console.log("[upsertSiteContent] 📤 Sending to local API...");
+  const response = await fetch("/api/localdb/siteContent", { method: "POST", body: JSON.stringify(content) });
+  console.log("[upsertSiteContent] 📥 Local API response:", response.status, response.statusText);
+  if (!response.ok) {
+    throw new Error(`Local API failed: ${response.status} ${response.statusText}`);
+  }
 }
 
 export async function getAvailabilityByDate(date: string): Promise<Availability | null> {
