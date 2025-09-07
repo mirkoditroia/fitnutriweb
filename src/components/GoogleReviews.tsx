@@ -64,6 +64,7 @@ export default function GoogleReviews({
   const [currentReviews, setCurrentReviews] = useState<GoogleReview[]>(reviews);
   const [loading, setLoading] = useState(false);
   const [reviewSource, setReviewSource] = useState<'google' | 'fallback' | 'embed' | 'unknown'>('unknown');
+  const [widgetLoaded, setWidgetLoaded] = useState(false);
 
   // Ottieni colori della palette
   const paletteConfig = getPaletteConfig(colorPalette);
@@ -83,9 +84,22 @@ export default function GoogleReviews({
 
       // 🎯 PRIORITÀ 1: Widget Embed (senza API)
       if (useWidget && embedCode && embedCode.trim()) {
-        console.log("🎨 Uso Widget Google Reviews (embed code)");
+        console.log("🎨 Uso Widget Google Reviews (embed code)", { embedCode: embedCode.substring(0, 100) + "..." });
         setReviewSource('embed');
         setCurrentReviews([]); // Widget si gestisce da solo
+        
+        // Controlla se il widget si è caricato dopo 3 secondi
+        setTimeout(() => {
+          const widgetElement = document.querySelector('.elfsight-app-ab2df3f0-117f-41ea-a938-86f3cf1c596b');
+          if (widgetElement && widgetElement.children.length > 0) {
+            console.log("✅ Widget Elfsight caricato correttamente");
+            setWidgetLoaded(true);
+          } else {
+            console.log("❌ Widget Elfsight non caricato");
+            setWidgetLoaded(false);
+          }
+        }, 3000);
+        
         return;
       }
 
@@ -223,10 +237,52 @@ export default function GoogleReviews({
         {/* ✅ Widget Embed Google Reviews (senza API) */}
         {reviewSource === 'embed' && embedCode && (
           <div className="max-w-4xl mx-auto">
+            {/* Debug info */}
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+              <strong>🔍 Debug Widget:</strong> 
+              <br />• useWidget: {useWidget ? 'true' : 'false'}
+              <br />• embedCode presente: {embedCode ? 'Sì' : 'No'}
+              <br />• reviewSource: {reviewSource}
+              <br />• widgetLoaded: {widgetLoaded ? '✅ Sì' : '❌ No'}
+              <br />• embedCode preview: {embedCode ? embedCode.substring(0, 50) + '...' : 'Nessuno'}
+            </div>
+            
             <div 
               className="google-reviews-widget"
               dangerouslySetInnerHTML={{ __html: embedCode }}
             />
+            
+            {/* Status Widget */}
+            {!widgetLoaded && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <p className="text-sm text-blue-700">
+                    <strong>⏳ Caricamento widget Google Reviews...</strong>
+                  </p>
+                </div>
+                <p className="text-xs text-blue-600">
+                  Il widget potrebbe impiegare alcuni secondi per apparire
+                </p>
+              </div>
+            )}
+            
+            {/* Fallback se widget non carica dopo 5 secondi */}
+            {!widgetLoaded && (
+              <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded text-center">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>⚠️ Widget non visibile?</strong>
+                </p>
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>• Verifica che il codice embed sia corretto</p>
+                  <p>• Controlla la connessione internet</p>
+                  <p>• Il widget potrebbe impiegare alcuni secondi per caricarsi</p>
+                  <p>• Se persiste, prova a ricaricare la pagina</p>
+                  <p>• Assicurati che il dominio sia autorizzato su Elfsight</p>
+                </div>
+              </div>
+            )}
+            
             <div className="text-center mt-6 text-sm text-gray-500">
               <span className="inline-flex items-center gap-2">
                 <img 

@@ -1253,7 +1253,7 @@ export default function AdminContentPage() {
                           📌 Google My Business - Codice Embed Widget
                         </label>
                         <textarea
-                          rows={4}
+                          rows={6}
                           value={content.googleReviews?.embedCode ?? ""}
                           onChange={(e) => setContent({
                             ...content,
@@ -1262,9 +1262,23 @@ export default function AdminContentPage() {
                               embedCode: e.target.value
                             }
                           })}
-                          placeholder='<div class="elfsight-app-abc123"></div><script src="https://static.elfsight.com/platform/platform.js"></script>'
+                          placeholder='<!-- Elfsight Google Reviews | Untitled Google Reviews -->
+<script src="https://elfsightcdn.com/platform.js" async></script>
+<div class="elfsight-app-ab2df3f0-117f-41ea-a938-86f3cf1c596b" data-elfsight-app-lazy></div>'
                           className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls} font-mono text-sm`}
                         />
+                        
+                        {/* ✅ Debug del codice inserito */}
+                        {content.googleReviews?.embedCode && (
+                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded text-sm">
+                            <strong>✅ Codice Widget Inserito:</strong>
+                            <br />• Script Elfsight: {content.googleReviews.embedCode.includes('elfsightcdn.com') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Div widget: {content.googleReviews.embedCode.includes('elfsight-app-') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Lazy loading: {content.googleReviews.embedCode.includes('data-elfsight-app-lazy') ? '✅ Presente' : '❌ Manca'}
+                            <br />• Lunghezza codice: {content.googleReviews.embedCode.length} caratteri
+                          </div>
+                        )}
+                        
                         <div className="mt-2 text-sm text-black/70">
                           <strong>📋 Come ottenere:</strong>
                           <ul className="list-disc list-inside mt-1 space-y-1">
@@ -1272,6 +1286,17 @@ export default function AdminContentPage() {
                             <li><strong>Opzione B:</strong> Elfsight.com → Google Reviews Widget (gratuito)</li>
                             <li><strong>Opzione C:</strong> Trustmary.com → Google Reviews Widget</li>
                             <li><strong>✅ Risultato:</strong> Recensioni vere senza API, auto-aggiornate</li>
+                          </ul>
+                        </div>
+                        
+                        <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded text-sm">
+                          <strong>⚠️ Se il widget non appare:</strong>
+                          <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
+                            <li>Verifica che il dominio sia autorizzato su Elfsight</li>
+                            <li>Controlla la connessione internet</li>
+                            <li>Il widget potrebbe impiegare 5-10 secondi per caricarsi</li>
+                            <li>Prova a ricaricare la pagina</li>
+                            <li>Verifica che il codice sia completo (script + div)</li>
                           </ul>
                         </div>
                       </div>
