@@ -80,10 +80,10 @@ export default function GoogleReviews({
       });
 
       // 🎯 PRIORITÀ 1: Widget Embed (senza API)
-      if (embedCode && embedCode.trim()) {
+      if (embedCode && embedCode.trim() && embedCode.trim() !== "<!-- Inserisci qui il codice del widget -->") {
         console.log("🎨 Uso Widget Google Reviews (embed code)");
         setReviewSource('embed');
-        setCurrentReviews([]); // Widget si gestisce da solo
+        setCurrentReviews([]); // Widget si gestisce da solo, non mostrare recensioni manuali
         return;
       }
 
