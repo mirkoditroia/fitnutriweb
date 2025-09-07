@@ -88,5 +88,8 @@
         "beforeAfter": "single"
       }
     ]
+  },
+  "bmiCalculator": {
+    "enabled": true
   }
 }

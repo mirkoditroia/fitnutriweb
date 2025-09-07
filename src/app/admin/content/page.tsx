@@ -937,7 +937,84 @@ export default function AdminContentPage() {
           </div>
         </section>
         
-        {/* Email cliente rimossa - sistema troppo complesso */}
+        {/* ✅ NUOVA SEZIONE: Calcolatore BMI */}
+        <section className="space-y-4 mt-8">
+          <h2 className="font-semibold text-black">📊 Calcolatore BMI</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="bmiEnabled"
+                checked={content.bmiCalculator?.enabled ?? false}
+                onChange={(e) => setContent({
+                  ...content,
+                  bmiCalculator: {
+                    ...content.bmiCalculator,
+                    enabled: e.target.checked
+                  }
+                })}
+                className="text-primary"
+              />
+              <label htmlFor="bmiEnabled" className="font-medium">
+                Abilita calcolatore BMI nella landing page
+              </label>
+            </div>
+            
+            <div className="text-sm text-black/70 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <strong>ℹ️ Calcolatore BMI:</strong>
+              <ul className="list-disc list-inside mt-1 space-y-1">
+                <li>Permette ai visitatori di calcolare il proprio Indice di Massa Corporea</li>
+                <li>Design moderno e responsivo, integrato con la palette del sito</li>
+                <li>Include visualizzazione grafica e classificazione WHO</li>
+                <li>Posizionato sotto il form di prenotazione</li>
+                <li>Disabilitato di default per non appesantire la pagina</li>
+              </ul>
+            </div>
+
+            {content.bmiCalculator?.enabled && (
+              <div className="space-y-4 p-4 border border-border rounded-lg">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Titolo sezione
+                  </label>
+                  <input
+                    type="text"
+                    value={content.bmiCalculator?.title ?? ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      bmiCalculator: {
+                        ...content.bmiCalculator,
+                        title: e.target.value
+                      }
+                    })}
+                    placeholder="📊 Calcola il tuo BMI"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Sottotitolo (opzionale)
+                  </label>
+                  <input
+                    type="text"
+                    value={content.bmiCalculator?.subtitle ?? ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      bmiCalculator: {
+                        ...content.bmiCalculator,
+                        subtitle: e.target.value
+                      }
+                    })}
+                    placeholder="Scopri il tuo Indice di Massa Corporea"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
         </div>
 
         {/* Pulsante salva */}

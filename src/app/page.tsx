@@ -12,6 +12,7 @@ import { BookingForm } from "@/components/BookingForm";
 import { ContactSection } from "@/components/ContactSection";
 import { FreeConsultationPopup } from "@/components/FreeConsultationPopup";
 import ResultsCarouselDesktop from "@/components/ResultsCarouselDesktop";
+import BMICalculator from "@/components/BMICalculator";
 
 export const dynamic = 'force-dynamic';
 
@@ -137,6 +138,15 @@ export default async function Home() {
           <BookingForm />
         </div>
       </section>
+      
+      {/* ✅ NUOVA SEZIONE: Calcolatore BMI - se abilitato */}
+      {c.bmiCalculator?.enabled && (
+        <BMICalculator
+          title={c.bmiCalculator.title}
+          subtitle={c.bmiCalculator.subtitle}
+          colorPalette={c.colorPalette}
+        />
+      )}
       {/* Contatti - sempre visibili con fallback */}
       <div id="contatti" className="border-t border-foreground/10">
         <ContactSection

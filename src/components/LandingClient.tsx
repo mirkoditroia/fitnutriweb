@@ -10,6 +10,7 @@ import { BookingForm } from "@/components/BookingForm";
 import { LandingImages } from "@/components/LandingImages";
 import { ContactSection } from "@/components/ContactSection";
 import { FreeConsultationPopup } from "@/components/FreeConsultationPopup";
+import BMICalculator from "@/components/BMICalculator";
 
 import { getPackages, getSiteContent } from "@/lib/datasource";
 // Rimosso sistema globale - ora usa approccio diretto
@@ -328,6 +329,15 @@ export default function LandingClient() {
           <BookingForm />
         </div>
       </section>
+      
+      {/* ✅ NUOVA SEZIONE: Calcolatore BMI - se abilitato */}
+      {effectiveContent.bmiCalculator?.enabled && (
+        <BMICalculator
+          title={effectiveContent.bmiCalculator.title}
+          subtitle={effectiveContent.bmiCalculator.subtitle}
+          colorPalette={effectiveContent.colorPalette}
+        />
+      )}
       
       {/* Sezione Contatti - usa componente condiviso anche in locale */}
       <div id="contatti" className="border-t border-foreground/10">

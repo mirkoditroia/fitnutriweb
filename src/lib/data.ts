@@ -235,6 +235,13 @@ export interface SiteContent {
   };
   
   // Email cliente rimossa - troppo complessa
+  
+  // ✅ NUOVA FEATURE: Calcolatore BMI
+  bmiCalculator?: {
+    enabled?: boolean; // Se abilitare il calcolatore BMI (default: false)
+    title?: string; // Titolo personalizzato (default: "📊 Calcola il tuo BMI")
+    subtitle?: string; // Sottotitolo personalizzato 
+  };
 }
 
 export type Availability = {
