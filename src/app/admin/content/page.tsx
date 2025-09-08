@@ -8,7 +8,7 @@ import { UploadButton } from "@/components/UploadButton";
 import { PALETTES, getPaletteConfig } from "@/lib/palettes";
 import { getStorage, ref, listAll, getMetadata, deleteObject, getDownloadURL } from "firebase/storage";
 import { getFirestore, collection, getDocs, query, orderBy, limit } from "firebase/firestore";
-import { app } from "@/lib/firebase";
+import { getClientApp } from "@/lib/firebase";
 
 export default function AdminContentPage() {
   const [content, setContent] = useState<SiteContent | null>(null);
@@ -17,6 +17,7 @@ export default function AdminContentPage() {
   const fieldCls = "bg-white text-black placeholder:text-black/70 border-foreground/30";
 
   // Firebase instances
+  const app = getClientApp();
   const storage = app ? getStorage(app) : null;
   const db = app ? getFirestore(app) : null;
 
