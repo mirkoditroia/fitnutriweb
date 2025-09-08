@@ -119,15 +119,6 @@ export default function AdminPackagesPage() {
     ));
   };
 
-  const addArrayItem = (idx: number, field: keyof NonNullable<Package['details']>, value: string) => {
-    const currentArray = (packages[idx].details?.[field] as string[]) || [];
-    updateDetails(idx, field, [...currentArray, value]);
-  };
-
-  const removeArrayItem = (idx: number, field: keyof NonNullable<Package['details']>, itemIndex: number) => {
-    const currentArray = (packages[idx].details?.[field] as string[]) || [];
-    updateDetails(idx, field, currentArray.filter((_, i) => i !== itemIndex));
-  };
 
   const calculateDiscountPercentage = (basePrice: number, discountedPrice: number): number => {
     if (basePrice <= 0 || discountedPrice >= basePrice) return 0;
@@ -414,14 +405,6 @@ export default function AdminPackagesPage() {
                           placeholder="es. 3 mesi, 6 mesi, 1 anno"
                         />
                         
-                        <Input 
-                          label="Sessioni" 
-                          type="number" 
-                          value={pkg.details?.sessions ?? 0} 
-                          onChange={(e) => updateDetails(idx, "sessions", Number(e.target.value))}
-                          placeholder="Numero di sessioni"
-                        />
-                        
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">Note</label>
                           <textarea 
@@ -435,119 +418,6 @@ export default function AdminPackagesPage() {
                       </div>
                     </div>
 
-                    {/* Liste dinamiche */}
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900 mb-4">Contenuti</h4>
-                      <div className="space-y-4">
-                        {/* Benefici */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Benefici</label>
-                          <div className="space-y-2">
-                            {(pkg.details?.features || []).map((feature, featureIdx) => (
-                              <div key={featureIdx} className="flex gap-2">
-                                <Input 
-                                  value={feature} 
-                                  onChange={(e) => {
-                                    const newFeatures = [...(pkg.details?.features || [])];
-                                    newFeatures[featureIdx] = e.target.value;
-                                    updateDetails(idx, "features", newFeatures);
-                                  }}
-                                  placeholder="Beneficio..."
-                                />
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={() => removeArrayItem(idx, "features", featureIdx)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  🗑️
-                                </Button>
-                              </div>
-                            ))}
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => addArrayItem(idx, "features", "")}
-                              className="w-full"
-                            >
-                              + Aggiungi Beneficio
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Inclusi */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Inclusi</label>
-                          <div className="space-y-2">
-                            {(pkg.details?.includes || []).map((item, itemIdx) => (
-                              <div key={itemIdx} className="flex gap-2">
-                                <Input 
-                                  value={item} 
-                                  onChange={(e) => {
-                                    const newIncludes = [...(pkg.details?.includes || [])];
-                                    newIncludes[itemIdx] = e.target.value;
-                                    updateDetails(idx, "includes", newIncludes);
-                                  }}
-                                  placeholder="Elemento incluso..."
-                                />
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={() => removeArrayItem(idx, "includes", itemIdx)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  🗑️
-                                </Button>
-                              </div>
-                            ))}
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => addArrayItem(idx, "includes", "")}
-                              className="w-full"
-                            >
-                              + Aggiungi Elemento
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Requisiti */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Requisiti</label>
-                          <div className="space-y-2">
-                            {(pkg.details?.requirements || []).map((req, reqIdx) => (
-                              <div key={reqIdx} className="flex gap-2">
-                                <Input 
-                                  value={req} 
-                                  onChange={(e) => {
-                                    const newRequirements = [...(pkg.details?.requirements || [])];
-                                    newRequirements[reqIdx] = e.target.value;
-                                    updateDetails(idx, "requirements", newRequirements);
-                                  }}
-                                  placeholder="Requisito..."
-                                />
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={() => removeArrayItem(idx, "requirements", reqIdx)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  🗑️
-                                </Button>
-                              </div>
-                            ))}
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => addArrayItem(idx, "requirements", "")}
-                              className="w-full"
-                            >
-                              + Aggiungi Requisito
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>

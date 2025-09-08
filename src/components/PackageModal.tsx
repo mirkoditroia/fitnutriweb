@@ -134,76 +134,13 @@ export function PackageModal({ pkg, onClose }: Props) {
             {/* Sezione Dettagli Completa con design migliorato */}
             {pkg.details && (
               <div className="space-y-4 md:space-y-6 mb-6 md:mb-8">
-                {/* Informazioni temporali e numeriche con card eleganti */}
-                {(pkg.details.duration || pkg.details.sessions) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                    {pkg.details.duration && (
-                      <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 p-3 md:p-4 rounded-xl border border-blue-500/20 text-center">
-                        <div className="text-xl md:text-2xl mb-1 md:mb-2">⏱️</div>
-                        <div className="text-xs md:text-sm text-blue-600/80 font-medium">Durata</div>
-                        <div className="text-base md:text-lg font-bold text-blue-700">{pkg.details.duration}</div>
-                      </div>
-                    )}
-                    {pkg.details.sessions && (
-                      <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 p-3 md:p-4 rounded-xl border border-green-500/20 text-center">
-                        <div className="text-xl md:text-2xl mb-1 md:mb-2">🎯</div>
-                        <div className="text-xs md:text-sm text-green-600/80 font-medium">Sessioni</div>
-                        <div className="text-base md:text-lg font-bold text-green-700">{pkg.details.sessions}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Caratteristiche con design a card */}
-                {pkg.details.features && pkg.details.features.length > 0 && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 md:p-6 rounded-xl border border-emerald-200">
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
-                      <span className="text-xl md:text-2xl">✨</span>
-                      <span className="text-sm md:text-base">Caratteristiche Principali</span>
-                    </h4>
-                    <div className="grid gap-2 md:gap-3">
-                      {pkg.details.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white/60 rounded-lg border border-emerald-100">
-                          <span className="text-emerald-500 text-base md:text-lg flex-shrink-0">✓</span>
-                          <span className="text-xs md:text-sm font-medium">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Cosa è incluso con design a card */}
-                {pkg.details.includes && pkg.details.includes.length > 0 && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 md:p-6 rounded-xl border border-blue-200">
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
-                      <span className="text-xl md:text-2xl">🎁</span>
-                      <span className="text-sm md:text-base">Cosa è Incluso</span>
-                    </h4>
-                    <div className="grid gap-2 md:gap-3">
-                      {pkg.details.includes.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white/60 rounded-lg border border-blue-100">
-                          <span className="text-blue-500 text-base md:text-lg flex-shrink-0">🎁</span>
-                          <span className="text-xs md:text-sm font-medium">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Requisiti con design a card */}
-                {pkg.details.requirements && pkg.details.requirements.length > 0 && (
-                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 md:p-6 rounded-xl border border-orange-200">
-                    <h4 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
-                      <span className="text-xl md:text-2xl">ℹ️</span>
-                      <span className="text-sm md:text-base">Requisiti</span>
-                    </h4>
-                    <div className="grid gap-2 md:gap-3">
-                      {pkg.details.requirements.map((req, idx) => (
-                        <div key={idx} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white/60 rounded-lg border border-orange-100">
-                          <span className="text-orange-500 text-base md:text-lg flex-shrink-0">ℹ️</span>
-                          <span className="text-xs md:text-sm font-medium">{req}</span>
-                        </div>
-                      ))}
+                {/* Informazioni temporali con card eleganti */}
+                {pkg.details.duration && (
+                  <div className="grid grid-cols-1 gap-3 md:gap-4">
+                    <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 p-3 md:p-4 rounded-xl border border-blue-500/20 text-center">
+                      <div className="text-xl md:text-2xl mb-1 md:mb-2">⏱️</div>
+                      <div className="text-xs md:text-sm text-blue-600/80 font-medium">Durata</div>
+                      <div className="text-base md:text-lg font-bold text-blue-700">{pkg.details.duration}</div>
                     </div>
                   </div>
                 )}
