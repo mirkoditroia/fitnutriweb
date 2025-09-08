@@ -16,15 +16,22 @@ const baseNavigationItems = [
 const getNavigationItems = (siteContent: any) => {
   const items = [...baseNavigationItems];
   
+  console.log("🔍 getNavigationItems: siteContent:", siteContent);
+  console.log("🔍 getNavigationItems: bmiCalculator enabled:", siteContent?.bmiCalculator?.enabled);
+  
   // Aggiungi BMI se attivato
   if (siteContent?.bmiCalculator?.enabled) {
+    console.log("✅ BMI attivato - aggiungo alla navbar");
     // Inserisci BMI dopo "Prenota" e prima di "Contatti"
     const prenotaIndex = items.findIndex(item => item.href === "#booking");
     if (prenotaIndex !== -1) {
       items.splice(prenotaIndex + 1, 0, { name: "BMI", href: "#bmi-calculator" });
     }
+  } else {
+    console.log("❌ BMI non attivato - navbar standard");
   }
   
+  console.log("🔍 getNavigationItems: items finali:", items);
   return items;
 };
 
@@ -49,48 +56,58 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Load only branding info if not already provided via SSR
+  // Load branding info and site content
   useEffect(() => {
+    // Handle initial brand from SSR
     if (initialBrand) {
-      // If we have initial brand from SSR, set up appropriately
       if (initialBrand.mode === 'image' && initialBrand.imageUrl) {
         setImageLoaded(true); // Should already be preloaded
       } else {
         setImageLoaded(true); // Text mode or no image
       }
-      return;
     }
 
+    // Always load site content for BMI and other features
     getSiteContent().then((c) => {
-      const cfg: BrandCfg = {
-        mode: c?.navbarLogoMode === 'image' ? 'image' : 'text',
-        imageUrl: c?.navbarLogoImageUrl || undefined,
-        height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 40,
-        autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
-        text: c?.navbarLogoText || 'GZnutrition',
-        color: undefined, // Use CSS variable
-        weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
-        size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
-      };
+      console.log("🔍 Navbar: Caricamento contenuto sito completo:", c);
+      console.log("🔍 Navbar: bmiCalculator object:", c?.bmiCalculator);
+      console.log("🔍 Navbar: bmiCalculator.enabled:", c?.bmiCalculator?.enabled);
       
-      // Preload image if mode is image
-      if (cfg.mode === 'image' && cfg.imageUrl) {
-        const img = new Image();
-        img.onload = () => {
-          setImageLoaded(true);
+      // Set brand config if not already set from SSR
+      if (!initialBrand) {
+        const cfg: BrandCfg = {
+          mode: c?.navbarLogoMode === 'image' ? 'image' : 'text',
+          imageUrl: c?.navbarLogoImageUrl || undefined,
+          height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 40,
+          autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
+          text: c?.navbarLogoText || 'GZnutrition',
+          color: undefined, // Use CSS variable
+          weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
+          size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
+        };
+        
+        // Preload image if mode is image
+        if (cfg.mode === 'image' && cfg.imageUrl) {
+          const img = new Image();
+          img.onload = () => {
+            setImageLoaded(true);
+            setBrand(cfg);
+          };
+          img.onerror = () => {
+            // Fallback to text mode if image fails to load
+            setBrand({...cfg, mode: 'text'});
+          };
+          img.src = cfg.imageUrl;
+        } else {
           setBrand(cfg);
-        };
-        img.onerror = () => {
-          // Fallback to text mode if image fails to load
-          setBrand({...cfg, mode: 'text'});
-        };
-        img.src = cfg.imageUrl;
-      } else {
-        setBrand(cfg);
+        }
       }
       
+      // Always set site content for BMI check
       setSiteContent(c);
-    }).catch(() => {});
+    }).catch((error) => {
+      console.error("❌ Navbar: Errore caricamento contenuto sito:", error);
+    });
   }, [initialBrand]);
 
   // Glass navbar using CSS variables

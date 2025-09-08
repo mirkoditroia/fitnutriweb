@@ -86,7 +86,7 @@ export default function BMICalculator({
   };
 
   return (
-    <section className="py-16 px-4 bg-gradient-to-br from-gray-50 to-white">
+    <section id="bmi-calculator" className="py-16 px-4 bg-gradient-to-br from-gray-50 to-white">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
