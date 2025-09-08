@@ -131,6 +131,25 @@ export type ClientCard = {
   }[];
 };
 
+export type ClientProgress = {
+  id: string;
+  clientId: string;
+  date: string;
+  weight?: number;
+  bodyFat?: number;
+  muscleMass?: number;
+  measurements?: {
+    chest?: number;
+    waist?: number;
+    hips?: number;
+    arms?: number;
+    thighs?: number;
+  };
+  notes?: string;
+  photos?: string[];
+  createdAt: string;
+};
+
 export type Booking = {
   id?: string;
   clientId?: string;
@@ -1722,6 +1741,58 @@ export async function getClientById(id: string): Promise<ClientCard | null> {
 export async function deleteClient(id: string): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
   await deleteDoc(doc(db as Firestore, "clients", id));
+}
+
+// Funzioni per gestire i progressi dei clienti
+export async function saveClientProgress(progress: Omit<ClientProgress, 'id' | 'createdAt'>): Promise<string> {
+  if (!db) throw new Error("Firestore not configured");
+  
+  const progressData = {
+    ...progress,
+    createdAt: serverTimestamp(),
+  };
+  
+  const docRef = await addDoc(collection(db as Firestore, "clientProgress"), progressData);
+  return docRef.id;
+}
+
+export async function getClientProgress(clientId: string): Promise<ClientProgress[]> {
+  if (!db) return [];
+  
+  const q = query(
+    collection(db as Firestore, "clientProgress"),
+    where("clientId", "==", clientId),
+    orderBy("date", "desc")
+  );
+  
+  const snap = await getDocs(q);
+  return snap.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      clientId: data.clientId,
+      date: data.date,
+      weight: data.weight,
+      bodyFat: data.bodyFat,
+      muscleMass: data.muscleMass,
+      measurements: data.measurements,
+      notes: data.notes,
+      photos: data.photos,
+      createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+    } as ClientProgress;
+  });
+}
+
+export async function updateClientProgress(progressId: string, updates: Partial<ClientProgress>): Promise<void> {
+  if (!db) throw new Error("Firestore not configured");
+  
+  const { id, createdAt, ...updateData } = updates;
+  await updateDoc(doc(db as Firestore, "clientProgress", progressId), updateData);
+}
+
+export async function deleteClientProgress(progressId: string): Promise<void> {
+  if (!db) throw new Error("Firestore not configured");
+  await deleteDoc(doc(db as Firestore, "clientProgress", progressId));
 }
 
 export async function createClientFromPendingBooking(booking: Booking): Promise<string> {

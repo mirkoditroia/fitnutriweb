@@ -32,11 +32,12 @@ interface ClientProgressCardProps {
     notes: string;
     createdAt: string;
   };
+  progressData?: ProgressEntry[];
   onSave: (clientId: string, progressEntry: Omit<ProgressEntry, 'id'>) => Promise<void>;
   onExportPDF: (clientId: string) => Promise<void>;
 }
 
-export function ClientProgressCard({ client, onSave, onExportPDF }: ClientProgressCardProps) {
+export function ClientProgressCard({ client, progressData = [], onSave, onExportPDF }: ClientProgressCardProps) {
   const [isAddingProgress, setIsAddingProgress] = useState(false);
   const [newProgress, setNewProgress] = useState<Omit<ProgressEntry, 'id'>>({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -123,11 +124,13 @@ export function ClientProgressCard({ client, onSave, onExportPDF }: ClientProgre
         </div>
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="text-sm text-gray-600">Ultimo aggiornamento</div>
-          <div className="text-lg font-semibold text-gray-900">-</div>
+          <div className="text-lg font-semibold text-gray-900">
+            {progressData.length > 0 ? format(new Date(progressData[0].date), 'dd/MM/yyyy', { locale: it }) : '-'}
+          </div>
         </div>
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="text-sm text-gray-600">Progressi registrati</div>
-          <div className="text-lg font-semibold text-gray-900">0</div>
+          <div className="text-lg font-semibold text-gray-900">{progressData.length}</div>
         </div>
       </div>
 
@@ -245,11 +248,56 @@ export function ClientProgressCard({ client, onSave, onExportPDF }: ClientProgre
         )}
 
         {/* Progress History */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <p className="text-gray-600 text-center py-8">
-            📊 Nessun progresso registrato ancora. Aggiungi il primo per iniziare a tracciare i risultati!
-          </p>
-        </div>
+        {progressData.length > 0 ? (
+          <div className="space-y-3">
+            {progressData.map((entry, index) => (
+              <div key={entry.id || index} className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-gray-900">
+                    {format(new Date(entry.date), 'dd MMM yyyy', { locale: it })}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  {entry.weight && (
+                    <div>
+                      <span className="text-gray-600">Peso:</span>
+                      <span className="ml-1 font-medium">{entry.weight} kg</span>
+                    </div>
+                  )}
+                  {entry.bodyFat && (
+                    <div>
+                      <span className="text-gray-600">Massa Grassa:</span>
+                      <span className="ml-1 font-medium">{entry.bodyFat}%</span>
+                    </div>
+                  )}
+                  {entry.muscleMass && (
+                    <div>
+                      <span className="text-gray-600">Massa Muscolare:</span>
+                      <span className="ml-1 font-medium">{entry.muscleMass} kg</span>
+                    </div>
+                  )}
+                  {entry.measurements?.waist && (
+                    <div>
+                      <span className="text-gray-600">Vita:</span>
+                      <span className="ml-1 font-medium">{entry.measurements.waist} cm</span>
+                    </div>
+                  )}
+                </div>
+                {entry.notes && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    <span className="font-medium">Note:</span> {entry.notes}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-gray-600 text-center py-8">
+              📊 Nessun progresso registrato ancora. Aggiungi il primo per iniziare a tracciare i risultati!
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Notes */}

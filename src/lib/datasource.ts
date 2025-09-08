@@ -2,6 +2,7 @@ import {
   type Package,
   type Booking,
   type ClientCard,
+  type ClientProgress,
   type SiteContent,
   type Availability,
   getPackages as fb_getPackages,
@@ -16,13 +17,17 @@ import {
   getClientById as fb_getClientById,
   deleteClient as fb_deleteClient,
   createClientFromPendingBooking as fb_createClientFromPendingBooking,
+  saveClientProgress as fb_saveClientProgress,
+  getClientProgress as fb_getClientProgress,
+  updateClientProgress as fb_updateClientProgress,
+  deleteClientProgress as fb_deleteClientProgress,
   getSiteContent as fb_getSiteContent,
   upsertSiteContent as fb_upsertSiteContent,
   getAvailabilityByDate as fb_getAvailabilityByDate,
   upsertAvailabilityForDate as fb_upsertAvailabilityForDate,
 } from "@/lib/data";
 import { getDataMode } from "@/lib/datamode";
-export type { Package, Booking, ClientCard, SiteContent, Availability } from "@/lib/data";
+export type { Package, Booking, ClientCard, ClientProgress, SiteContent, Availability } from "@/lib/data";
 
 // ✅ ESPORTA getDataMode per debugging client-side
 export { getDataMode };
@@ -582,6 +587,63 @@ export async function upsertAvailabilityForDate(date: string, onlineSlots: strin
 function cryptoRandomId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return (crypto as { randomUUID: () => string }).randomUUID();
   return Math.random().toString(36).slice(2);
+}
+
+// Funzioni per i progressi dei clienti
+export async function saveClientProgress(progress: Omit<ClientProgress, 'id' | 'createdAt'>): Promise<string> {
+  if (getDataMode() === "local") {
+    // In modalità local, salva in localStorage
+    const progressId = cryptoRandomId();
+    const progressData = {
+      ...progress,
+      id: progressId,
+      createdAt: new Date().toISOString()
+    };
+    
+    const existing = JSON.parse(localStorage.getItem("clientProgress") || "[]");
+    existing.push(progressData);
+    localStorage.setItem("clientProgress", JSON.stringify(existing));
+    
+    return progressId;
+  }
+  
+  return fb_saveClientProgress(progress);
+}
+
+export async function getClientProgress(clientId: string): Promise<ClientProgress[]> {
+  if (getDataMode() === "local") {
+    const allProgress = JSON.parse(localStorage.getItem("clientProgress") || "[]");
+    return allProgress
+      .filter((p: ClientProgress) => p.clientId === clientId)
+      .sort((a: ClientProgress, b: ClientProgress) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+  
+  return fb_getClientProgress(clientId);
+}
+
+export async function updateClientProgress(progressId: string, updates: Partial<ClientProgress>): Promise<void> {
+  if (getDataMode() === "local") {
+    const allProgress = JSON.parse(localStorage.getItem("clientProgress") || "[]");
+    const index = allProgress.findIndex((p: ClientProgress) => p.id === progressId);
+    if (index !== -1) {
+      allProgress[index] = { ...allProgress[index], ...updates };
+      localStorage.setItem("clientProgress", JSON.stringify(allProgress));
+    }
+    return;
+  }
+  
+  return fb_updateClientProgress(progressId, updates);
+}
+
+export async function deleteClientProgress(progressId: string): Promise<void> {
+  if (getDataMode() === "local") {
+    const allProgress = JSON.parse(localStorage.getItem("clientProgress") || "[]");
+    const filtered = allProgress.filter((p: ClientProgress) => p.id !== progressId);
+    localStorage.setItem("clientProgress", JSON.stringify(filtered));
+    return;
+  }
+  
+  return fb_deleteClientProgress(progressId);
 }
 
 

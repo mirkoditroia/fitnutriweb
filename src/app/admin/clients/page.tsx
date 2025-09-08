@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { listClients, upsertClient, deleteClient, getPackages, listBookings, getSiteContent, type ClientCard, type Package, type Booking } from "@/lib/datasource";
+import { listClients, upsertClient, deleteClient, getPackages, listBookings, getSiteContent, saveClientProgress, getClientProgress, type ClientCard, type Package, type Booking, type ClientProgress } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
@@ -19,7 +19,7 @@ export default function AdminClientsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedClient, setSelectedClient] = useState<ClientCard | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [clientProgress, setClientProgress] = useState<{[key: string]: any[]}>({});
+  const [clientProgress, setClientProgress] = useState<{[key: string]: ClientProgress[]}>({});
 
   const loadData = async () => {
     try {
@@ -31,6 +31,25 @@ export default function AdminClientsPage() {
       setClients(clientsList);
       setPackages(packagesList);
       setBookings(bookingsList);
+      
+      // Carica i progressi per tutti i clienti
+      const progressPromises = clientsList.map(async (client) => {
+        if (client.id) {
+          const progress = await getClientProgress(client.id);
+          return { clientId: client.id, progress };
+        }
+        return null;
+      });
+      
+      const progressResults = await Promise.all(progressPromises);
+      const progressMap: {[key: string]: ClientProgress[]} = {};
+      progressResults.forEach(result => {
+        if (result) {
+          progressMap[result.clientId] = result.progress;
+        }
+      });
+      setClientProgress(progressMap);
+      
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("Errore nel caricamento dei dati");
@@ -44,13 +63,27 @@ export default function AdminClientsPage() {
   }, []);
 
   // Funzioni per gestire i progressi dei clienti
-  const handleSaveProgress = async (clientId: string, progressEntry: any) => {
+  const handleSaveProgress = async (clientId: string, progressEntry: Omit<ClientProgress, 'id' | 'clientId' | 'createdAt'>) => {
     try {
-      // Simula il salvataggio (in futuro integreremo con Firebase)
+      // Salva nel database
+      const progressId = await saveClientProgress({
+        clientId,
+        ...progressEntry
+      });
+      
+      // Aggiorna lo state locale
+      const newProgress: ClientProgress = {
+        id: progressId,
+        clientId,
+        ...progressEntry,
+        createdAt: new Date().toISOString()
+      };
+      
       setClientProgress(prev => ({
         ...prev,
-        [clientId]: [...(prev[clientId] || []), { ...progressEntry, id: Date.now().toString() }]
+        [clientId]: [newProgress, ...(prev[clientId] || [])]
       }));
+      
       toast.success("Progresso salvato con successo!");
     } catch (error) {
       console.error("Error saving progress:", error);
@@ -383,6 +416,7 @@ export default function AdminClientsPage() {
             notes: client.notes || '',
             createdAt: client.createdAt || new Date().toISOString()
           }}
+          progressData={progressData}
           onSave={handleSaveProgress}
           onExportPDF={handleExportPDF}
         />
