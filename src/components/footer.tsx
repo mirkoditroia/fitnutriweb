@@ -12,7 +12,7 @@ export function Footer() {
   }, []);
 
   const legalInfo = siteContent?.legalInfo;
-  const companyName = legalInfo?.companyName || "GZnutrition";
+  const companyName = legalInfo?.companyName || siteContent?.businessName || "GZnutrition";
   const footerText = legalInfo?.footerText;
   const showLegalLinks = legalInfo?.showLegalLinks !== false; // Default true
 
@@ -23,13 +23,13 @@ export function Footer() {
           {/* Copyright e informazioni aziendali */}
           <div className="text-center sm:text-left">
             <p>© {new Date().getFullYear()} {companyName}</p>
-            {footerText && (
-              <p className="mt-1 text-xs text-foreground/60">{footerText}</p>
-            )}
             {legalInfo?.vatNumber && (
-              <p className="mt-1 text-xs text-foreground/60">
+              <p className="mt-1 text-sm font-medium text-foreground/80">
                 P.IVA: {legalInfo.vatNumber}
               </p>
+            )}
+            {footerText && (
+              <p className="mt-1 text-xs text-foreground/60">{footerText}</p>
             )}
             {legalInfo?.taxCode && (
               <p className="mt-1 text-xs text-foreground/60">
@@ -41,36 +41,24 @@ export function Footer() {
           {/* Link legali */}
           {showLegalLinks && (
             <nav className="flex flex-wrap justify-center sm:justify-end gap-4 text-xs">
-              {legalInfo?.privacyPolicyUrl && (
-                <a 
-                  href={legalInfo.privacyPolicyUrl} 
-                  className="hover:text-primary transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Privacy Policy
-                </a>
-              )}
-              {legalInfo?.cookiePolicyUrl && (
-                <a 
-                  href={legalInfo.cookiePolicyUrl} 
-                  className="hover:text-primary transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Cookie Policy
-                </a>
-              )}
-              {legalInfo?.termsOfServiceUrl && (
-                <a 
-                  href={legalInfo.termsOfServiceUrl} 
-                  className="hover:text-primary transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Termini di Servizio
-                </a>
-              )}
+              <a 
+                href="/privacy" 
+                className="hover:text-primary transition-colors"
+              >
+                Privacy Policy
+              </a>
+              <a 
+                href="/cookies" 
+                className="hover:text-primary transition-colors"
+              >
+                Cookie Policy
+              </a>
+              <a 
+                href="/terms" 
+                className="hover:text-primary transition-colors"
+              >
+                Termini di Servizio
+              </a>
             </nav>
           )}
         </div>

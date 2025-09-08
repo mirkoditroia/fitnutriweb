@@ -1043,16 +1043,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                     {siteContent?.legalInfo?.gdprConsentText || 
                       "Acconsento al trattamento dei miei dati personali per la gestione della prenotazione e per ricevere comunicazioni relative al servizio, ai sensi del GDPR (Regolamento UE 2016/679). I dati saranno utilizzati esclusivamente per le finalità indicate e non saranno comunicati a terzi."}
                   </p>
-                  {siteContent?.legalInfo?.privacyPolicyUrl && (
-                    <a 
-                      href={siteContent.legalInfo.privacyPolicyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline text-xs mt-1 inline-block"
-                    >
-                      Leggi la Privacy Policy
-                    </a>
-                  )}
+                  <a 
+                    href="/privacy"
+                    className="text-primary hover:underline text-xs mt-1 inline-block"
+                  >
+                    Leggi la Privacy Policy
+                  </a>
                 </label>
                 {errors.gdprConsent && (
                   <p className="text-destructive text-sm mt-1">{errors.gdprConsent.message}</p>

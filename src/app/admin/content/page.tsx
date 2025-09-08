@@ -1561,63 +1561,19 @@ export default function AdminContentPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-black">
-                    Privacy Policy URL
-                  </label>
-                  <input
-                    type="url"
-                    value={content.legalInfo?.privacyPolicyUrl || ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      legalInfo: {
-                        ...content.legalInfo,
-                        privacyPolicyUrl: e.target.value
-                      }
-                    })}
-                    placeholder="https://gznutrition.com/privacy"
-                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-black">
-                    Cookie Policy URL
-                  </label>
-                  <input
-                    type="url"
-                    value={content.legalInfo?.cookiePolicyUrl || ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      legalInfo: {
-                        ...content.legalInfo,
-                        cookiePolicyUrl: e.target.value
-                      }
-                    })}
-                    placeholder="https://gznutrition.com/cookies"
-                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-black">
-                    Termini di Servizio URL
-                  </label>
-                  <input
-                    type="url"
-                    value={content.legalInfo?.termsOfServiceUrl || ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      legalInfo: {
-                        ...content.legalInfo,
-                        termsOfServiceUrl: e.target.value
-                      }
-                    })}
-                    placeholder="https://gznutrition.com/terms"
-                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
-                  />
-                </div>
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <h4 className="font-medium text-black mb-2">📄 Pagine Legali</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Le pagine legali sono ora integrate nel sito e accessibili tramite:
+                </p>
+                <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                  <li><strong>Privacy Policy:</strong> <a href="/privacy" target="_blank" className="text-primary hover:underline">/privacy</a></li>
+                  <li><strong>Cookie Policy:</strong> <a href="/cookies" target="_blank" className="text-primary hover:underline">/cookies</a></li>
+                  <li><strong>Termini di Servizio:</strong> <a href="/terms" target="_blank" className="text-primary hover:underline">/terms</a></li>
+                </ul>
+                <p className="text-xs text-gray-500 mt-2">
+                  Le pagine sono personalizzate automaticamente con le informazioni aziendali configurate sopra.
+                </p>
               </div>
             </div>
 

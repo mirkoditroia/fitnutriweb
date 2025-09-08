@@ -12,10 +12,12 @@ export function CookieBanner() {
   useEffect(() => {
     getSiteContent().then(setSiteContent);
     
-    // Check if user has already made a choice
-    const cookieConsent = localStorage.getItem('cookieConsent');
-    if (!cookieConsent) {
-      setIsVisible(true);
+    // Check if user has already made a choice (only on client side)
+    if (typeof window !== 'undefined') {
+      const cookieConsent = localStorage.getItem('cookieConsent');
+      if (!cookieConsent) {
+        setIsVisible(true);
+      }
     }
   }, []);
 
@@ -29,7 +31,8 @@ export function CookieBanner() {
     setIsVisible(false);
   };
 
-  if (!isVisible || !siteContent?.legalInfo?.cookieBanner?.enabled) {
+  // Show banner if visible and either enabled is true or not explicitly disabled
+  if (!isVisible || siteContent?.legalInfo?.cookieBanner?.enabled === false) {
     return null;
   }
 
@@ -47,16 +50,12 @@ export function CookieBanner() {
               {cookieBanner.message || 
                 "Utilizziamo i cookie per migliorare la tua esperienza di navigazione e per fornire funzionalità personalizzate. Continuando a navigare accetti l'utilizzo dei cookie."}
             </p>
-            {siteContent.legalInfo.cookiePolicyUrl && (
-              <a 
-                href={siteContent.legalInfo.cookiePolicyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline"
-              >
-                {cookieBanner.learnMoreText || "Scopri di più"}
-              </a>
-            )}
+            <a 
+              href="/cookies"
+              className="text-sm text-primary hover:underline"
+            >
+              {cookieBanner.learnMoreText || "Scopri di più"}
+            </a>
           </div>
           
           <div className="flex gap-3">
