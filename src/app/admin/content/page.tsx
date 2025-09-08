@@ -38,7 +38,13 @@ export default function AdminContentPage() {
               // ✅ Aggiungi Legal Info se non esiste
               legalInfo: c.legalInfo ?? {
                 companyName: "GZnutrition",
+                vatNumber: "",
+                taxCode: "",
+                email: "",
+                registeredAddress: "",
+                footerText: "",
                 showLegalLinks: true,
+                gdprConsentText: "",
                 cookieBanner: {
                   enabled: true,
                   title: "🍪 Utilizzo dei Cookie",
@@ -46,6 +52,23 @@ export default function AdminContentPage() {
                   acceptText: "Accetta",
                   declineText: "Rifiuta",
                   learnMoreText: "Scopri di più"
+                },
+                legalPages: {
+                  privacyPolicy: {
+                    title: "Privacy Policy",
+                    lastUpdated: new Date().toLocaleDateString('it-IT'),
+                    content: ""
+                  },
+                  cookiePolicy: {
+                    title: "Cookie Policy", 
+                    lastUpdated: new Date().toLocaleDateString('it-IT'),
+                    content: ""
+                  },
+                  termsOfService: {
+                    title: "Termini di Servizio",
+                    lastUpdated: new Date().toLocaleDateString('it-IT'),
+                    content: ""
+                  }
                 }
               }
             } : { 
