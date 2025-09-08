@@ -36,7 +36,7 @@ export function CookieBanner() {
     return null;
   }
 
-  const cookieBanner = siteContent.legalInfo.cookieBanner;
+  const cookieBanner = siteContent?.legalInfo?.cookieBanner;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
@@ -44,17 +44,17 @@ export function CookieBanner() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 mb-2">
-              {cookieBanner.title || "🍪 Utilizzo dei Cookie"}
+              {cookieBanner?.title || "🍪 Utilizzo dei Cookie"}
             </h3>
             <p className="text-sm text-gray-600 mb-2">
-              {cookieBanner.message || 
+              {cookieBanner?.message || 
                 "Utilizziamo i cookie per migliorare la tua esperienza di navigazione e per fornire funzionalità personalizzate. Continuando a navigare accetti l'utilizzo dei cookie."}
             </p>
             <a 
               href="/cookies"
               className="text-sm text-primary hover:underline"
             >
-              {cookieBanner.learnMoreText || "Scopri di più"}
+              {cookieBanner?.learnMoreText || "Scopri di più"}
             </a>
           </div>
           
@@ -65,14 +65,14 @@ export function CookieBanner() {
               onClick={handleDecline}
               className="text-gray-600 border-gray-300 hover:bg-gray-50"
             >
-              {cookieBanner.declineText || "Rifiuta"}
+              {cookieBanner?.declineText || "Rifiuta"}
             </Button>
             <Button
               size="sm"
               onClick={handleAccept}
               className="bg-primary hover:bg-primary/90"
             >
-              {cookieBanner.acceptText || "Accetta"}
+              {cookieBanner?.acceptText || "Accetta"}
             </Button>
           </div>
         </div>
