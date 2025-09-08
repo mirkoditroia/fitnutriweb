@@ -1297,12 +1297,54 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
   console.log("🔥 [Firebase] Content originale:", content);
   console.log("🔥 [Firebase] BMI config:", content.bmiCalculator);
   console.log("🔥 [Firebase] Reviews config:", content.googleReviews);
+  console.log("🔥 [Firebase] LegalInfo config:", content.legalInfo);
   
   // Firestore non accetta valori undefined: rimuoviamoli in modo sicuro
   const sanitized = JSON.parse(JSON.stringify(content));
+  
+  // ✅ ASSICURATI che legalInfo sia sempre presente con valori di default
+  if (!sanitized.legalInfo) {
+    sanitized.legalInfo = {
+      companyName: "",
+      vatNumber: "",
+      taxCode: "",
+      email: "",
+      registeredAddress: "",
+      footerText: "",
+      showLegalLinks: true,
+      gdprConsentText: "",
+      cookieBanner: {
+        enabled: true,
+        title: "🍪 Utilizzo dei Cookie",
+        message: "Utilizziamo i cookie per migliorare la tua esperienza di navigazione e per fornire funzionalità personalizzate. Continuando a navigare accetti l'utilizzo dei cookie.",
+        acceptText: "Accetta",
+        declineText: "Rifiuta",
+        learnMoreText: "Scopri di più"
+      },
+      legalPages: {
+        privacyPolicy: {
+          title: "Privacy Policy",
+          lastUpdated: new Date().toLocaleDateString('it-IT'),
+          content: ""
+        },
+        cookiePolicy: {
+          title: "Cookie Policy", 
+          lastUpdated: new Date().toLocaleDateString('it-IT'),
+          content: ""
+        },
+        termsOfService: {
+          title: "Termini di Servizio",
+          lastUpdated: new Date().toLocaleDateString('it-IT'),
+          content: ""
+        }
+      }
+    };
+  }
+  
   console.log("🔥 [Firebase] Content sanitizzato:", sanitized);
   console.log("🔥 [Firebase] BMI sanitizzato:", sanitized.bmiCalculator);
   console.log("🔥 [Firebase] Reviews sanitizzato:", sanitized.googleReviews);
+  console.log("🔥 [Firebase] LegalInfo sanitizzato:", sanitized.legalInfo);
   
   console.log("🔥 [Firebase] Chiamando setDoc...");
   await setDoc(col.content(db as Firestore), sanitized, { merge: true });

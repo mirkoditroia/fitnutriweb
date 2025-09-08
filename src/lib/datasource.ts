@@ -505,6 +505,7 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
   console.log("[upsertSiteContent] Current mode:", mode);
   console.log("[upsertSiteContent] 📊 BMI config being saved:", content.bmiCalculator);
   console.log("[upsertSiteContent] ⭐ Reviews config being saved:", content.googleReviews);
+  console.log("[upsertSiteContent] ⚖️ LegalInfo config being saved:", content.legalInfo);
   
   if (mode === "firebase") {
     console.log("[upsertSiteContent] Using Firebase");

@@ -122,6 +122,7 @@ export default function AdminContentPage() {
     console.log("🔍 SALVATAGGIO CONTENUTI - Oggetto completo:", content);
     console.log("📊 BMI Calculator config:", content.bmiCalculator);
     console.log("⭐ Google Reviews config:", content.googleReviews);
+    console.log("⚖️ LegalInfo config:", content.legalInfo);
     
     try {
       await upsertSiteContent(content);
