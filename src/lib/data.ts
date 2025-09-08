@@ -1759,28 +1759,60 @@ export async function saveClientProgress(progress: Omit<ClientProgress, 'id' | '
 export async function getClientProgress(clientId: string): Promise<ClientProgress[]> {
   if (!db) return [];
   
-  const q = query(
-    collection(db as Firestore, "clientProgress"),
-    where("clientId", "==", clientId),
-    orderBy("date", "desc")
-  );
-  
-  const snap = await getDocs(q);
-  return snap.docs.map(doc => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      clientId: data.clientId,
-      date: data.date,
-      weight: data.weight,
-      bodyFat: data.bodyFat,
-      muscleMass: data.muscleMass,
-      measurements: data.measurements,
-      notes: data.notes,
-      photos: data.photos,
-      createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
-    } as ClientProgress;
-  });
+  try {
+    // Prova prima con l'ordinamento (quando l'indice sarà pronto)
+    const q = query(
+      collection(db as Firestore, "clientProgress"),
+      where("clientId", "==", clientId),
+      orderBy("date", "desc")
+    );
+    
+    const snap = await getDocs(q);
+    const results = snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        clientId: data.clientId,
+        date: data.date,
+        weight: data.weight,
+        bodyFat: data.bodyFat,
+        muscleMass: data.muscleMass,
+        measurements: data.measurements,
+        notes: data.notes,
+        photos: data.photos,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+      } as ClientProgress;
+    });
+    
+    return results;
+  } catch (error) {
+    // Se l'indice non è ancora pronto, usa una query senza ordinamento
+    console.log("Indice non ancora pronto, uso query senza ordinamento");
+    const q = query(
+      collection(db as Firestore, "clientProgress"),
+      where("clientId", "==", clientId)
+    );
+    
+    const snap = await getDocs(q);
+    const results = snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        clientId: data.clientId,
+        date: data.date,
+        weight: data.weight,
+        bodyFat: data.bodyFat,
+        muscleMass: data.muscleMass,
+        measurements: data.measurements,
+        notes: data.notes,
+        photos: data.photos,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+      } as ClientProgress;
+    });
+    
+    // Ordina manualmente i risultati
+    return results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
 }
 
 export async function updateClientProgress(progressId: string, updates: Partial<ClientProgress>): Promise<void> {
