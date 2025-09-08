@@ -112,21 +112,6 @@ export default function AdminPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <h2 className="font-semibold">Trustpilot Logs</h2>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-foreground/70">
-              Monitora esito fetch e ultimi log.
-            </p>
-            <div className="mt-4 flex gap-3">
-              <Link href="/admin/trustpilot" className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors font-medium">
-                📊 Trustpilot
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </>
   );

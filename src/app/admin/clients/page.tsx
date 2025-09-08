@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
 import { UploadButton } from "@/components/UploadButton";
+import { ClientProgressCard } from "@/components/ClientProgressCard";
+import { ProgressChart } from "@/components/ProgressChart";
 import { format } from "date-fns";
 
 type ViewMode = "list" | "detail" | "create";
@@ -18,6 +20,7 @@ export default function AdminClientsPage() {
   const [selectedClient, setSelectedClient] = useState<ClientCard | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [clientProgress, setClientProgress] = useState<{[key: string]: any[]}>({});
 
   const loadData = async () => {
     try {
@@ -41,6 +44,113 @@ export default function AdminClientsPage() {
     loadData();
   }, []);
 
+  // Funzioni per gestire i progressi dei clienti
+  const handleSaveProgress = async (clientId: string, progressEntry: any) => {
+    try {
+      // Simula il salvataggio (in futuro integreremo con Firebase)
+      setClientProgress(prev => ({
+        ...prev,
+        [clientId]: [...(prev[clientId] || []), { ...progressEntry, id: Date.now().toString() }]
+      }));
+      toast.success("Progresso salvato con successo!");
+    } catch (error) {
+      console.error("Error saving progress:", error);
+      toast.error("Errore nel salvare il progresso");
+    }
+  };
+
+  const handleExportPDF = async (clientId: string) => {
+    try {
+      const client = clients.find(c => c.id === clientId);
+      if (!client) return;
+      
+      const progressData = clientProgress[clientId] || [];
+      
+      // Crea una nuova finestra per il PDF
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
+
+      const currentDate = new Date().toLocaleDateString('it-IT');
+      
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Report Progressi - ${client.name}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3B82F6; padding-bottom: 20px; }
+              .client-info { background: #F9FAFB; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+              .progress-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              .progress-table th, .progress-table td { border: 1px solid #D1D5DB; padding: 12px; text-align: left; }
+              .progress-table th { background: #F3F4F6; font-weight: bold; }
+              .footer { margin-top: 40px; text-align: center; color: #6B7280; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>📊 Report Progressi Cliente</h1>
+              <p>Generato il ${currentDate} - GZ Nutrition</p>
+            </div>
+            <div class="client-info">
+              <h2>👤 ${client.name}</h2>
+              <p><strong>Email:</strong> ${client.email}</p>
+              <p><strong>Telefono:</strong> ${client.phone}</p>
+              <p><strong>Status:</strong> ${client.status}</p>
+            </div>
+            ${progressData.length > 0 ? `
+              <h2>📈 Storico Progressi</h2>
+              <table class="progress-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Peso (kg)</th>
+                    <th>Massa Grassa (%)</th>
+                    <th>Massa Muscolare (kg)</th>
+                    <th>Vita (cm)</th>
+                    <th>Petto (cm)</th>
+                    <th>Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${progressData.map(entry => `
+                    <tr>
+                      <td>${new Date(entry.date).toLocaleDateString('it-IT')}</td>
+                      <td>${entry.weight || '-'}</td>
+                      <td>${entry.bodyFat || '-'}</td>
+                      <td>${entry.muscleMass || '-'}</td>
+                      <td>${entry.measurements?.waist || '-'}</td>
+                      <td>${entry.measurements?.chest || '-'}</td>
+                      <td>${entry.notes || '-'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : '<p>Nessun progresso registrato ancora.</p>'}
+            <div class="footer">
+              <p>Report generato automaticamente da GZ Nutrition</p>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 500);
+      };
+      
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Errore nell'export del PDF");
+    }
+  };
+
   const handleCreateNew = () => {
     setSelectedClient({
       name: "",
@@ -48,19 +158,10 @@ export default function AdminClientsPage() {
       phone: "",
       notes: "",
       status: "prospect",
-      source: "website",
-      goals: [],
-      medicalConditions: [],
-      allergies: [],
-      medications: [],
-      documents: []
+      createdAt: new Date().toISOString(),
+      id: crypto.randomUUID()
     });
     setViewMode("create");
-  };
-
-  const handleEditClient = (client: ClientCard) => {
-    setSelectedClient(client);
-    setViewMode("detail");
   };
 
   const handleSaveClient = async (client: ClientCard) => {
@@ -68,13 +169,11 @@ export default function AdminClientsPage() {
       await upsertClient(client);
       toast.success("Cliente salvato con successo!");
       await loadData();
-      if (viewMode === "create") {
-        setViewMode("list");
-        setSelectedClient(null);
-      }
+      setViewMode("list");
+      setSelectedClient(null);
     } catch (error) {
       console.error("Error saving client:", error);
-      toast.error("Errore nel salvataggio del cliente");
+      toast.error("Errore nel salvare il cliente");
     }
   };
 
@@ -99,39 +198,6 @@ export default function AdminClientsPage() {
     }
   };
 
-
-  const handleDocumentUpload = (clientId: string, documentType: string, url: string) => {
-    if (!selectedClient) return;
-    
-    const newDocument = {
-      id: crypto.randomUUID(),
-      name: `${documentType}_${format(new Date(), 'yyyy-MM-dd')}`,
-      url,
-      type: documentType as "medical_certificate" | "id_document" | "consent_form" | "other",
-      uploadedAt: new Date().toISOString()
-    };
-
-    const updatedClient = {
-      ...selectedClient,
-      documents: [...(selectedClient.documents || []), newDocument]
-    };
-
-    setSelectedClient(updatedClient);
-    handleSaveClient(updatedClient);
-  };
-
-  const handleRemoveDocument = (clientId: string, documentId: string) => {
-    if (!selectedClient) return;
-    
-    const updatedClient = {
-      ...selectedClient,
-      documents: selectedClient.documents?.filter(d => d.id !== documentId) || []
-    };
-
-    setSelectedClient(updatedClient);
-    handleSaveClient(updatedClient);
-  };
-
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -140,8 +206,8 @@ export default function AdminClientsPage() {
   });
 
   if (loading) {
-  return (
-    <main className="container py-8">
+    return (
+      <main className="container py-8">
         <h1 className="text-2xl font-bold">Gestione Clienti</h1>
         <p className="mt-4 text-foreground/70">Caricamento...</p>
       </main>
@@ -157,470 +223,255 @@ export default function AdminClientsPage() {
             placeholder="Cerca per nome o email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
           />
         </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-2 border border-foreground/20 rounded-md bg-background"
-        >
-          <option value="all">Tutti gli stati</option>
-          <option value="prospect">Prospetto</option>
-          <option value="active">Attivo</option>
-          <option value="inactive">Inattivo</option>
-        </select>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={handleCreateNew} className="button-responsive">
-            <span className="flex items-center justify-center gap-2 text-center">
-              <span>➕</span>
-              <span>Nuovo Cliente</span>
-            </span>
+        <div className="flex gap-2">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="all">Tutti gli stati</option>
+            <option value="prospect">Prospect</option>
+            <option value="active">Attivo</option>
+            <option value="inactive">Inattivo</option>
+            <option value="completed">Completato</option>
+          </select>
+          <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
+            + Nuovo Cliente
           </Button>
         </div>
       </div>
 
       {/* Clients Grid */}
-      <div className="grid gap-4">
-        {filteredClients.map(client => (
-          <div key={client.id} className="card p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredClients.map((client) => (
+          <div key={client.id} className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                {client.name.charAt(0).toUpperCase()}
+              </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-semibold text-lg">{client.name}</h3>
-                  <span className={`chip text-xs ${
-                    client.status === "active" ? "bg-green-100 text-green-800" :
-                    client.status === "inactive" ? "bg-gray-100 text-gray-800" :
-                    "bg-blue-100 text-blue-800"
-                  }`}>
-                    {client.status === "active" ? "Attivo" : 
-                     client.status === "inactive" ? "Inattivo" : "Prospetto"}
-                  </span>
-                  {client.assignedPackage && (
-                    <span className="chip bg-primary/10 text-primary text-xs">
-                      📦 Pacchetto
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-foreground/70 space-y-1">
-                  <div>📧 {client.email}</div>
-                  {client.phone && <div>📱 {client.phone}</div>}
-                  {client.city && <div>🏠 {client.city}</div>}
-                  {client.fitnessLevel && (
-                    <div>💪 Livello: {client.fitnessLevel === "beginner" ? "Principiante" : 
-                                       client.fitnessLevel === "intermediate" ? "Intermedio" : "Avanzato"}</div>
-                  )}
-                  {client.documents && client.documents.length > 0 && (
-                    <div>📄 {client.documents.length} documento{client.documents.length !== 1 ? 'i' : ''}</div>
-                  )}
-                </div>
-                {client.notes && (
-                  <div className="text-sm text-foreground/60 mt-2 italic">
-                    &ldquo;{client.notes.substring(0, 100)}{client.notes.length > 100 ? '...' : ''}&rdquo;
-                  </div>
-                )}
+                <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
+                <p className="text-sm text-gray-600">{client.email}</p>
+                <p className="text-sm text-gray-600">{client.phone}</p>
               </div>
-              <div className="flex gap-2 ml-4">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleEditClient(client)}
-                >
-                  ✏️ Modifica
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDeleteClient(client.id!)}
-                  className="text-red-600 border-red-300 hover:bg-red-50"
-                >
-                  🗑️ Elimina
-                </Button>
-              </div>
+            </div>
+            
+            <div className="flex items-center justify-between mb-4">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                client.status === 'active' ? 'bg-green-100 text-green-800' :
+                client.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                client.status === 'prospect' ? 'bg-blue-100 text-blue-800' :
+                'bg-purple-100 text-purple-800'
+              }`}>
+                {client.status === 'active' ? 'Attivo' :
+                 client.status === 'inactive' ? 'Inattivo' :
+                 client.status === 'prospect' ? 'Prospect' : 'Completato'}
+              </span>
+              <span className="text-xs text-gray-500">
+                Cliente dal {format(new Date(client.createdAt || new Date()), 'dd/MM/yyyy')}
+              </span>
+            </div>
+
+            {client.notes && (
+              <p className="text-sm text-gray-600 mb-4 line-clamp-2">{client.notes}</p>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  setSelectedClient(client);
+                  setViewMode("detail");
+                }}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                👁️ Visualizza
+              </Button>
+              <Button
+                onClick={() => handleDeleteClient(client.id!)}
+                className="bg-red-600 hover:bg-red-700"
+                size="sm"
+              >
+                🗑️
+              </Button>
             </div>
           </div>
         ))}
-        
-        {filteredClients.length === 0 && (
-          <div className="text-center py-12 text-foreground/50">
-            <div className="text-4xl mb-4">👥</div>
-            <p className="text-lg font-medium mb-2">Nessun cliente trovato</p>
-            <p className="text-sm">
-              {searchTerm || filterStatus !== "all" 
-                ? "Prova a modificare i filtri di ricerca" 
-                : "Crea il tuo primo cliente cliccando su 'Nuovo Cliente'"}
-            </p>
-          </div>
-        )}
       </div>
+
+      {filteredClients.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">👥</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Nessun cliente trovato</h3>
+          <p className="text-gray-600 mb-4">
+            {searchTerm || filterStatus !== "all" 
+              ? "Prova a modificare i filtri di ricerca" 
+              : "Inizia aggiungendo il tuo primo cliente"}
+          </p>
+          {(!searchTerm && filterStatus === "all") && (
+            <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
+              + Aggiungi Primo Cliente
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 
-  const renderClientForm = (client: ClientCard, isNew: boolean = false) => (
-    <div className="mt-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold">
-          {isNew ? "Nuovo Cliente" : `Modifica Cliente: ${client.name}`}
-        </h2>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setViewMode("list");
-              setSelectedClient(null);
-            }}
-          >
-            ← Torna alla lista
-          </Button>
-          <Button onClick={() => handleSaveClient(client)}>
-            💾 Salva Cliente
-          </Button>
+  const renderClientForm = (client: ClientCard, isNew: boolean = false) => {
+    const progressData = clientProgress[client.id!] || [];
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => {
+                setViewMode("list");
+                setSelectedClient(null);
+              }}
+              variant="outline"
+              size="sm"
+            >
+              ← Torna alla Lista
+            </Button>
+            <h1 className="text-2xl font-bold">
+              {isNew ? "Nuovo Cliente" : `Dettaglio Cliente`}
+            </h1>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => handleSaveClient(client)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              💾 Salva Modifiche
+            </Button>
+            {!isNew && (
+              <Button
+                onClick={() => handleDeleteClient(client.id!)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                🗑️ Elimina Cliente
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="bg-card border border-border rounded-lg p-6 mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 shadow-sm">
-        <form className="space-y-6">
-          {/* Basic Information */}
-          <section>
-            <h3 className="text-lg font-medium mb-4">📋 Informazioni Base</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome completo *</label>
-                <Input
-                  value={client.name}
-                  onChange={(e) => setSelectedClient({ ...client, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email *</label>
-                <Input
-                  type="email"
-                  value={client.email}
-                  onChange={(e) => setSelectedClient({ ...client, email: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Telefono</label>
-                <Input
-                  type="tel"
-                  value={client.phone || ""}
-                  onChange={(e) => setSelectedClient({ ...client, phone: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Data di nascita</label>
-                <Input
-                  type="date"
-                  value={client.birthDate || ""}
-                  onChange={(e) => setSelectedClient({ ...client, birthDate: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Genere</label>
-                <select
-                  value={client.gender || ""}
-                  onChange={(e) => setSelectedClient({ ...client, gender: e.target.value as "male" | "female" | "other" | "prefer_not_to_say" })}
-                  className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-white text-black placeholder:text-black/70"
-                >
-                  <option value="">Seleziona...</option>
-                  <option value="male">Maschio</option>
-                  <option value="female">Femmina</option>
-                  <option value="other">Altro</option>
-                  <option value="prefer_not_to_say">Preferisco non dire</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Stato</label>
-                <select
-                  value={client.status || "prospect"}
-                  onChange={(e) => setSelectedClient({ ...client, status: e.target.value as "active" | "inactive" | "prospect" })}
-                  className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-white text-black placeholder:text-black/70"
-                >
-                  <option value="prospect">Prospetto</option>
-                  <option value="active">Attivo</option>
-                  <option value="inactive">Inattivo</option>
-                </select>
-              </div>
-            </div>
-          </section>
+        {/* Nuova Scheda Cliente Migliorata */}
+        <ClientProgressCard
+          client={{
+            id: client.id || '',
+            name: client.name || '',
+            email: client.email || '',
+            phone: client.phone || '',
+            status: client.status || 'prospect',
+            notes: client.notes || '',
+            createdAt: client.createdAt || new Date().toISOString()
+          }}
+          onSave={handleSaveProgress}
+          onExportPDF={handleExportPDF}
+        />
 
-          {/* Address */}
-          <section>
-            <h3 className="text-lg font-medium mb-4">🏠 Indirizzo</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Indirizzo</label>
-                <Input
-                  value={client.address || ""}
-                  onChange={(e) => setSelectedClient({ ...client, address: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Città</label>
-                <Input
-                  value={client.city || ""}
-                  onChange={(e) => setSelectedClient({ ...client, city: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">CAP</label>
-                <Input
-                  value={client.postalCode || ""}
-                  onChange={(e) => setSelectedClient({ ...client, postalCode: e.target.value })}
-                />
-              </div>
-            </div>
-          </section>
+        {/* Grafici Progressi */}
+        {progressData.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ProgressChart
+              data={progressData}
+              type="weight"
+              onExportPDF={() => handleExportPDF(client.id!)}
+            />
+            <ProgressChart
+              data={progressData}
+              type="bodyFat"
+              onExportPDF={() => handleExportPDF(client.id!)}
+            />
+            <ProgressChart
+              data={progressData}
+              type="muscleMass"
+              onExportPDF={() => handleExportPDF(client.id!)}
+            />
+            <ProgressChart
+              data={progressData}
+              type="measurements"
+              onExportPDF={() => handleExportPDF(client.id!)}
+            />
+          </div>
+        )}
 
-          {/* Health Information */}
-          <section>
-            <h3 className="text-lg font-medium mb-4">💪 Informazioni Salute e Fitness</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Altezza (cm)</label>
-                <Input
-                  type="number"
-                  value={client.height || ""}
-                  onChange={(e) => setSelectedClient({ ...client, height: Number(e.target.value) || undefined })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Peso (kg)</label>
-                <Input
-                  type="number"
-                  value={client.weight || ""}
-                  onChange={(e) => setSelectedClient({ ...client, weight: Number(e.target.value) || undefined })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Livello fitness</label>
-                <select
-                  value={client.fitnessLevel || ""}
-                  onChange={(e) => setSelectedClient({ ...client, fitnessLevel: e.target.value as "beginner" | "intermediate" | "advanced" })}
-                  className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background"
-                >
-                  <option value="">Seleziona...</option>
-                  <option value="beginner">Principiante</option>
-                  <option value="intermediate">Intermedio</option>
-                  <option value="advanced">Avanzato</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Pacchetto assegnato</label>
-                <select
-                  value={client.assignedPackage || ""}
-                  onChange={(e) => setSelectedClient({ ...client, assignedPackage: e.target.value })}
-                  className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background"
-                >
-                  <option value="">Nessun pacchetto</option>
-                  {packages.map(pkg => (
-                    <option key={pkg.id} value={pkg.id}>{pkg.title}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </section>
-
-          {/* Arrays */}
-          <section>
-            <h3 className="text-lg font-medium mb-4">🎯 Obiettivi e Condizioni</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Obiettivi (separati da virgola)</label>
-                <Input
-                  value={client.goals?.join(", ") || ""}
-                  onChange={(e) => setSelectedClient({ 
-                    ...client, 
-                    goals: e.target.value.split(",").map(s => s.trim()).filter(Boolean) 
-                  })}
-                  placeholder="es. Perdere peso, Aumentare massa muscolare"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Condizioni mediche (separate da virgola)</label>
-                <Input
-                  value={client.medicalConditions?.join(", ") || ""}
-                  onChange={(e) => setSelectedClient({ 
-                    ...client, 
-                    medicalConditions: e.target.value.split(",").map(s => s.trim()).filter(Boolean) 
-                  })}
-                  placeholder="es. Diabete, Ipertensione"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Allergie (separate da virgola)</label>
-                <Input
-                  value={client.allergies?.join(", ") || ""}
-                  onChange={(e) => setSelectedClient({ 
-                    ...client, 
-                    allergies: e.target.value.split(",").map(s => s.trim()).filter(Boolean) 
-                  })}
-                  placeholder="es. Glutine, Lattosio"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Farmaci (separati da virgola)</label>
-                <Input
-                  value={client.medications?.join(", ") || ""}
-                  onChange={(e) => setSelectedClient({ 
-                    ...client, 
-                    medications: e.target.value.split(",").map(s => s.trim()).filter(Boolean) 
-                  })}
-                  placeholder="es. Metformina, Enalapril"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Emergency Contact */}
-          <section>
-            <h3 className="text-lg font-medium mb-4">🚨 Contatto di Emergenza</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome</label>
-                <Input
-                  value={client.emergencyContact?.name || ""}
-                  onChange={(e) => setSelectedClient({ 
-                    ...client, 
-                    emergencyContact: { 
-                      ...client.emergencyContact, 
-                      name: e.target.value 
-                    } as { name: string; phone: string; relationship: string }
-                  })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Telefono</label>
-                <Input
-                  type="tel"
-                  value={client.emergencyContact?.phone || ""}
-                  onChange={(e) => setSelectedClient({ 
-                    ...client, 
-                    emergencyContact: { 
-                      ...client.emergencyContact, 
-                      phone: e.target.value 
-                    } as { name: string; phone: string; relationship: string }
-                  })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Relazione</label>
-                <Input
-                  value={client.emergencyContact?.relationship || ""}
-                  onChange={(e) => setSelectedClient({ 
-                    ...client, 
-                    emergencyContact: { 
-                      ...client.emergencyContact, 
-                      relationship: e.target.value 
-                    } as { name: string; phone: string; relationship: string }
-                  })}
-                  placeholder="es. Coniuge, Genitore"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Documents */}
-          <section>
-            <h3 className="text-lg font-medium mb-4">📄 Documenti</h3>
-            <div className="space-y-4">
-              {/* Upload Section */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Carica Certificato Medico</label>
-                  <UploadButton
-                    folder="clients/medical"
-                    onUploaded={(url) => handleDocumentUpload(client.id!, "medical_certificate", url)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Carica Documento d&apos;Identità</label>
-                  <UploadButton
-                    folder="clients/id"
-                    onUploaded={(url) => handleDocumentUpload(client.id!, "id_document", url)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Carica Modulo Consenso</label>
-                  <UploadButton
-                    folder="clients/consent"
-                    onUploaded={(url) => handleDocumentUpload(client.id!, "consent_form", url)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Carica Altro Documento</label>
-                  <UploadButton
-                    folder="clients/other"
-                    onUploaded={(url) => handleDocumentUpload(client.id!, "other", url)}
-                  />
-                </div>
-              </div>
-
-              {/* Documents List */}
-              {client.documents && client.documents.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Documenti caricati:</h4>
-                  <div className="space-y-2">
-                    {client.documents.map(doc => (
-                      <div key={doc.id} className="flex items-center justify-between p-3 bg-background/50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">
-                            {doc.type === "medical_certificate" ? "🏥" :
-                             doc.type === "id_document" ? "🆔" :
-                             doc.type === "consent_form" ? "📝" : "📄"}
-                          </span>
-                          <div>
-                            <div className="font-medium">{doc.name}</div>
-                            <div className="text-sm text-foreground/60">
-                              Caricato il {format(new Date(doc.uploadedAt), 'dd/MM/yyyy')}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn-outline text-xs"
-                          >
-                            👁️ Visualizza
-                          </a>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRemoveDocument(client.id!, doc.id)}
-                            className="text-red-600 border-red-300 hover:bg-red-50 text-xs"
-                          >
-                            🗑️ Rimuovi
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+        {/* Informazioni Dettagliate (Collassabile) */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          <details className="group">
+            <summary className="cursor-pointer text-lg font-semibold text-gray-900 mb-4 list-none">
+              <span className="group-open:hidden">📋 Mostra Informazioni Dettagliate</span>
+              <span className="hidden group-open:inline">📋 Nascondi Informazioni Dettagliate</span>
+            </summary>
+            
+            <div className="space-y-6">
+              {/* Basic Info */}
+              <section>
+                <h3 className="text-lg font-medium mb-4">👤 Informazioni Base</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nome Completo *</label>
+                    <Input
+                      value={client.name}
+                      onChange={(e) => setSelectedClient({ ...client, name: e.target.value })}
+                      placeholder="es. Mario Rossi"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Email *</label>
+                    <Input
+                      type="email"
+                      value={client.email}
+                      onChange={(e) => setSelectedClient({ ...client, email: e.target.value })}
+                      placeholder="es. mario.rossi@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Telefono *</label>
+                    <Input
+                      type="tel"
+                      value={client.phone}
+                      onChange={(e) => setSelectedClient({ ...client, phone: e.target.value })}
+                      placeholder="es. +39 123 456 7890"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Status</label>
+                    <select
+                      value={client.status}
+                      onChange={(e) => setSelectedClient({ ...client, status: e.target.value as any })}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="prospect">Prospect</option>
+                      <option value="active">Attivo</option>
+                      <option value="inactive">Inattivo</option>
+                      <option value="completed">Completato</option>
+                    </select>
                   </div>
                 </div>
-              )}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium mb-1">Note</label>
+                  <textarea
+                    value={client.notes}
+                    onChange={(e) => setSelectedClient({ ...client, notes: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Note aggiuntive sul cliente..."
+                  />
+                </div>
+              </section>
             </div>
-          </section>
-
-          {/* Notes */}
-          <section>
-            <h3 className="text-lg font-medium mb-4">📝 Note</h3>
-            <div>
-              <label className="block text-sm font-medium mb-1">Note personali</label>
-              <textarea
-                rows={6}
-                value={client.notes || ""}
-                onChange={(e) => setSelectedClient({ ...client, notes: e.target.value })}
-                className="w-full px-3 py-2 border border-foreground/20 rounded-md bg-background"
-                placeholder="Inserisci note personali, obiettivi specifici, preferenze alimentari..."
-              />
-            </div>
-          </section>
-        </form>
+          </details>
         </div>
       </div>
-  );
+    );
+  };
 
   return (
     <>
@@ -632,5 +483,3 @@ export default function AdminClientsPage() {
     </>
   );
 }
-
-
