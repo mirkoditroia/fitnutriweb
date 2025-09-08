@@ -49,8 +49,8 @@ const getNavigationItems = (siteContent: any) => {
 
 import { getSiteContent } from "@/lib/datasource";
 type BrandCfg = { mode: "image"|"text"; imageUrl?: string; height?: number; autoBg?: boolean; text?: string; color?: string; weight?: number; size?: number };
-type NavbarProps = { initialBrand?: BrandCfg };
-export function Navbar({ initialBrand }: NavbarProps = {}) {
+type NavbarProps = { initialBrand?: BrandCfg; initialSiteContent?: any };
+export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -58,7 +58,7 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
   const [imageLoaded, setImageLoaded] = useState(
     initialBrand ? (initialBrand.mode === 'image' ? !!initialBrand.imageUrl : true) : false
   );
-  const [siteContent, setSiteContent] = useState<any>(null);
+  const [siteContent, setSiteContent] = useState<any>(initialSiteContent);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -125,8 +125,12 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
       });
     };
 
-    // Load initially
-    loadSiteContent();
+    // Load initially only if we don't have initial content
+    if (!initialSiteContent) {
+      loadSiteContent();
+    } else {
+      console.log("✅ Navbar: Usando contenuto iniziale SSR - nessun lag");
+    }
 
     // Listen for content changes (when admin saves)
     const handleContentChange = () => {

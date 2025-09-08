@@ -61,25 +61,27 @@ export default async function RootLayout({
   // Fetch site content for SSR including brand info and palette
   let initialBrand: BrandCfg | undefined = undefined;
   let serverPalette: string = 'gz-default';
+  let initialSiteContent: any = null;
   
   try {
-    if (getDataMode() !== "local") {
-      const siteContent = await getSiteContent();
-      if (siteContent) {
-        // Extract brand info
-        initialBrand = {
-          mode: siteContent.navbarLogoMode === 'image' ? 'image' : 'text',
-          imageUrl: siteContent.navbarLogoImageUrl || undefined,
-          height: typeof siteContent.navbarLogoHeight === 'number' ? siteContent.navbarLogoHeight : 40,
-          autoBg: Boolean(siteContent.navbarLogoAutoRemoveBg),
-          text: siteContent.navbarLogoText || 'GZnutrition',
-          weight: typeof siteContent.navbarLogoTextWeight === 'number' ? siteContent.navbarLogoTextWeight : 700,
-          size: typeof siteContent.navbarLogoTextSize === 'number' ? siteContent.navbarLogoTextSize : 20,
-        };
-        
-        // Extract palette from server content 
-        serverPalette = siteContent.colorPalette || 'gz-default';
-      }
+    const siteContent = await getSiteContent();
+    if (siteContent) {
+      // Store full site content for navbar (both local and production)
+      initialSiteContent = siteContent;
+      
+      // Extract brand info
+      initialBrand = {
+        mode: siteContent.navbarLogoMode === 'image' ? 'image' : 'text',
+        imageUrl: siteContent.navbarLogoImageUrl || undefined,
+        height: typeof siteContent.navbarLogoHeight === 'number' ? siteContent.navbarLogoHeight : 40,
+        autoBg: Boolean(siteContent.navbarLogoAutoRemoveBg),
+        text: siteContent.navbarLogoText || 'GZnutrition',
+        weight: typeof siteContent.navbarLogoTextWeight === 'number' ? siteContent.navbarLogoTextWeight : 700,
+        size: typeof siteContent.navbarLogoTextSize === 'number' ? siteContent.navbarLogoTextSize : 20,
+      };
+      
+      // Extract palette from server content 
+      serverPalette = siteContent.colorPalette || 'gz-default';
     }
   } catch (error) {
     // Fallback to defaults if fetch fails
@@ -140,7 +142,7 @@ export default async function RootLayout({
         )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 font-sans`}>
-        <Navbar initialBrand={initialBrand} />
+        <Navbar initialBrand={initialBrand} initialSiteContent={initialSiteContent} />
         <ToasterProvider />
         {children}
         <Footer />
