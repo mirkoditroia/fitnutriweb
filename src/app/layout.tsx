@@ -141,6 +141,10 @@ export default async function RootLayout({
         {initialBrand?.mode === 'image' && initialBrand.imageUrl && (
           <link rel="preload" as="image" href={initialBrand.imageUrl} />
         )}
+        {/* Favicon dinamico */}
+        {initialSiteContent?.favicon && (
+          <link rel="icon" href={initialSiteContent.favicon} />
+        )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 font-sans`}>
         <Navbar initialBrand={initialBrand} initialSiteContent={initialSiteContent} />

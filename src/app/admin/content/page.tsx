@@ -628,6 +628,36 @@ export default function AdminContentPage() {
           <section className="space-y-4">
             <h2 className="font-semibold text-black">Hero</h2>
           <Input label="Nome del sito" value={content.siteName || "GZnutrition"} onChange={(e) => setContent({ ...content, siteName: e.target.value })} placeholder="GZnutrition" />
+          
+          {/* Favicon Upload */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-black">Favicon</label>
+            <div className="flex items-center gap-3">
+              {content.favicon && (
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={content.favicon} 
+                    alt="Favicon" 
+                    className="w-8 h-8"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  <span className="text-sm text-gray-600">Favicon attuale</span>
+                </div>
+              )}
+              <UploadButton
+                folder="favicon"
+                accept=".ico,.png,.jpg,.jpeg,.svg"
+                maxSize={1}
+                onUploaded={(url) => setContent({ ...content, favicon: url })}
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              Carica un'immagine per il favicon del sito. Formato consigliato: 32x32px o 16x16px. Supportati: .ico, .png, .jpg, .svg
+            </p>
+          </div>
+          
           <Input label="Hero title" value={content.heroTitle} onChange={(e) => setContent({ ...content, heroTitle: e.target.value })} />
           <Input label="Hero subtitle" value={content.heroSubtitle} onChange={(e) => setContent({ ...content, heroSubtitle: e.target.value })} />
           <Input label="Hero CTA" value={content.heroCta} onChange={(e) => setContent({ ...content, heroCta: e.target.value })} />
