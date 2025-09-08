@@ -47,8 +47,10 @@ export function FreeConsultationPopup({
     setHasSeen(true);
     localStorage.setItem('freeConsultationPopupSeen', 'true');
     
-    // NUOVO SISTEMA DIRETTO: seleziona il pacchetto promozionale
+    // ✅ CORREZIONE: Imposta correttamente l'ID del pacchetto nell'URL
+    // setDirectState gestisce già l'aggiornamento dell'URL
     setDirectState('free-consultation', true);
+    console.log("FreeConsultationPopup: Impostato packageId 'free-consultation' per consultazione gratuita");
     
     // Scroll alla sezione prenota
     const bookingSection = document.getElementById('booking');

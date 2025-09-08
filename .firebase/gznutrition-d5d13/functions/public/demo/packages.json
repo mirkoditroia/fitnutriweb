@@ -1,20 +1,25 @@
 [
   {
-    "id": "demo-basic",
-    "title": "Start",
-    "description": "• Piano nutrizionale base\n• 2 check-in al mese\n• Allenamenti essenziali",
-    "price": 99,
-    "isActive": true,
-    "featured": false
-  },
-  {
-    "id": "demo-pro",
-    "title": "Pro",
-    "description": "• Piano personalizzato\n• Check-in settimanali\n• Progressioni intelligenti",
-    "price": 149,
+    "id": "free-consultation",
+    "title": "🎯 10 Minuti Consultivi Gratuiti",
+    "description": "Primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance",
+    "price": 0,
+    "imageUrl": "",
     "isActive": true,
     "featured": true,
-    "badge": "Più scelto"
+    "badge": "GRATIS",
+    "isPromotional": true
+  },
+  {
+    "id": "basic-package",
+    "title": "Pacchetto Base",
+    "description": "Programma nutrizionale personalizzato con follow-up settimanale",
+    "price": 150,
+    "imageUrl": "",
+    "isActive": true,
+    "featured": false,
+    "badge": null,
+    "isPromotional": false
   }
 ]
 
