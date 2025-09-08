@@ -788,9 +788,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                       € {selectedPackage.price}
                     </p>
                   )}
-                  <p className="text-xs text-foreground mt-1">
-                    {selectedPackage.paymentText || "pagabile mensilmente"}
-                  </p>
+                  {selectedPackage.paymentText && (
+                    <p className="text-xs text-foreground mt-1">
+                      {selectedPackage.paymentText}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

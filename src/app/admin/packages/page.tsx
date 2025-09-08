@@ -215,7 +215,7 @@ export default function AdminPackagesPage() {
 
                 <Input 
                   label="Testo Pagamento" 
-                  value={p.paymentText ?? "pagabile mensilmente"} 
+                  value={p.paymentText || ""} 
                   onChange={(e) => setItems(upd(items, i, { paymentText: e.target.value }))} 
                   placeholder="es. pagabile mensilmente, in un'unica soluzione"
                 />

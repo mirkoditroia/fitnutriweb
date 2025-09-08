@@ -78,7 +78,7 @@ export type Package = {
   basePrice?: number; // Prezzo base (mostrato sbarrato)
   discountedPrice?: number; // Prezzo scontato
   discountPercentage?: number; // Percentuale di sconto
-  paymentText?: string; // Testo personalizzabile sotto il prezzo (default: "pagabile mensilmente")
+  paymentText?: string; // Testo personalizzabile sotto il prezzo (opzionale)
   // Sezione dettagli completa
   details?: {
     duration?: string; // Durata del pacchetto (es. "3 mesi", "6 mesi")
@@ -371,7 +371,7 @@ export async function getPackages(): Promise<Package[]> {
         discountedPrice: data.discountedPrice || undefined,
         discountPercentage: data.discountPercentage || undefined,
         // Usa nullish coalescing per rispettare stringhe non vuote
-        paymentText: data.paymentText ?? "pagabile mensilmente",
+        paymentText: data.paymentText || undefined,
         details: data.details || undefined,
         createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt) : undefined
       };
@@ -407,7 +407,7 @@ export async function upsertPackage(pkg: Package): Promise<string> {
       basePrice: pkg.basePrice ?? null,
       discountedPrice: pkg.discountedPrice ?? null,
       discountPercentage: pkg.discountPercentage ?? null,
-      paymentText: pkg.paymentText ?? "pagabile mensilmente",
+      paymentText: pkg.paymentText || null,
       // Sezione dettagli completa
       details: pkg.details ?? null,
       createdAt: serverTimestamp(),
@@ -429,7 +429,7 @@ export async function upsertPackage(pkg: Package): Promise<string> {
       basePrice: pkg.basePrice ?? null,
       discountedPrice: pkg.discountedPrice ?? null,
       discountPercentage: pkg.discountPercentage ?? null,
-      paymentText: pkg.paymentText ?? "pagabile mensilmente",
+      paymentText: pkg.paymentText || null,
       // Sezione dettagli completa
       details: pkg.details ?? null,
     createdAt: serverTimestamp(),

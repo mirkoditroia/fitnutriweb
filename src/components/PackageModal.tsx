@@ -46,9 +46,11 @@ export function PackageModal({ pkg, onClose }: Props) {
             )}
           </div>
           <div className="text-center">
-            <div className="text-xs md:text-sm text-foreground/60 bg-muted/30 px-2 md:px-3 py-1 md:py-2 rounded-full inline-block">
-              {pkg.paymentText || "pagabile mensilmente"}
-            </div>
+            {pkg.paymentText && (
+              <div className="text-xs md:text-sm text-foreground/60 bg-muted/30 px-2 md:px-3 py-1 md:py-2 rounded-full inline-block">
+                {pkg.paymentText}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -57,9 +59,11 @@ export function PackageModal({ pkg, onClose }: Props) {
     return (
       <div className="text-center">
         <div className="text-2xl md:text-3xl font-bold text-foreground">€ {pkg.price}</div>
-        <div className="text-xs md:text-sm text-foreground/60 bg-muted/30 px-2 md:px-3 py-1 md:py-2 rounded-full inline-block mt-1 md:mt-2">
-          {pkg.paymentText || "pagabile mensilmente"}
-        </div>
+        {pkg.paymentText && (
+          <div className="text-xs md:text-sm text-foreground/60 bg-muted/30 px-2 md:px-3 py-1 md:py-2 rounded-full inline-block mt-1 md:mt-2">
+            {pkg.paymentText}
+          </div>
+        )}
       </div>
     );
   };
