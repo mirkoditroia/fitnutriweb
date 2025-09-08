@@ -9,6 +9,7 @@ interface FreeConsultationPopupProps {
   description: string;
   ctaText: string;
   isEnabled: boolean;
+  packageUrl: string;
 }
 
 export function FreeConsultationPopup({ 
@@ -16,7 +17,8 @@ export function FreeConsultationPopup({
   subtitle, 
   description, 
   ctaText, 
-  isEnabled 
+  isEnabled,
+  packageUrl 
 }: FreeConsultationPopupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasSeen, setHasSeen] = useState(false);
@@ -47,10 +49,10 @@ export function FreeConsultationPopup({
     setHasSeen(true);
     localStorage.setItem('freeConsultationPopupSeen', 'true');
     
-    // ✅ CORREZIONE: Imposta correttamente l'ID del pacchetto nell'URL
+    // ✅ CORREZIONE: Usa l'URL del pacchetto configurato dall'admin
     // setDirectState gestisce già l'aggiornamento dell'URL
-    setDirectState('free-consultation', true);
-    console.log("FreeConsultationPopup: Impostato packageId 'free-consultation' per consultazione gratuita");
+    setDirectState(packageUrl, true);
+    console.log(`FreeConsultationPopup: Impostato packageId '${packageUrl}' per consultazione gratuita`);
     
     // Scroll alla sezione prenota
     const bookingSection = document.getElementById('booking');

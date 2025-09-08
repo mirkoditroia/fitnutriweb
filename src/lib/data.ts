@@ -172,6 +172,7 @@ export type Booking = {
 
 export interface SiteContent {
   siteName?: string; // Nome del sito (default: "GZnutrition")
+  favicon?: string; // URL del favicon personalizzato
   heroTitle: string;
   heroSubtitle: string;
   heroCta: string;
@@ -237,6 +238,7 @@ export interface SiteContent {
     description?: string;
     ctaText?: string;
     isEnabled?: boolean;
+    packageUrl?: string; // URL del pacchetto promozionale
   };
   // Google Calendar integration
   googleCalendar?: {
@@ -488,18 +490,27 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   const siteContent = await getSiteContent();
   if (siteContent?.recaptchaEnabled && captchaToken) {
     try {
-      const response = await fetch('https://us-central1-gznutrition-d5d13.cloudfunctions.net/verifyCaptcha', {
+      console.log("🔑 Inizio verifica CAPTCHA con token:", captchaToken ? captchaToken.substring(0, 20) + "..." : "null");
+      
+      const response = await fetch('https://verifycaptcha-4ks3j6nupa-uc.a.run.app', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: captchaToken })
       });
       
+      console.log("📡 Risposta Firebase Function status:", response.status);
+      
       const result = await response.json();
+      console.log("🔍 Risultato verifica CAPTCHA:", result);
+      
       if (!result.success) {
-        throw new Error("Verifica CAPTCHA fallita. Riprova.");
+        console.error("❌ CAPTCHA verifica fallita:", result.message, result.errors);
+        throw new Error(`Verifica CAPTCHA fallita: ${result.message || 'Errore sconosciuto'}`);
       }
+      
+      console.log("✅ CAPTCHA verificato con successo!");
     } catch (error) {
-      console.error("Errore verifica CAPTCHA:", error);
+      console.error("💥 Errore verifica CAPTCHA:", error);
       throw new Error("Errore nella verifica CAPTCHA. Riprova.");
     }
   } else if (siteContent?.recaptchaEnabled && !captchaToken) {
@@ -1178,7 +1189,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
           title: "🎯 10 Minuti Consultivi Gratuiti",
           subtitle: "Valuta i tuoi obiettivi gratuitamente",
           description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
-          ctaText: "Prenota Ora - È Gratis!"
+          ctaText: "Prenota Ora - È Gratis!",
+          packageUrl: "free-consultation"
         },
         colorPalette: "gz-default" as const,
         notificationEmail: "mirkoditroia@gmail.com", // Default notification email
@@ -1287,7 +1299,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         title: data.freeConsultationPopup?.title || "🎯 10 Minuti Consultivi Gratuiti",
         subtitle: data.freeConsultationPopup?.subtitle || "Valuta i tuoi obiettivi gratuitamente",
         description: data.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
-        ctaText: data.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"
+        ctaText: data.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!",
+        packageUrl: data.freeConsultationPopup?.packageUrl || "free-consultation"
       },
       googleCalendar: {
         isEnabled: data.googleCalendar?.isEnabled || false,
@@ -1705,7 +1718,8 @@ export async function getSiteContentSSR(projectId: string): Promise<SiteContent 
       title: fromFs("freeConsultationPopup.title") || "🎯 10 Minuti Consultivi Gratuiti",
       subtitle: fromFs("freeConsultationPopup.subtitle") || "Valuta i tuoi obiettivi gratuitamente",
       description: fromFs("freeConsultationPopup.description") || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
-      ctaText: fromFs("freeConsultationPopup.ctaText") || "Prenota Ora - È Gratis!"
+      ctaText: fromFs("freeConsultationPopup.ctaText") || "Prenota Ora - È Gratis!",
+      packageUrl: fromFs("freeConsultationPopup.packageUrl") || "free-consultation"
     },
     colorPalette: (fromFs("colorPalette") as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
     notificationEmail: fromFs("notificationEmail") || "mirkoditroia@gmail.com",

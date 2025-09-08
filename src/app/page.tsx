@@ -53,6 +53,7 @@ export default async function Home() {
           description={c.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance."}
           ctaText={c.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"}
           isEnabled={true}
+          packageUrl={c.freeConsultationPopup?.packageUrl || "free-consultation"}
         />
       )}
       {(() => {

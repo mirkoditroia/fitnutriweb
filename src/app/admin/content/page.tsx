@@ -1251,6 +1251,22 @@ export default function AdminContentPage() {
                   })}
                   placeholder="Prenota Ora - È Gratis!"
                 />
+                
+                <Input
+                  label="URL Pacchetto Promozionale"
+                  value={content.freeConsultationPopup?.packageUrl ?? ""}
+                  onChange={(e) => setContent({
+                    ...content,
+                    freeConsultationPopup: {
+                      ...content.freeConsultationPopup,
+                      packageUrl: e.target.value
+                    }
+                  })}
+                  placeholder="free-consultation"
+                />
+                <p className="text-xs text-black/60">
+                  ID del pacchetto da selezionare quando si clicca il popup (es: "free-consultation", "basic-package")
+                </p>
               </div>
             )}
           </div>
@@ -2047,6 +2063,7 @@ export default function AdminContentPage() {
               </div>
             </div>
           </div>
+
         </section>
         </div>
 

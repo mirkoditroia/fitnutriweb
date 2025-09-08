@@ -201,7 +201,7 @@ export default function AdminSettingsPage() {
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
-                checked={content.recaptchaEnabled !== false}
+                checked={content.recaptchaEnabled === true}
                 onChange={(e) => setContent({...content, recaptchaEnabled: e.target.checked})}
                 className="rounded border-border"
               />

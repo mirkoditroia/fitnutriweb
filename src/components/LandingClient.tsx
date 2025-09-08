@@ -224,6 +224,7 @@ export default function LandingClient() {
           description={effectiveContent.freeConsultationPopup?.description || "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance."}
           ctaText={effectiveContent.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!"}
           isEnabled={true}
+          packageUrl={effectiveContent.freeConsultationPopup?.packageUrl || "free-consultation"}
         />
       )}
       
