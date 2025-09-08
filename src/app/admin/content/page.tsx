@@ -627,6 +627,7 @@ export default function AdminContentPage() {
           {/* Hero Section */}
           <section className="space-y-4">
             <h2 className="font-semibold text-black">Hero</h2>
+          <Input label="Nome del sito" value={content.siteName || "GZnutrition"} onChange={(e) => setContent({ ...content, siteName: e.target.value })} placeholder="GZnutrition" />
           <Input label="Hero title" value={content.heroTitle} onChange={(e) => setContent({ ...content, heroTitle: e.target.value })} />
           <Input label="Hero subtitle" value={content.heroSubtitle} onChange={(e) => setContent({ ...content, heroSubtitle: e.target.value })} />
           <Input label="Hero CTA" value={content.heroCta} onChange={(e) => setContent({ ...content, heroCta: e.target.value })} />

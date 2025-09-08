@@ -152,6 +152,7 @@ export type Booking = {
 };
 
 export interface SiteContent {
+  siteName?: string; // Nome del sito (default: "GZnutrition")
   heroTitle: string;
   heroSubtitle: string;
   heroCta: string;

@@ -6,9 +6,10 @@ interface PDFExporterProps {
   progressData: any[];
   onExport: () => void;
   isLoading?: boolean;
+  siteName?: string;
 }
 
-export function PDFExporter({ clientName, progressData, onExport, isLoading = false }: PDFExporterProps) {
+export function PDFExporter({ clientName, progressData, onExport, isLoading = false, siteName = "GZnutrition" }: PDFExporterProps) {
   const handleExport = async () => {
     try {
       // Create a new window for PDF generation
@@ -176,10 +177,10 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>📊 Report Progressi Cliente</h1>
-            <p>Generato il ${currentDate} - GZ Nutrition</p>
-          </div>
+            <div class="header">
+              <h1>📊 Report Progressi Cliente</h1>
+              <p>Generato il ${currentDate} - ${siteName}</p>
+            </div>
 
           <div class="client-info">
             <h2>👤 Informazioni Cliente</h2>
@@ -273,7 +274,7 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
           `}
 
           <div class="footer">
-            <p>Report generato automaticamente da GZ Nutrition</p>
+            <p>Report generato automaticamente da ${siteName}</p>
             <p>Per domande o supporto, contatta il tuo personal trainer</p>
           </div>
         </body>

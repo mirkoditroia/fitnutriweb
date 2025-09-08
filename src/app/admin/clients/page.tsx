@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { listClients, upsertClient, deleteClient, getPackages, listBookings, type ClientCard, type Package, type Booking } from "@/lib/datasource";
+import { listClients, upsertClient, deleteClient, getPackages, listBookings, getSiteContent, type ClientCard, type Package, type Booking } from "@/lib/datasource";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
@@ -19,7 +19,6 @@ export default function AdminClientsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedClient, setSelectedClient] = useState<ClientCard | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [clientProgress, setClientProgress] = useState<{[key: string]: any[]}>({});
 
   const loadData = async () => {
@@ -66,6 +65,10 @@ export default function AdminClientsPage() {
       
       const progressData = clientProgress[clientId] || [];
       
+      // Ottieni il nome del sito dal contenuto
+      const siteContent = await getSiteContent();
+      const siteName = siteContent?.siteName || "GZnutrition";
+      
       // Crea una nuova finestra per il PDF
       const printWindow = window.open('', '_blank');
       if (!printWindow) return;
@@ -91,13 +94,12 @@ export default function AdminClientsPage() {
           <body>
             <div class="header">
               <h1>📊 Report Progressi Cliente</h1>
-              <p>Generato il ${currentDate} - GZ Nutrition</p>
+              <p>Generato il ${currentDate} - ${siteName}</p>
             </div>
             <div class="client-info">
               <h2>👤 ${client.name}</h2>
               <p><strong>Email:</strong> ${client.email}</p>
               <p><strong>Telefono:</strong> ${client.phone}</p>
-              <p><strong>Status:</strong> ${client.status}</p>
             </div>
             ${progressData.length > 0 ? `
               <h2>📈 Storico Progressi</h2>
@@ -129,7 +131,7 @@ export default function AdminClientsPage() {
               </table>
             ` : '<p>Nessun progresso registrato ancora.</p>'}
             <div class="footer">
-              <p>Report generato automaticamente da GZ Nutrition</p>
+              <p>Report generato automaticamente da ${siteName}</p>
             </div>
           </body>
         </html>
@@ -157,7 +159,6 @@ export default function AdminClientsPage() {
       email: "",
       phone: "",
       notes: "",
-      status: "prospect",
       createdAt: new Date().toISOString(),
       id: crypto.randomUUID()
     });
@@ -198,11 +199,42 @@ export default function AdminClientsPage() {
     }
   };
 
+  const handleDocumentUpload = (clientId: string, documentType: string, url: string) => {
+    if (!selectedClient) return;
+    
+    const newDocument = {
+      id: crypto.randomUUID(),
+      name: `${documentType}_${format(new Date(), 'yyyy-MM-dd')}`,
+      url,
+      type: documentType as "medical_certificate" | "id_document" | "consent_form" | "other",
+      uploadedAt: new Date().toISOString()
+    };
+
+    const updatedClient = {
+      ...selectedClient,
+      documents: [...(selectedClient.documents || []), newDocument]
+    };
+
+    setSelectedClient(updatedClient);
+    handleSaveClient(updatedClient);
+  };
+
+  const handleRemoveDocument = (clientId: string, documentId: string) => {
+    if (!selectedClient) return;
+    
+    const updatedClient = {
+      ...selectedClient,
+      documents: selectedClient.documents?.filter(d => d.id !== documentId) || []
+    };
+
+    setSelectedClient(updatedClient);
+    handleSaveClient(updatedClient);
+  };
+
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || client.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   if (loading) {
@@ -227,17 +259,6 @@ export default function AdminClientsPage() {
           />
         </div>
         <div className="flex gap-2">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">Tutti gli stati</option>
-            <option value="prospect">Prospect</option>
-            <option value="active">Attivo</option>
-            <option value="inactive">Inattivo</option>
-            <option value="completed">Completato</option>
-          </select>
           <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
             + Nuovo Cliente
           </Button>
@@ -260,16 +281,6 @@ export default function AdminClientsPage() {
             </div>
             
             <div className="flex items-center justify-between mb-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                client.status === 'active' ? 'bg-green-100 text-green-800' :
-                client.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-                client.status === 'prospect' ? 'bg-blue-100 text-blue-800' :
-                'bg-purple-100 text-purple-800'
-              }`}>
-                {client.status === 'active' ? 'Attivo' :
-                 client.status === 'inactive' ? 'Inattivo' :
-                 client.status === 'prospect' ? 'Prospect' : 'Completato'}
-              </span>
               <span className="text-xs text-gray-500">
                 Cliente dal {format(new Date(client.createdAt || new Date()), 'dd/MM/yyyy')}
               </span>
@@ -308,11 +319,11 @@ export default function AdminClientsPage() {
           <div className="text-6xl mb-4">👥</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Nessun cliente trovato</h3>
           <p className="text-gray-600 mb-4">
-            {searchTerm || filterStatus !== "all" 
+            {searchTerm 
               ? "Prova a modificare i filtri di ricerca" 
               : "Inizia aggiungendo il tuo primo cliente"}
           </p>
-          {(!searchTerm && filterStatus === "all") && (
+          {!searchTerm && (
             <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
               + Aggiungi Primo Cliente
             </Button>
@@ -368,7 +379,7 @@ export default function AdminClientsPage() {
             name: client.name || '',
             email: client.email || '',
             phone: client.phone || '',
-            status: client.status || 'prospect',
+            status: 'active',
             notes: client.notes || '',
             createdAt: client.createdAt || new Date().toISOString()
           }}
@@ -441,19 +452,6 @@ export default function AdminClientsPage() {
                       placeholder="es. +39 123 456 7890"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Status</label>
-                    <select
-                      value={client.status}
-                      onChange={(e) => setSelectedClient({ ...client, status: e.target.value as any })}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="prospect">Prospect</option>
-                      <option value="active">Attivo</option>
-                      <option value="inactive">Inattivo</option>
-                      <option value="completed">Completato</option>
-                    </select>
-                  </div>
                 </div>
                 <div className="mt-4">
                   <label className="block text-sm font-medium mb-1">Note</label>
@@ -464,6 +462,87 @@ export default function AdminClientsPage() {
                     rows={3}
                     placeholder="Note aggiuntive sul cliente..."
                   />
+                </div>
+              </section>
+
+              {/* Documents */}
+              <section>
+                <h3 className="text-lg font-medium mb-4">📄 Documenti</h3>
+                <div className="space-y-4">
+                  {/* Upload Section */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Carica Certificato Medico</label>
+                      <UploadButton
+                        folder="clients/medical"
+                        onUploaded={(url) => handleDocumentUpload(client.id!, "medical_certificate", url)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Carica Documento d&apos;Identità</label>
+                      <UploadButton
+                        folder="clients/documents"
+                        onUploaded={(url) => handleDocumentUpload(client.id!, "id_document", url)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Carica Modulo Consenso</label>
+                      <UploadButton
+                        folder="clients/consent"
+                        onUploaded={(url) => handleDocumentUpload(client.id!, "consent_form", url)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Carica Altro Documento</label>
+                      <UploadButton
+                        folder="clients/other"
+                        onUploaded={(url) => handleDocumentUpload(client.id!, "other", url)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Documents List */}
+                  {client.documents && client.documents.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Documenti caricati:</h4>
+                      <div className="space-y-2">
+                        {client.documents.map(doc => (
+                          <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">
+                                {doc.type === "medical_certificate" ? "🏥" :
+                                 doc.type === "id_document" ? "🆔" :
+                                 doc.type === "consent_form" ? "📝" : "📄"}
+                              </span>
+                              <div>
+                                <div className="font-medium">{doc.name}</div>
+                                <div className="text-sm text-gray-600">
+                                  Caricato il {format(new Date(doc.uploadedAt), 'dd/MM/yyyy')}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm underline"
+                              >
+                                Visualizza
+                              </a>
+                              <Button
+                                onClick={() => handleRemoveDocument(client.id!, doc.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                                size="sm"
+                              >
+                                🗑️
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </section>
             </div>
