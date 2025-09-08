@@ -15,15 +15,28 @@ export default function CookiePolicyPage() {
   const companyName = legalInfo?.companyName || siteContent?.businessName || "GZnutrition";
   const email = legalInfo?.email || siteContent?.contactEmail;
 
+  const cookieContent = siteContent?.legalInfo?.legalPages?.cookiePolicy;
+  const hasCustomContent = cookieContent?.content && cookieContent.content.trim() !== "";
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container py-16 max-w-4xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">Cookie Policy</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-8">
+          {cookieContent?.title || "Cookie Policy"}
+        </h1>
         
         <div className="prose prose-lg max-w-none">
           <p className="text-gray-600 mb-8">
-            <strong>Ultimo aggiornamento:</strong> {new Date().toLocaleDateString('it-IT')}
+            <strong>Ultimo aggiornamento:</strong> {cookieContent?.lastUpdated || new Date().toLocaleDateString('it-IT')}
           </p>
+
+          {hasCustomContent ? (
+            <div 
+              dangerouslySetInnerHTML={{ __html: cookieContent.content || "" }}
+              className="text-gray-700"
+            />
+          ) : (
+            <>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Cosa sono i Cookie</h2>
@@ -183,6 +196,8 @@ export default function CookiePolicyPage() {
               {email && <>Email: {email}</>}
             </p>
           </section>
+            </>
+          )}
         </div>
       </div>
     </div>

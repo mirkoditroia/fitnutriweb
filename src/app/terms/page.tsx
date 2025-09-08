@@ -17,15 +17,28 @@ export default function TermsOfServicePage() {
   const email = legalInfo?.email || siteContent?.contactEmail;
   const address = legalInfo?.registeredAddress;
 
+  const termsContent = siteContent?.legalInfo?.legalPages?.termsOfService;
+  const hasCustomContent = termsContent?.content && termsContent.content.trim() !== "";
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container py-16 max-w-4xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">Termini di Servizio</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-8">
+          {termsContent?.title || "Termini di Servizio"}
+        </h1>
         
         <div className="prose prose-lg max-w-none">
           <p className="text-gray-600 mb-8">
-            <strong>Ultimo aggiornamento:</strong> {new Date().toLocaleDateString('it-IT')}
+            <strong>Ultimo aggiornamento:</strong> {termsContent?.lastUpdated || new Date().toLocaleDateString('it-IT')}
           </p>
+
+          {hasCustomContent ? (
+            <div 
+              dangerouslySetInnerHTML={{ __html: termsContent.content || "" }}
+              className="text-gray-700"
+            />
+          ) : (
+            <>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Informazioni Generali</h2>
@@ -192,6 +205,8 @@ export default function TermsOfServicePage() {
               {address && <>Indirizzo: {address}</>}
             </p>
           </section>
+            </>
+          )}
         </div>
       </div>
     </div>

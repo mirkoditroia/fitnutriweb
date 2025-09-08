@@ -283,6 +283,25 @@ export interface SiteContent {
       declineText?: string; // Testo pulsante rifiuta
       learnMoreText?: string; // Testo link "scopri di più"
     };
+    
+    // Contenuto delle pagine legali
+    legalPages?: {
+      privacyPolicy?: {
+        title?: string; // Titolo della pagina
+        lastUpdated?: string; // Data ultimo aggiornamento
+        content?: string; // Contenuto HTML della privacy policy
+      };
+      cookiePolicy?: {
+        title?: string; // Titolo della pagina
+        lastUpdated?: string; // Data ultimo aggiornamento
+        content?: string; // Contenuto HTML della cookie policy
+      };
+      termsOfService?: {
+        title?: string; // Titolo della pagina
+        lastUpdated?: string; // Data ultimo aggiornamento
+        content?: string; // Contenuto HTML dei termini di servizio
+      };
+    };
   };
 }
 

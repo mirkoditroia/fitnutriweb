@@ -1577,6 +1577,173 @@ export default function AdminContentPage() {
               </div>
             </div>
 
+            {/* Editor Pagine Legali */}
+            <div className="space-y-4 p-4 border border-foreground/10 rounded-lg">
+              <h3 className="font-medium text-black">📝 Editor Pagine Legali</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Modifica il contenuto delle pagine legali. Puoi utilizzare HTML per la formattazione.
+              </p>
+              
+              {/* Privacy Policy Editor */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-black">🔒 Privacy Policy</h4>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Titolo
+                  </label>
+                  <input
+                    type="text"
+                    value={content.legalInfo?.legalPages?.privacyPolicy?.title || "Privacy Policy"}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        legalPages: {
+                          ...content.legalInfo?.legalPages,
+                          privacyPolicy: {
+                            ...content.legalInfo?.legalPages?.privacyPolicy,
+                            title: e.target.value
+                          }
+                        }
+                      }
+                    })}
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Contenuto (HTML)
+                  </label>
+                  <textarea
+                    value={content.legalInfo?.legalPages?.privacyPolicy?.content || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        legalPages: {
+                          ...content.legalInfo?.legalPages,
+                          privacyPolicy: {
+                            ...content.legalInfo?.legalPages?.privacyPolicy,
+                            content: e.target.value,
+                            lastUpdated: new Date().toLocaleDateString('it-IT')
+                          }
+                        }
+                      }
+                    })}
+                    rows={15}
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    placeholder="Inserisci il contenuto HTML della Privacy Policy..."
+                  />
+                </div>
+              </div>
+
+              {/* Cookie Policy Editor */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-black">🍪 Cookie Policy</h4>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Titolo
+                  </label>
+                  <input
+                    type="text"
+                    value={content.legalInfo?.legalPages?.cookiePolicy?.title || "Cookie Policy"}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        legalPages: {
+                          ...content.legalInfo?.legalPages,
+                          cookiePolicy: {
+                            ...content.legalInfo?.legalPages?.cookiePolicy,
+                            title: e.target.value
+                          }
+                        }
+                      }
+                    })}
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Contenuto (HTML)
+                  </label>
+                  <textarea
+                    value={content.legalInfo?.legalPages?.cookiePolicy?.content || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        legalPages: {
+                          ...content.legalInfo?.legalPages,
+                          cookiePolicy: {
+                            ...content.legalInfo?.legalPages?.cookiePolicy,
+                            content: e.target.value,
+                            lastUpdated: new Date().toLocaleDateString('it-IT')
+                          }
+                        }
+                      }
+                    })}
+                    rows={15}
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    placeholder="Inserisci il contenuto HTML della Cookie Policy..."
+                  />
+                </div>
+              </div>
+
+              {/* Terms of Service Editor */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-black">📋 Termini di Servizio</h4>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Titolo
+                  </label>
+                  <input
+                    type="text"
+                    value={content.legalInfo?.legalPages?.termsOfService?.title || "Termini di Servizio"}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        legalPages: {
+                          ...content.legalInfo?.legalPages,
+                          termsOfService: {
+                            ...content.legalInfo?.legalPages?.termsOfService,
+                            title: e.target.value
+                          }
+                        }
+                      }
+                    })}
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Contenuto (HTML)
+                  </label>
+                  <textarea
+                    value={content.legalInfo?.legalPages?.termsOfService?.content || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        legalPages: {
+                          ...content.legalInfo?.legalPages,
+                          termsOfService: {
+                            ...content.legalInfo?.legalPages?.termsOfService,
+                            content: e.target.value,
+                            lastUpdated: new Date().toLocaleDateString('it-IT')
+                          }
+                        }
+                      }
+                    })}
+                    rows={15}
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    placeholder="Inserisci il contenuto HTML dei Termini di Servizio..."
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Cookie Banner */}
             <div className="space-y-4 p-4 border border-foreground/10 rounded-lg">
               <h3 className="font-medium text-black">🍪 Cookie Banner</h3>
