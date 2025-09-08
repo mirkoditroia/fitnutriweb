@@ -1,38 +1,56 @@
 # 🔐 Regole di Sicurezza Firebase
 
-## Panoramica
-Le regole Firebase sono state configurate per garantire la sicurezza del database Firestore, permettendo l'accesso pubblico solo ai dati necessari per il funzionamento del sito web, mentre proteggendo le operazioni amministrative.
+## ✅ STATO ATTUALE: REGOLE BILANCIATE
 
-## 📋 Regole Implementate
+**SICUREZZA**: Le regole attuali permettono lettura pubblica ma richiedono autenticazione per le modifiche.
+
+## Panoramica
+Le regole Firebase sono configurate per permettere la lettura pubblica di tutti i dati (necessario per il funzionamento del sito web) ma richiedono autenticazione per qualsiasi modifica (protezione dell'area admin).
+
+## 📋 Regole Attuali (BILANCIATE)
+
+### **Tutte le Collezioni**
+- ✅ **Lettura**: Pubblica (chiunque può leggere)
+- 🔒 **Scrittura**: Solo utenti autenticati (richiede login admin)
+
+### **Vantaggi di questa configurazione:**
+- ✅ **Sito funzionante**: Tutti i dati sono leggibili pubblicamente
+- 🔒 **Area admin protetta**: Solo utenti loggati possono modificare
+- ⚡ **Performance**: Nessun problema di caricamento
+- 🛡️ **Sicurezza**: Protezione contro modifiche non autorizzate
+
+## 📋 Dettagli delle Regole
 
 ### 1. **Prenotazioni (`/bookings/{bookingId}`)**
 - ✅ **Lettura**: Pubblica (chiunque può leggere)
-- ✅ **Creazione**: Solo utenti autenticati
-- 🔒 **Modifica/Eliminazione**: Solo admin autorizzati
+- 🔒 **Creazione/Modifica/Eliminazione**: Solo utenti autenticati
 
 ### 2. **Pacchetti (`/packages/{packageId}`)**
 - ✅ **Lettura**: Pubblica (per visualizzazione sul sito)
-- 🔒 **Scrittura**: Solo admin autorizzati
+- 🔒 **Creazione/Modifica/Eliminazione**: Solo utenti autenticati
 
 ### 3. **Contenuto Sito (`/siteContent/{contentId}`)**
 - ✅ **Lettura**: Pubblica (per visualizzazione sul sito)
-- 🔒 **Scrittura**: Solo admin autorizzati
+- 🔒 **Creazione/Modifica/Eliminazione**: Solo utenti autenticati
 
 ### 4. **Clienti (`/clients/{clientId}`)**
-- 🔒 **Accesso completo**: Solo admin autorizzati
+- ✅ **Lettura**: Pubblica (se necessario per il sito)
+- 🔒 **Creazione/Modifica/Eliminazione**: Solo utenti autenticati
 
 ### 5. **Immagini (`/uploads/{allPaths=**}`)**
 - ✅ **Lettura**: Pubblica (per visualizzazione sul sito)
-- 🔒 **Scrittura**: Solo admin autorizzati
+- 🔒 **Upload/Modifica/Eliminazione**: Solo utenti autenticati
 
 ### 6. **Altre Collezioni**
-- 🔒 **Accesso completo**: Solo admin autorizzati
+- ✅ **Lettura**: Pubblica
+- 🔒 **Scrittura**: Solo utenti autenticati
 
-## 👥 Admin Autorizzati
+## 👥 Autenticazione Richiesta
 
-Gli admin autorizzati sono identificati tramite email:
-- `zamboninutrition@gmail.com`
-- `impostazionizamboninutrition@gmail.com`
+Per modificare i contenuti è necessario:
+- ✅ **Essere autenticati**: Login tramite Firebase Auth
+- ✅ **Email valida**: Qualsiasi utente con account Firebase
+- 🔒 **Protezione**: Solo utenti loggati possono modificare dati
 
 ## 🚀 Come Deployare le Regole
 

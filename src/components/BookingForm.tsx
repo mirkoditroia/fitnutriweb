@@ -17,6 +17,22 @@ import { getPackages } from "@/lib/datasource";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getPaletteConfig } from "@/lib/palettes";
 
+// ✅ Funzione per troncare le descrizioni lunghe
+function createDescriptionPreview(description: string, maxLength: number = 120): string {
+  if (description.length <= maxLength) {
+    return description;
+  }
+  
+  const truncated = description.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  
+  if (lastSpace > maxLength * 0.8) {
+    return truncated.substring(0, lastSpace) + '...';
+  }
+  
+  return truncated + '...';
+}
+
 // Schema di validazione
 const schema = z.object({
   name: z.string().min(2, "Nome troppo corto"),
@@ -749,7 +765,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                 {selectedPackage.title}
               </h3>
               <p className={`text-sm ${showPromotionalBanner ? 'text-green-700' : 'text-foreground'}`}>
-                {selectedPackage.description}
+                {createDescriptionPreview(selectedPackage.description)}
               </p>
               {!showPromotionalBanner && (
                 <div className="mt-2">
