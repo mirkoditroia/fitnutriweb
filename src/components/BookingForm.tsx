@@ -299,7 +299,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   useEffect(() => {
     console.log("BookingForm: NUOVO SISTEMA - Inizializzazione");
     
-    // 1. Carica i pacchetti direttamente
+        // 1. Carica i pacchetti direttamente
     const loadPackages = async () => {
       try {
         console.log("BookingForm: Caricamento pacchetti...");
@@ -307,6 +307,9 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.log("BookingForm: Pacchetti caricati:", pkgs);
         console.log("🎯 PACCHETTI PROMOZIONALI TROVATI:", pkgs.filter(p => p.isPromotional));
         console.log("🎯 TUTTI I PACCHETTI CON FLAG PROMOZIONALE:", pkgs.map(p => ({ title: p.title, isPromotional: p.isPromotional })));
+        console.log("🎯 TUTTI GLI ID DEI PACCHETTI:", pkgs.map(p => p.id));
+        console.log("🎯 PACCHETTO FREE-CONSULTATION ESISTE?", pkgs.some(p => p.id === 'free-consultation'));
+        
         const finalPackages = pkgs || [];
         setPackages(finalPackages);
         packagesRef.current = finalPackages;
@@ -316,6 +319,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.log("BookingForm: Stato diretto attuale:", currentDirectState);
         
         if (currentDirectState.selectedPackageId && finalPackages.length > 0) {
+          console.log("BookingForm: Cercando pacchetto con ID:", currentDirectState.selectedPackageId);
+          console.log("BookingForm: Pacchetti disponibili:", finalPackages.map(p => ({ id: p.id, title: p.title, isPromotional: p.isPromotional })));
           const selectedPkg = finalPackages.find(p => p.id === currentDirectState.selectedPackageId);
           console.log("BookingForm: Pacchetto trovato:", selectedPkg);
           
@@ -323,6 +328,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             setSelectedPackage(selectedPkg);
             setValue("packageId", selectedPkg.id || "");
             console.log("BookingForm: SUCCESSO - Form precompilato con:", selectedPkg.title);
+          } else {
+            console.error("BookingForm: ERRORE - Pacchetto non trovato con ID:", currentDirectState.selectedPackageId);
           }
         }
       } catch (error) {
@@ -338,11 +345,16 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       setDirectStateLocal(event.detail);
       
       if (event.detail.selectedPackageId && packagesRef.current.length > 0) {
+        console.log("BookingForm: Evento directStateChange - Cercando pacchetto con ID:", event.detail.selectedPackageId);
+        console.log("BookingForm: Pacchetti disponibili per evento:", packagesRef.current.map(p => ({ id: p.id, title: p.title, isPromotional: p.isPromotional })));
         const selectedPkg = packagesRef.current.find(p => p.id === event.detail.selectedPackageId);
+        console.log("BookingForm: Pacchetto trovato per evento:", selectedPkg);
         if (selectedPkg) {
           setSelectedPackage(selectedPkg);
           setValue("packageId", selectedPkg.id || "");
           console.log("BookingForm: Form aggiornato via evento:", selectedPkg.title);
+        } else {
+          console.error("BookingForm: ERRORE - Pacchetto non trovato per evento con ID:", event.detail.selectedPackageId);
         }
       }
     };
