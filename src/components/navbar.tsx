@@ -19,9 +19,49 @@ const getNavigationItems = (siteContent: any) => {
   console.log("🔍 getNavigationItems: siteContent:", siteContent);
   console.log("🔍 getNavigationItems: bmiCalculator enabled:", siteContent?.bmiCalculator?.enabled);
   console.log("🔍 getNavigationItems: googleReviews enabled:", siteContent?.googleReviews?.enabled);
+  console.log("🔍 getNavigationItems: sectionVisibility:", siteContent?.sectionVisibility);
   
-  // Aggiungi BMI se attivato
-  if (siteContent?.bmiCalculator?.enabled) {
+  // ✅ NUOVA FEATURE: Rimuovi sezioni nascoste dalla navbar
+  const sectionVisibility = siteContent?.sectionVisibility;
+  
+  // Rimuovi "Chi sono" se la sezione about è nascosta
+  if (sectionVisibility?.about === false) {
+    console.log("❌ Sezione About nascosta - rimuovo dalla navbar");
+    const chiSonoIndex = items.findIndex(item => item.href === "#chi-sono");
+    if (chiSonoIndex !== -1) {
+      items.splice(chiSonoIndex, 1);
+    }
+  }
+  
+  // Rimuovi "Pacchetti" se la sezione packages è nascosta
+  if (sectionVisibility?.packages === false) {
+    console.log("❌ Sezione Pacchetti nascosta - rimuovo dalla navbar");
+    const pacchettiIndex = items.findIndex(item => item.href === "#pacchetti");
+    if (pacchettiIndex !== -1) {
+      items.splice(pacchettiIndex, 1);
+    }
+  }
+  
+  // Rimuovi "Prenota" se la sezione bookingForm è nascosta
+  if (sectionVisibility?.bookingForm === false) {
+    console.log("❌ Sezione Booking Form nascosta - rimuovo dalla navbar");
+    const prenotaIndex = items.findIndex(item => item.href === "#booking");
+    if (prenotaIndex !== -1) {
+      items.splice(prenotaIndex, 1);
+    }
+  }
+  
+  // Rimuovi "Contatti" se la sezione contact è nascosta
+  if (sectionVisibility?.contact === false) {
+    console.log("❌ Sezione Contatti nascosta - rimuovo dalla navbar");
+    const contattiIndex = items.findIndex(item => item.href === "#contatti");
+    if (contattiIndex !== -1) {
+      items.splice(contattiIndex, 1);
+    }
+  }
+  
+  // Aggiungi BMI se attivato (solo se la sezione about è visibile)
+  if (siteContent?.bmiCalculator?.enabled && sectionVisibility?.about !== false) {
     console.log("✅ BMI attivato - aggiungo alla navbar");
     // Inserisci BMI dopo "Chi sono" e prima di "Pacchetti"
     const chiSonoIndex = items.findIndex(item => item.href === "#chi-sono");
@@ -29,7 +69,7 @@ const getNavigationItems = (siteContent: any) => {
       items.splice(chiSonoIndex + 1, 0, { name: "BMI", href: "#bmi-calculator" });
     }
   } else {
-    console.log("❌ BMI non attivato - navbar standard");
+    console.log("❌ BMI non attivato o sezione about nascosta - navbar standard");
   }
   
   // Rimuovi Recensioni se disattivate

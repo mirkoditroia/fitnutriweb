@@ -159,6 +159,16 @@ export interface SiteContent {
   heroBadgeText?: string; // Testo del badge (default: "Performance • Estetica • Energia")
   heroBadgeColor?: string; // Colore del badge (default: "bg-primary text-primary-foreground")
 
+  // ✅ NUOVA FEATURE: Controlli di visibilità sezioni
+  sectionVisibility?: {
+    hero?: boolean; // Sezione hero (default: true)
+    about?: boolean; // Sezione "Chi sono" (default: true)
+    images?: boolean; // Sezione immagini (default: true)
+    packages?: boolean; // Sezione pacchetti (default: true)
+    bookingForm?: boolean; // Form di prenotazione (default: true)
+    contact?: boolean; // Sezione contatti (default: true)
+  };
+
   // Navbar logo customization
   navbarLogoMode?: "image" | "text";
   navbarLogoImageUrl?: string;
@@ -1100,6 +1110,16 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         heroBadgeText: "Performance • Estetica • Energia",
         heroBadgeColor: "bg-primary text-primary-foreground",
 
+        // ✅ NUOVA FEATURE: Visibilità sezioni (tutte abilitate di default)
+        sectionVisibility: {
+          hero: true,
+          about: true,
+          images: true,
+          packages: true,
+          bookingForm: true,
+          contact: true
+        },
+
         aboutTitle: "Chi Sono",
         aboutBody: "Sono Gabriele Zambonin, nutrizionista e personal trainer. Ti guido con un metodo scientifico e pratico per raggiungere forma fisica, energia e benessere reale.",
         aboutImageUrl: "",
@@ -1183,6 +1203,23 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       heroBackgroundImage: data.heroBackgroundImage || "",
       heroBadgeText: data.heroBadgeText || "Performance • Estetica • Energia",
       heroBadgeColor: data.heroBadgeColor || "bg-primary text-primary-foreground",
+
+      // ✅ NUOVA FEATURE: Visibilità sezioni con fallback
+      sectionVisibility: data.sectionVisibility ? {
+        hero: data.sectionVisibility.hero !== false, // Default true
+        about: data.sectionVisibility.about !== false, // Default true
+        images: data.sectionVisibility.images !== false, // Default true
+        packages: data.sectionVisibility.packages !== false, // Default true
+        bookingForm: data.sectionVisibility.bookingForm !== false, // Default true
+        contact: data.sectionVisibility.contact !== false // Default true
+      } : {
+        hero: true,
+        about: true,
+        images: true,
+        packages: true,
+        bookingForm: true,
+        contact: true
+      },
 
       navbarLogoMode: ((val: unknown) => (val === 'image' || val === 'text' ? val : undefined))((data as { navbarLogoMode?: unknown }).navbarLogoMode) as 'image' | 'text' | undefined,
       navbarLogoImageUrl: (data as { navbarLogoImageUrl?: string }).navbarLogoImageUrl || undefined,
@@ -1375,6 +1412,28 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
   // Firestore non accetta valori undefined: rimuoviamoli in modo sicuro
   const sanitized = JSON.parse(JSON.stringify(content));
   
+  // ✅ ASSICURATI che sectionVisibility sia sempre presente con valori di default
+  if (!sanitized.sectionVisibility) {
+    sanitized.sectionVisibility = {
+      hero: true,
+      about: true,
+      images: true,
+      packages: true,
+      bookingForm: true,
+      contact: true
+    };
+  } else {
+    // Se sectionVisibility esiste, assicurati che tutti i campi necessari siano presenti
+    sanitized.sectionVisibility = {
+      hero: sanitized.sectionVisibility.hero !== false,
+      about: sanitized.sectionVisibility.about !== false,
+      images: sanitized.sectionVisibility.images !== false,
+      packages: sanitized.sectionVisibility.packages !== false,
+      bookingForm: sanitized.sectionVisibility.bookingForm !== false,
+      contact: sanitized.sectionVisibility.contact !== false
+    };
+  }
+
   // ✅ ASSICURATI che legalInfo sia sempre presente con valori di default
   // Se legalInfo non esiste o è undefined, crealo con valori di default
   if (!sanitized.legalInfo) {

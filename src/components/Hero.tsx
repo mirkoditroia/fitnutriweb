@@ -5,10 +5,51 @@ type Props = {
   backgroundImage?: string;
   badgeText?: string;
   badgeColor?: string;
+  sectionVisibility?: {
+    bookingForm?: boolean;
+    packages?: boolean;
+    contact?: boolean;
+  };
 };
 
-export function Hero({ title, subtitle, ctaLabel, backgroundImage, badgeText = "Performance • Estetica • Energia", badgeColor = "bg-primary text-primary-foreground" }: Props) {
+export function Hero({ title, subtitle, ctaLabel, backgroundImage, badgeText = "Performance • Estetica • Energia", badgeColor = "bg-primary text-primary-foreground", sectionVisibility }: Props) {
   const bg = backgroundImage && String(backgroundImage).trim() !== "" ? backgroundImage : "/hero-demo.svg";
+  
+  // ✅ NUOVA FEATURE: CTA intelligenti basati sulla visibilità delle sezioni
+  const getPrimaryCtaHref = () => {
+    // Se il form di prenotazione è visibile, vai al form
+    if (sectionVisibility?.bookingForm !== false) {
+      return "#booking";
+    }
+    // Se il form è nascosto ma i contatti sono visibili, vai ai contatti
+    if (sectionVisibility?.contact !== false) {
+      return "#contatti";
+    }
+    // Fallback al form (per retrocompatibilità)
+    return "#booking";
+  };
+
+  const getSecondaryCtaHref = () => {
+    // Se i pacchetti sono visibili, vai ai pacchetti
+    if (sectionVisibility?.packages !== false) {
+      return "#pacchetti";
+    }
+    // Se i pacchetti sono nascosti ma i contatti sono visibili, vai ai contatti
+    if (sectionVisibility?.contact !== false) {
+      return "#contatti";
+    }
+    // Fallback ai pacchetti (per retrocompatibilità)
+    return "#pacchetti";
+  };
+
+  const getSecondaryCtaText = () => {
+    // Se i pacchetti sono nascosti, cambia il testo del CTA secondario
+    if (sectionVisibility?.packages === false) {
+      return "Contattaci";
+    }
+    return "Scopri i pacchetti";
+  };
+
   return (
     <section className={`relative py-16 sm:py-20 ${bg ? 'min-h-[80vh] flex items-center' : ''}`}>
       {/* Background Image */}
@@ -37,14 +78,14 @@ export function Hero({ title, subtitle, ctaLabel, backgroundImage, badgeText = "
             {subtitle}
           </p>
           <div className="mt-6 flex gap-3">
-            <a href="#booking" className="btn-primary">
+            <a href={getPrimaryCtaHref()} className="btn-primary">
               <span className="text-center">
                 {ctaLabel}
               </span>
             </a>
-            <a href="#pacchetti" className="btn-secondary-white">
+            <a href={getSecondaryCtaHref()} className="btn-secondary-white">
               <span className="text-center">
-                Scopri i pacchetti
+                {getSecondaryCtaText()}
               </span>
             </a>
           </div>

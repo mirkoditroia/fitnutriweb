@@ -67,13 +67,18 @@ export default async function Home() {
             backgroundImage={heroBg}
             badgeText={c.heroBadgeText}
             badgeColor={c.heroBadgeColor}
+            sectionVisibility={c.sectionVisibility}
           />
         );
       })()}
-      <AboutSection title={c.aboutTitle} body={c.aboutBody} imageUrl={c.aboutImageUrl} />
       
-      {/* ✅ SEZIONE BMI - subito dopo Chi sono */}
-      {c.bmiCalculator?.enabled && (
+      {/* ✅ SEZIONE ABOUT - solo se visibile */}
+      {c.sectionVisibility?.about !== false && (
+        <AboutSection title={c.aboutTitle} body={c.aboutBody} imageUrl={c.aboutImageUrl} />
+      )}
+      
+      {/* ✅ SEZIONE BMI - subito dopo Chi sono, solo se about è visibile */}
+      {c.bmiCalculator?.enabled && c.sectionVisibility?.about !== false && (
         <BMICalculator
           title={c.bmiCalculator.title}
           subtitle={c.bmiCalculator.subtitle}
@@ -81,8 +86,15 @@ export default async function Home() {
         />
       )}
       
-      <LandingImages images={c.images} />
-      <PackagesCarousel items={featuredFirst} />
+      {/* ✅ SEZIONE IMMAGINI - solo se visibile */}
+      {c.sectionVisibility?.images !== false && (
+        <LandingImages images={c.images} />
+      )}
+      
+      {/* ✅ SEZIONE PACCHETTI - solo se visibile */}
+      {c.sectionVisibility?.packages !== false && (
+        <PackagesCarousel items={featuredFirst} sectionVisibility={c.sectionVisibility} />
+      )}
       
       {/* Sezione Risultati Clienti - se abilitata */}
       {c.resultsSection?.isEnabled && c.resultsSection.photos && c.resultsSection.photos.length > 0 && (
@@ -139,18 +151,22 @@ export default async function Home() {
         </section>
       )}
       
-      <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
-        <h2 className="text-3xl font-bold text-center">Prenota la tua consulenza</h2>
-        <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
-          Inizia il tuo percorso di trasformazione. Compila il modulo e ti contatteremo per definire i dettagli.
-        </p>
-        <div className="mt-8 max-w-lg mx-auto">
-          <BookingForm />
-        </div>
-      </section>
+      {/* ✅ SEZIONE BOOKING - solo se visibile */}
+      {c.sectionVisibility?.bookingForm !== false && (
+        <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
+          <h2 className="text-3xl font-bold text-center">Prenota la tua consulenza</h2>
+          <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
+            Inizia il tuo percorso di trasformazione. Compila il modulo e ti contatteremo per definire i dettagli.
+          </p>
+          <div className="mt-8 max-w-lg mx-auto">
+            <BookingForm />
+          </div>
+        </section>
+      )}
       
-      {/* Contatti - sempre visibili con fallback */}
-      <div id="contatti" className="border-t border-foreground/10">
+      {/* ✅ SEZIONE CONTATTI - solo se visibile */}
+      {c.sectionVisibility?.contact !== false && (
+        <div id="contatti" className="border-t border-foreground/10">
         <ContactSection
           contactInfo={{
             title: c.contactTitle || "📞 Contattami",
@@ -180,7 +196,8 @@ export default async function Home() {
             studiosSubtitle: c.studiosSectionSubtitle || "Trova lo studio più vicino a te",
           }}
         />
-      </div>
+        </div>
+      )}
       <GoogleReviews
         title={c.googleReviews?.title}
         subtitle={c.googleReviews?.subtitle}

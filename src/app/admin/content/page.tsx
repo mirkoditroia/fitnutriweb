@@ -70,6 +70,15 @@ export default function AdminContentPage() {
                     content: ""
                   }
                 }
+              },
+              // ✅ Aggiungi Section Visibility se non esiste
+              sectionVisibility: c.sectionVisibility ?? {
+                hero: true,
+                about: true,
+                images: true,
+                packages: true,
+                bookingForm: true,
+                contact: true
               }
             } : { 
               heroTitle: "", 
@@ -78,6 +87,14 @@ export default function AdminContentPage() {
               heroBackgroundImage: "", 
               images: [],
               colorPalette: "gz-default" as const,
+              sectionVisibility: {
+                hero: true,
+                about: true,
+                images: true,
+                packages: true,
+                bookingForm: true,
+                contact: true
+              },
               bmiCalculator: {
                 enabled: false,
                 title: "📊 Calcola il tuo BMI",
@@ -110,9 +127,8 @@ export default function AdminContentPage() {
             console.log("⭐ Reviews finale:", finalContent.googleReviews);
             
             setContent(finalContent);
-      
-        setLoading(false);
-      });
+            setLoading(false);
+          });
   }, []);
 
   if (loading || !content) return <main className="container py-8">Caricamento...</main>;
@@ -433,6 +449,173 @@ export default function AdminContentPage() {
             </div>
           )}
         </section>
+        </div>
+
+        {/* ========== VISIBILITÀ SEZIONI ========== */}
+        <div className="border-b border-foreground/10 pb-8">
+          <h3 className="text-lg font-bold text-black mb-6 flex items-center gap-2">
+            👁️ Visibilità Sezioni
+          </h3>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-black/70">
+              Controlla quali sezioni del sito sono visibili. Se una sezione è nascosta, 
+              anche il collegamento dalla navbar scompare automaticamente.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Hero Section */}
+              <div className="flex items-center justify-between p-4 border border-foreground/20 rounded-lg bg-white">
+                <div>
+                  <h4 className="font-medium text-black">🏠 Sezione Hero</h4>
+                  <p className="text-sm text-black/60">Sezione principale con titolo e CTA</p>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={content.sectionVisibility?.hero !== false}
+                    onChange={(e) => setContent({
+                      ...content,
+                      sectionVisibility: {
+                        ...content.sectionVisibility,
+                        hero: e.target.checked
+                      }
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Visibile</span>
+                </label>
+              </div>
+
+              {/* About Section */}
+              <div className="flex items-center justify-between p-4 border border-foreground/20 rounded-lg bg-white">
+                <div>
+                  <h4 className="font-medium text-black">👤 Sezione "Chi sono"</h4>
+                  <p className="text-sm text-black/60">Presentazione del nutrizionista</p>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={content.sectionVisibility?.about !== false}
+                    onChange={(e) => setContent({
+                      ...content,
+                      sectionVisibility: {
+                        ...content.sectionVisibility,
+                        about: e.target.checked
+                      }
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Visibile</span>
+                </label>
+              </div>
+
+              {/* Images Section */}
+              <div className="flex items-center justify-between p-4 border border-foreground/20 rounded-lg bg-white">
+                <div>
+                  <h4 className="font-medium text-black">🖼️ Sezione Immagini</h4>
+                  <p className="text-sm text-black/60">Galleria immagini personalizzate</p>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={content.sectionVisibility?.images !== false}
+                    onChange={(e) => setContent({
+                      ...content,
+                      sectionVisibility: {
+                        ...content.sectionVisibility,
+                        images: e.target.checked
+                      }
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Visibile</span>
+                </label>
+              </div>
+
+              {/* Packages Section */}
+              <div className="flex items-center justify-between p-4 border border-foreground/20 rounded-lg bg-white">
+                <div>
+                  <h4 className="font-medium text-black">📦 Sezione Pacchetti</h4>
+                  <p className="text-sm text-black/60">Carosello dei pacchetti disponibili</p>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={content.sectionVisibility?.packages !== false}
+                    onChange={(e) => setContent({
+                      ...content,
+                      sectionVisibility: {
+                        ...content.sectionVisibility,
+                        packages: e.target.checked
+                      }
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Visibile</span>
+                </label>
+              </div>
+
+              {/* Booking Form Section */}
+              <div className="flex items-center justify-between p-4 border border-foreground/20 rounded-lg bg-white">
+                <div>
+                  <h4 className="font-medium text-black">📅 Form di Prenotazione</h4>
+                  <p className="text-sm text-black/60">Form per prenotare appuntamenti</p>
+                  <p className="text-xs text-orange-600 mt-1">
+                    ⚠️ Se nascosto, i CTA "Prenota ora" reindirizzano ai contatti
+                  </p>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={content.sectionVisibility?.bookingForm !== false}
+                    onChange={(e) => setContent({
+                      ...content,
+                      sectionVisibility: {
+                        ...content.sectionVisibility,
+                        bookingForm: e.target.checked
+                      }
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Visibile</span>
+                </label>
+              </div>
+
+              {/* Contact Section */}
+              <div className="flex items-center justify-between p-4 border border-foreground/20 rounded-lg bg-white">
+                <div>
+                  <h4 className="font-medium text-black">📞 Sezione Contatti</h4>
+                  <p className="text-sm text-black/60">Informazioni di contatto e studi</p>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={content.sectionVisibility?.contact !== false}
+                    onChange={(e) => setContent({
+                      ...content,
+                      sectionVisibility: {
+                        ...content.sectionVisibility,
+                        contact: e.target.checked
+                      }
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Visibile</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="text-sm font-medium text-black mb-2">💡 Come funziona:</div>
+              <div className="text-xs text-black/70 space-y-1">
+                <div>• <strong>Sezioni nascoste</strong>: Non vengono mostrate nella landing page</div>
+                <div>• <strong>Navbar automatica</strong>: I link delle sezioni nascoste scompaiono dalla navigazione</div>
+                <div>• <strong>CTA intelligenti</strong>: Se il form è nascosto, i pulsanti "Prenota ora" reindirizzano ai contatti</div>
+                <div>• <strong>Salvataggio</strong>: Le modifiche si applicano immediatamente dopo il salvataggio</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ========== CONTENUTI PRINCIPALI ========== */}

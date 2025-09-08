@@ -104,6 +104,14 @@ export default function LandingClient() {
         description: "Prenota il tuo primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance.",
         ctaText: "Prenota Ora - È Gratis!"
       },
+      sectionVisibility: {
+        hero: true,
+        about: true,
+        images: true,
+        packages: true,
+        bookingForm: true,
+        contact: true
+      },
       googleCalendar: {
         calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
         timezone: "Europe/Rome",
@@ -185,6 +193,14 @@ export default function LandingClient() {
       title: "🎯 Risultati dei Nostri Clienti",
       subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
       photos: []
+    },
+    sectionVisibility: {
+      hero: true,
+      about: true,
+      images: true,
+      packages: true,
+      bookingForm: true,
+      contact: true
     }
   };
   const effectivePackages = finalPackages;
@@ -232,13 +248,17 @@ export default function LandingClient() {
             backgroundImage={heroBg}
             badgeText={effectiveContent.heroBadgeText}
             badgeColor={effectiveContent.heroBadgeColor}
+            sectionVisibility={effectiveContent.sectionVisibility}
           />
         );
       })()}
-      <AboutSection title={effectiveContent.aboutTitle} body={effectiveContent.aboutBody} imageUrl={effectiveContent.aboutImageUrl} />
+      {/* ✅ SEZIONE ABOUT - solo se visibile */}
+      {effectiveContent.sectionVisibility?.about !== false && (
+        <AboutSection title={effectiveContent.aboutTitle} body={effectiveContent.aboutBody} imageUrl={effectiveContent.aboutImageUrl} />
+      )}
       
-      {/* ✅ SEZIONE BMI - subito dopo Chi sono */}
-      {effectiveContent.bmiCalculator?.enabled && (
+      {/* ✅ SEZIONE BMI - subito dopo Chi sono, solo se about è visibile */}
+      {effectiveContent.bmiCalculator?.enabled && effectiveContent.sectionVisibility?.about !== false && (
         <BMICalculator
           title={effectiveContent.bmiCalculator.title}
           subtitle={effectiveContent.bmiCalculator.subtitle}
@@ -246,10 +266,15 @@ export default function LandingClient() {
         />
       )}
       
-      {effectiveContent.images && effectiveContent.images.length > 0 && (
+      {/* ✅ SEZIONE IMMAGINI - solo se visibile */}
+      {effectiveContent.sectionVisibility?.images !== false && effectiveContent.images && effectiveContent.images.length > 0 && (
         <LandingImages images={effectiveContent.images} />
       )}
-      <PackagesCarousel items={featuredFirst} />
+      
+      {/* ✅ SEZIONE PACCHETTI - solo se visibile */}
+      {effectiveContent.sectionVisibility?.packages !== false && (
+        <PackagesCarousel items={featuredFirst} sectionVisibility={effectiveContent.sectionVisibility} />
+      )}
       
       {/* Sezione Risultati Clienti - SEMPRE VISIBILE PER DEBUG */}
       <section 
@@ -329,20 +354,23 @@ export default function LandingClient() {
         }
       })()}
       
-      {/* Sezione Prenota Consulenza */}
-      <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
-        <h2 className="text-3xl font-bold text-center">Prenota la tua consulenza</h2>
-        <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
-          Inizia il tuo percorso di trasformazione. Compila il modulo e ti contatteremo per definire i dettagli.
-        </p>
-        <div className="mt-8 max-w-lg mx-auto" data-booking-form>
-          <BookingForm />
-        </div>
-      </section>
+      {/* ✅ SEZIONE BOOKING - solo se visibile */}
+      {effectiveContent.sectionVisibility?.bookingForm !== false && (
+        <section id="booking" className="container py-16 sm:py-20 border-t border-foreground/10">
+          <h2 className="text-3xl font-bold text-center">Prenota la tua consulenza</h2>
+          <p className="mt-4 text-center text-foreground/70 max-w-2xl mx-auto">
+            Inizia il tuo percorso di trasformazione. Compila il modulo e ti contatteremo per definire i dettagli.
+          </p>
+          <div className="mt-8 max-w-lg mx-auto" data-booking-form>
+            <BookingForm />
+          </div>
+        </section>
+      )}
       
       
-      {/* Sezione Contatti - usa componente condiviso anche in locale */}
-      <div id="contatti" className="border-t border-foreground/10">
+      {/* ✅ SEZIONE CONTATTI - solo se visibile */}
+      {effectiveContent.sectionVisibility?.contact !== false && (
+        <div id="contatti" className="border-t border-foreground/10">
         <ContactSection
           contactInfo={{
             title: effectiveContent.contactSectionTitle || "📞 Contattami",
@@ -367,7 +395,8 @@ export default function LandingClient() {
             studiosSubtitle: effectiveContent.studiosSectionSubtitle || "Trova lo studio più vicino a te",
           }}
         />
-      </div>
+        </div>
+      )}
       
       {/* Recensioni Google */}
         <GoogleReviews

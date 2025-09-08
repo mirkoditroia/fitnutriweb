@@ -12,13 +12,24 @@ function parseBenefits(description: string): string[] {
   return byLines.slice(0, 3);
 }
 
-export function PackagesCarousel({ items }: { items: Package[] }) {
+export function PackagesCarousel({ items, sectionVisibility }: { items: Package[]; sectionVisibility?: { bookingForm?: boolean; contact?: boolean } }) {
   const [active, setActive] = useState<Package | null>(null);
   // featured first, then by price asc
   const ordered = [...items].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.price - b.price);
 
   const handleBookingClick = (packageId: string) => {
     console.log("PackagesCarousel: Click su prenota per pacchetto:", packageId);
+    console.log("PackagesCarousel: sectionVisibility:", sectionVisibility);
+    
+    // ✅ NUOVA FEATURE: Se il form è nascosto, vai ai contatti
+    if (sectionVisibility?.bookingForm === false) {
+      console.log("PackagesCarousel: Form nascosto - reindirizzo ai contatti");
+      const contactSection = document.getElementById('contatti');
+      if (contactSection) {
+        contactSection.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
     
     // Aggiorna l'URL con il packageId
     const url = new URL(window.location.href);
