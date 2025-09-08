@@ -2,18 +2,80 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
+    
+    // Regole per le prenotazioni
+    match /bookings/{bookingId} {
+      // Chiunque può leggere le prenotazioni (per visualizzazione pubblica)
+      allow read: if true;
+      
+      // Solo utenti autenticati possono creare prenotazioni
+      allow create: if request.auth != null;
+      
+      // Solo admin possono modificare/eliminare prenotazioni
+      allow update, delete: if request.auth != null && 
+        request.auth.token.email in [
+          "zamboninutrition@gmail.com",
+          "impostazionizamboninutrition@gmail.com"
+        ];
+    }
+    
+    // Regole per i pacchetti
+    match /packages/{packageId} {
+      // Chiunque può leggere i pacchetti (per visualizzazione pubblica)
+      allow read: if true;
+      
+      // Solo admin possono creare/modificare/eliminare pacchetti
+      allow write: if request.auth != null && 
+        request.auth.token.email in [
+          "zamboninutrition@gmail.com",
+          "impostazionizamboninutrition@gmail.com"
+        ];
+    }
+    
+    // Regole per il contenuto del sito
+    match /siteContent/{contentId} {
+      // Chiunque può leggere il contenuto del sito (per visualizzazione pubblica)
+      allow read: if true;
+      
+      // Solo admin possono modificare il contenuto del sito
+      allow write: if request.auth != null && 
+        request.auth.token.email in [
+          "zamboninutrition@gmail.com",
+          "impostazionizamboninutrition@gmail.com"
+        ];
+    }
+    
+    // Regole per i clienti
+    match /clients/{clientId} {
+      // Solo admin possono accedere ai dati dei clienti
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in [
+          "zamboninutrition@gmail.com",
+          "impostazionizamboninutrition@gmail.com"
+        ];
+    }
+    
+    // Regole per le immagini caricate
+    match /uploads/{allPaths=**} {
+      // Chiunque può leggere le immagini (per visualizzazione pubblica)
+      allow read: if true;
+      
+      // Solo admin possono caricare/modificare/eliminare immagini
+      allow write: if request.auth != null && 
+        request.auth.token.email in [
+          "zamboninutrition@gmail.com",
+          "impostazionizamboninutrition@gmail.com"
+        ];
+    }
+    
+    // Regole per altre collezioni (fallback)
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 9, 22);
+      // Solo admin possono accedere a collezioni non specificate
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in [
+          "zamboninutrition@gmail.com",
+          "impostazionizamboninutrition@gmail.com"
+        ];
     }
   }
 }

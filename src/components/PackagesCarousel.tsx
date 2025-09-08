@@ -12,6 +12,21 @@ function parseBenefits(description: string): string[] {
   return byLines.slice(0, 3);
 }
 
+// ✅ NUOVA FEATURE: Funzione per creare anteprima descrizione
+function createDescriptionPreview(description: string, maxLength: number = 120): string {
+  if (description.length <= maxLength) return description;
+  
+  // Trova l'ultimo spazio prima del limite per evitare di tagliare parole
+  const truncated = description.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  
+  if (lastSpace > maxLength * 0.8) {
+    return truncated.substring(0, lastSpace) + '...';
+  }
+  
+  return truncated + '...';
+}
+
 export function PackagesCarousel({ items, sectionVisibility }: { items: Package[]; sectionVisibility?: { bookingForm?: boolean; contact?: boolean } }) {
   const [active, setActive] = useState<Package | null>(null);
   // featured first, then by price asc
@@ -95,7 +110,9 @@ export function PackagesCarousel({ items, sectionVisibility }: { items: Package[
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         {ordered.map((p) => {
           const badge = p.badge || (p.featured ? "Più scelto" : undefined);
-          const benefits = parseBenefits(p.description);
+          const descriptionPreview = createDescriptionPreview(p.description);
+          const hasLongDescription = p.description.length > 120;
+          
           return (
             <article key={p.id ?? p.title} className="card p-0 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               {p.imageUrl && (
@@ -106,11 +123,22 @@ export function PackagesCarousel({ items, sectionVisibility }: { items: Package[
                   <h3 className="font-semibold text-lg">{p.title}</h3>
                   {badge && <span className="chip">{badge}</span>}
                 </div>
-                <ul className="mt-3 space-y-2 text-sm list-disc pl-5 max-h-28 overflow-y-auto pr-2">
-                  {benefits.map((b, i) => (
-                    <li key={i}>{b}</li>
-                  ))}
-                </ul>
+                
+                {/* ✅ NUOVA FEATURE: Anteprima descrizione invece di lista con scroll */}
+                <div className="mt-3">
+                  <p className="text-sm text-foreground/80 leading-relaxed">
+                    {descriptionPreview}
+                  </p>
+                  {hasLongDescription && (
+                    <button 
+                      className="text-xs text-primary hover:text-primary/80 font-medium mt-1 transition-colors"
+                      onClick={() => setActive(p)}
+                    >
+                      Leggi di più →
+                    </button>
+                  )}
+                </div>
+                
                 <div className="mt-4 flex items-end justify-between">
                   {renderPrice(p)}
                   <div className="flex gap-2">

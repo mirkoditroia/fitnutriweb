@@ -67,9 +67,6 @@ export function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-foreground">🔐 Admin Access</h2>
-          <p className="mt-2 text-sm text-foreground/70">
-            Accedi all'area amministrativa di GZnutrition
-          </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
@@ -130,14 +127,6 @@ export function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           <p className="text-xs text-foreground/50">
             Solo gli amministratori autorizzati possono accedere
           </p>
-          <div className="mt-4">
-            <a 
-              href="/admin/setup" 
-              className="text-sm text-primary hover:text-primary/80 underline"
-            >
-              🔧 Setup Admin (primo accesso)
-            </a>
-          </div>
         </div>
       </div>
     </div>

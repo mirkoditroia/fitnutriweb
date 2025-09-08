@@ -108,11 +108,23 @@ export function PackageModal({ pkg, onClose }: Props) {
               </div>
             )}
             
-            {/* Descrizione principale */}
+            {/* ✅ NUOVA FEATURE: Descrizione principale con formattazione migliorata */}
             <div className="mb-6 md:mb-8">
-              <p className="text-sm md:text-lg text-foreground/80 leading-relaxed bg-muted/20 p-3 md:p-4 rounded-xl border-l-4 border-primary/50">
-                {pkg.description}
-              </p>
+              <div className="bg-gradient-to-r from-muted/20 to-muted/30 p-4 md:p-6 rounded-xl border-l-4 border-primary/50">
+                <h3 className="text-sm md:text-base font-semibold text-primary mb-3 flex items-center gap-2">
+                  <span className="text-lg">📋</span>
+                  Descrizione del Pacchetto
+                </h3>
+                <div className="text-sm md:text-base text-foreground/80 leading-relaxed space-y-3">
+                  {pkg.description.split('\n').map((paragraph, index) => (
+                    paragraph.trim() && (
+                      <p key={index} className="text-justify">
+                        {paragraph.trim()}
+                      </p>
+                    )
+                  ))}
+                </div>
+              </div>
             </div>
             
             {/* Sezione Dettagli Completa con design migliorato */}

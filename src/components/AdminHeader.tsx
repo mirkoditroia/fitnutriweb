@@ -7,7 +7,7 @@ export function AdminHeader() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="bg-card/80 backdrop-blur-sm border-b border-border shadow-lg sticky top-0 z-50">
+    <header className="bg-black border-b border-gray-800 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
