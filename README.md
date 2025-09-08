@@ -22,6 +22,12 @@ npm run dev
 - **🌐 Demo**: File JSON statici (Render pre-produzione)  
 - **🚀 Firebase**: Database reale (produzione)
 
+### 🔐 Autenticazione Admin
+- **Setup**: Vai su `/admin/setup` per creare il primo account admin
+- **Login**: Accedi con email e password su qualsiasi route `/admin/*`
+- **Sicurezza**: Sistema basato su Firebase Authentication
+- **Documentazione**: Vedi [ADMIN_AUTH_SETUP.md](./ADMIN_AUTH_SETUP.md) per dettagli completi
+
 ## 📁 Struttura Progetto
 
 ```
