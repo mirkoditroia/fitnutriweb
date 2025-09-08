@@ -88,6 +88,10 @@ export default function AdminContentPage() {
       
       console.log("✅ SALVATAGGIO COMPLETATO con successo");
       
+      // ✅ NOTIFICA: Invia evento per aggiornare navbar e altri componenti
+      window.dispatchEvent(new CustomEvent('contentUpdated'));
+      console.log("📡 Evento 'contentUpdated' inviato per aggiornare navbar");
+      
       // ✅ VERIFICA: Ricarica i contenuti dal database per confermare il salvataggio
       setTimeout(async () => {
         try {

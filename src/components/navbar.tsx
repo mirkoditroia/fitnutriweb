@@ -18,6 +18,7 @@ const getNavigationItems = (siteContent: any) => {
   
   console.log("🔍 getNavigationItems: siteContent:", siteContent);
   console.log("🔍 getNavigationItems: bmiCalculator enabled:", siteContent?.bmiCalculator?.enabled);
+  console.log("🔍 getNavigationItems: googleReviews enabled:", siteContent?.googleReviews?.enabled);
   
   // Aggiungi BMI se attivato
   if (siteContent?.bmiCalculator?.enabled) {
@@ -29,6 +30,17 @@ const getNavigationItems = (siteContent: any) => {
     }
   } else {
     console.log("❌ BMI non attivato - navbar standard");
+  }
+  
+  // Rimuovi Recensioni se disattivate
+  if (!siteContent?.googleReviews?.enabled) {
+    console.log("❌ Recensioni disattivate - rimuovo dalla navbar");
+    const recensioniIndex = items.findIndex(item => item.href === "#recensioni");
+    if (recensioniIndex !== -1) {
+      items.splice(recensioniIndex, 1);
+    }
+  } else {
+    console.log("✅ Recensioni attivate - mantengo nella navbar");
   }
   
   console.log("🔍 getNavigationItems: items finali:", items);
@@ -67,47 +79,68 @@ export function Navbar({ initialBrand }: NavbarProps = {}) {
       }
     }
 
-    // Always load site content for BMI and other features
-    getSiteContent().then((c) => {
-      console.log("🔍 Navbar: Caricamento contenuto sito completo:", c);
-      console.log("🔍 Navbar: bmiCalculator object:", c?.bmiCalculator);
-      console.log("🔍 Navbar: bmiCalculator.enabled:", c?.bmiCalculator?.enabled);
-      
-      // Set brand config if not already set from SSR
-      if (!initialBrand) {
-        const cfg: BrandCfg = {
-          mode: c?.navbarLogoMode === 'image' ? 'image' : 'text',
-          imageUrl: c?.navbarLogoImageUrl || undefined,
-          height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 40,
-          autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
-          text: c?.navbarLogoText || 'GZnutrition',
-          color: undefined, // Use CSS variable
-          weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
-          size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
-        };
+    // Function to load site content
+    const loadSiteContent = () => {
+      getSiteContent().then((c) => {
+        console.log("🔍 Navbar: Caricamento contenuto sito completo:", c);
+        console.log("🔍 Navbar: bmiCalculator object:", c?.bmiCalculator);
+        console.log("🔍 Navbar: bmiCalculator.enabled:", c?.bmiCalculator?.enabled);
+        console.log("🔍 Navbar: googleReviews object:", c?.googleReviews);
+        console.log("🔍 Navbar: googleReviews.enabled:", c?.googleReviews?.enabled);
         
-        // Preload image if mode is image
-        if (cfg.mode === 'image' && cfg.imageUrl) {
-          const img = new Image();
-          img.onload = () => {
-            setImageLoaded(true);
+        // Set brand config if not already set from SSR
+        if (!initialBrand) {
+          const cfg: BrandCfg = {
+            mode: c?.navbarLogoMode === 'image' ? 'image' : 'text',
+            imageUrl: c?.navbarLogoImageUrl || undefined,
+            height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 40,
+            autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
+            text: c?.navbarLogoText || 'GZnutrition',
+            color: undefined, // Use CSS variable
+            weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
+            size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
+          };
+          
+          // Preload image if mode is image
+          if (cfg.mode === 'image' && cfg.imageUrl) {
+            const img = new Image();
+            img.onload = () => {
+              setImageLoaded(true);
+              setBrand(cfg);
+            };
+            img.onerror = () => {
+              // Fallback to text mode if image fails to load
+              setBrand({...cfg, mode: 'text'});
+            };
+            img.src = cfg.imageUrl;
+          } else {
             setBrand(cfg);
-          };
-          img.onerror = () => {
-            // Fallback to text mode if image fails to load
-            setBrand({...cfg, mode: 'text'});
-          };
-          img.src = cfg.imageUrl;
-        } else {
-          setBrand(cfg);
+          }
         }
-      }
-      
-      // Always set site content for BMI check
-      setSiteContent(c);
-    }).catch((error) => {
-      console.error("❌ Navbar: Errore caricamento contenuto sito:", error);
-    });
+        
+        // Always set site content for BMI and Reviews check
+        setSiteContent(c);
+      }).catch((error) => {
+        console.error("❌ Navbar: Errore caricamento contenuto sito:", error);
+      });
+    };
+
+    // Load initially
+    loadSiteContent();
+
+    // Listen for content changes (when admin saves)
+    const handleContentChange = () => {
+      console.log("🔄 Navbar: Rilevato cambiamento contenuto - ricarico");
+      loadSiteContent();
+    };
+
+    // Add event listener for content changes
+    window.addEventListener('contentUpdated', handleContentChange);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('contentUpdated', handleContentChange);
+    };
   }, [initialBrand]);
 
   // Glass navbar using CSS variables
