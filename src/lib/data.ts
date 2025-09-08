@@ -1275,7 +1275,78 @@ export async function getSiteContent(): Promise<SiteContent | null> {
               source: review.source || 'fallback' // Assicura source sempre presente
             }))
           : []
-      } : undefined
+      } : undefined,
+      
+      // ✅ AGGIUNGI MAPPING PER legalInfo
+      legalInfo: data.legalInfo ? {
+        companyName: data.legalInfo.companyName || "",
+        vatNumber: data.legalInfo.vatNumber || "",
+        taxCode: data.legalInfo.taxCode || "",
+        email: data.legalInfo.email || "",
+        registeredAddress: data.legalInfo.registeredAddress || "",
+        footerText: data.legalInfo.footerText || "",
+        showLegalLinks: data.legalInfo.showLegalLinks !== false,
+        gdprConsentText: data.legalInfo.gdprConsentText || "",
+        cookieBanner: {
+          enabled: data.legalInfo.cookieBanner?.enabled !== false,
+          title: data.legalInfo.cookieBanner?.title || "🍪 Utilizzo dei Cookie",
+          message: data.legalInfo.cookieBanner?.message || "Utilizziamo i cookie per migliorare la tua esperienza di navigazione e per fornire funzionalità personalizzate. Continuando a navigare accetti l'utilizzo dei cookie.",
+          acceptText: data.legalInfo.cookieBanner?.acceptText || "Accetta",
+          declineText: data.legalInfo.cookieBanner?.declineText || "Rifiuta",
+          learnMoreText: data.legalInfo.cookieBanner?.learnMoreText || "Scopri di più"
+        },
+        legalPages: {
+          privacyPolicy: {
+            title: data.legalInfo.legalPages?.privacyPolicy?.title || "Privacy Policy",
+            lastUpdated: data.legalInfo.legalPages?.privacyPolicy?.lastUpdated || new Date().toLocaleDateString('it-IT'),
+            content: data.legalInfo.legalPages?.privacyPolicy?.content || ""
+          },
+          cookiePolicy: {
+            title: data.legalInfo.legalPages?.cookiePolicy?.title || "Cookie Policy",
+            lastUpdated: data.legalInfo.legalPages?.cookiePolicy?.lastUpdated || new Date().toLocaleDateString('it-IT'),
+            content: data.legalInfo.legalPages?.cookiePolicy?.content || ""
+          },
+          termsOfService: {
+            title: data.legalInfo.legalPages?.termsOfService?.title || "Termini di Servizio",
+            lastUpdated: data.legalInfo.legalPages?.termsOfService?.lastUpdated || new Date().toLocaleDateString('it-IT'),
+            content: data.legalInfo.legalPages?.termsOfService?.content || ""
+          }
+        }
+      } : {
+        companyName: "",
+        vatNumber: "",
+        taxCode: "",
+        email: "",
+        registeredAddress: "",
+        footerText: "",
+        showLegalLinks: true,
+        gdprConsentText: "",
+        cookieBanner: {
+          enabled: true,
+          title: "🍪 Utilizzo dei Cookie",
+          message: "Utilizziamo i cookie per migliorare la tua esperienza di navigazione e per fornire funzionalità personalizzate. Continuando a navigare accetti l'utilizzo dei cookie.",
+          acceptText: "Accetta",
+          declineText: "Rifiuta",
+          learnMoreText: "Scopri di più"
+        },
+        legalPages: {
+          privacyPolicy: {
+            title: "Privacy Policy",
+            lastUpdated: new Date().toLocaleDateString('it-IT'),
+            content: ""
+          },
+          cookiePolicy: {
+            title: "Cookie Policy",
+            lastUpdated: new Date().toLocaleDateString('it-IT'),
+            content: ""
+          },
+          termsOfService: {
+            title: "Termini di Servizio",
+            lastUpdated: new Date().toLocaleDateString('it-IT'),
+            content: ""
+          }
+        }
+      }
     };
     
     console.log("getSiteContent: Contenuto finale mappato:", siteContent);
@@ -1283,6 +1354,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     console.log("🔍 getSiteContent: BMI mappato finale:", siteContent.bmiCalculator);
     console.log("🔍 getSiteContent: Reviews raw da DB:", data.googleReviews);
     console.log("🔍 getSiteContent: Reviews mappate finale:", siteContent.googleReviews);
+    console.log("🔍 getSiteContent: LegalInfo raw da DB:", data.legalInfo);
+    console.log("🔍 getSiteContent: LegalInfo mappato finale:", siteContent.legalInfo);
     return siteContent;
   } catch (error) {
     console.error("getSiteContent: Errore nel caricamento da Firebase:", error);
@@ -1303,6 +1376,7 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
   const sanitized = JSON.parse(JSON.stringify(content));
   
   // ✅ ASSICURATI che legalInfo sia sempre presente con valori di default
+  // Se legalInfo non esiste o è undefined, crealo con valori di default
   if (!sanitized.legalInfo) {
     sanitized.legalInfo = {
       companyName: "",
@@ -1336,6 +1410,43 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
           title: "Termini di Servizio",
           lastUpdated: new Date().toLocaleDateString('it-IT'),
           content: ""
+        }
+      }
+    };
+  } else {
+    // Se legalInfo esiste, assicurati che tutti i campi necessari siano presenti
+    sanitized.legalInfo = {
+      companyName: sanitized.legalInfo.companyName || "",
+      vatNumber: sanitized.legalInfo.vatNumber || "",
+      taxCode: sanitized.legalInfo.taxCode || "",
+      email: sanitized.legalInfo.email || "",
+      registeredAddress: sanitized.legalInfo.registeredAddress || "",
+      footerText: sanitized.legalInfo.footerText || "",
+      showLegalLinks: sanitized.legalInfo.showLegalLinks !== false,
+      gdprConsentText: sanitized.legalInfo.gdprConsentText || "",
+      cookieBanner: {
+        enabled: sanitized.legalInfo.cookieBanner?.enabled !== false,
+        title: sanitized.legalInfo.cookieBanner?.title || "🍪 Utilizzo dei Cookie",
+        message: sanitized.legalInfo.cookieBanner?.message || "Utilizziamo i cookie per migliorare la tua esperienza di navigazione e per fornire funzionalità personalizzate. Continuando a navigare accetti l'utilizzo dei cookie.",
+        acceptText: sanitized.legalInfo.cookieBanner?.acceptText || "Accetta",
+        declineText: sanitized.legalInfo.cookieBanner?.declineText || "Rifiuta",
+        learnMoreText: sanitized.legalInfo.cookieBanner?.learnMoreText || "Scopri di più"
+      },
+      legalPages: {
+        privacyPolicy: {
+          title: sanitized.legalInfo.legalPages?.privacyPolicy?.title || "Privacy Policy",
+          lastUpdated: sanitized.legalInfo.legalPages?.privacyPolicy?.lastUpdated || new Date().toLocaleDateString('it-IT'),
+          content: sanitized.legalInfo.legalPages?.privacyPolicy?.content || ""
+        },
+        cookiePolicy: {
+          title: sanitized.legalInfo.legalPages?.cookiePolicy?.title || "Cookie Policy",
+          lastUpdated: sanitized.legalInfo.legalPages?.cookiePolicy?.lastUpdated || new Date().toLocaleDateString('it-IT'),
+          content: sanitized.legalInfo.legalPages?.cookiePolicy?.content || ""
+        },
+        termsOfService: {
+          title: sanitized.legalInfo.legalPages?.termsOfService?.title || "Termini di Servizio",
+          lastUpdated: sanitized.legalInfo.legalPages?.termsOfService?.lastUpdated || new Date().toLocaleDateString('it-IT'),
+          content: sanitized.legalInfo.legalPages?.termsOfService?.content || ""
         }
       }
     };
