@@ -3,43 +3,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Componente per testo troncato con "altro" cliccabile
-function TruncatedText({ text, maxLines = 2 }: { text: string; maxLines?: number }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Conta le righe approssimative (1 riga ≈ 50 caratteri)
-  const charsPerLine = 50;
-  const maxChars = maxLines * charsPerLine;
-  
-  if (text.length <= maxChars || isExpanded) {
-    return (
-      <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-        {text}
-        {text.length > maxChars && (
-          <button 
-            onClick={() => setIsExpanded(false)}
-            className="text-primary hover:text-primary/80 ml-1 underline"
-          >
-            meno
-          </button>
-        )}
-      </p>
-    );
-  }
-  
-  return (
-    <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-      {text.substring(0, maxChars)}...
-      <button 
-        onClick={() => setIsExpanded(true)}
-        className="text-primary hover:text-primary/80 ml-1 underline"
-      >
-        altro
-      </button>
-    </p>
-  );
-}
-
 interface Photo {
   id: string;
   url: string;
@@ -90,10 +53,10 @@ export default function ResultsCarouselDesktop({ photos }: ResultsCarouselDeskto
                 <div className="grid grid-cols-3 gap-8 px-4">
                   {photos.slice(pageIndex * photosPerPage, (pageIndex + 1) * photosPerPage).map((photo, photoIndex) => (
                     <div key={photo.id} className="group relative">
-                      {/* Card con effetto hover - altezza aumentata */}
-                      <div className="relative bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-[520px] flex flex-col">
+                      {/* Card con effetto hover */}
+                      <div className="relative bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                         {/* Immagine con overlay gradiente */}
-                        <div className="aspect-[4/5] relative overflow-hidden flex-shrink-0">
+                        <div className="aspect-[4/5] relative overflow-hidden">
                           <img
                             src={photo.url}
                             alt={photo.description || `Risultato cliente ${pageIndex * photosPerPage + photoIndex + 1}`}
@@ -104,12 +67,14 @@ export default function ResultsCarouselDesktop({ photos }: ResultsCarouselDeskto
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </div>
                         
-                        {/* Descrizione con styling moderno - spazio fisso */}
-                        <div className="p-5 flex-1 flex flex-col justify-start">
-                          {photo.description && (
-                            <TruncatedText text={photo.description} maxLines={2} />
-                          )}
-                        </div>
+                        {/* Descrizione con styling moderno */}
+                        {photo.description && (
+                          <div className="p-5">
+                            <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                              {photo.description}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -119,7 +84,7 @@ export default function ResultsCarouselDesktop({ photos }: ResultsCarouselDeskto
                     length: Math.max(0, photosPerPage - photos.slice(pageIndex * photosPerPage, (pageIndex + 1) * photosPerPage).length) 
                   }).map((_, emptyIndex) => (
                     <div key={`empty-${emptyIndex}`} className="invisible">
-                      <div className="h-[520px]"></div>
+                      <div className="aspect-[4/5]"></div>
                     </div>
                   ))}
                 </div>
