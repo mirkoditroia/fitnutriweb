@@ -71,6 +71,16 @@ export default async function Home() {
         );
       })()}
       <AboutSection title={c.aboutTitle} body={c.aboutBody} imageUrl={c.aboutImageUrl} />
+      
+      {/* ✅ SEZIONE BMI - subito dopo Chi sono */}
+      {c.bmiCalculator?.enabled && (
+        <BMICalculator
+          title={c.bmiCalculator.title}
+          subtitle={c.bmiCalculator.subtitle}
+          colorPalette={c.colorPalette}
+        />
+      )}
+      
       <LandingImages images={c.images} />
       <PackagesCarousel items={featuredFirst} />
       
@@ -139,14 +149,6 @@ export default async function Home() {
         </div>
       </section>
       
-      {/* ✅ NUOVA SEZIONE: Calcolatore BMI - se abilitato */}
-      {c.bmiCalculator?.enabled && (
-        <BMICalculator
-          title={c.bmiCalculator.title}
-          subtitle={c.bmiCalculator.subtitle}
-          colorPalette={c.colorPalette}
-        />
-      )}
       {/* Contatti - sempre visibili con fallback */}
       <div id="contatti" className="border-t border-foreground/10">
         <ContactSection

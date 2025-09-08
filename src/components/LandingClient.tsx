@@ -236,6 +236,16 @@ export default function LandingClient() {
         );
       })()}
       <AboutSection title={effectiveContent.aboutTitle} body={effectiveContent.aboutBody} imageUrl={effectiveContent.aboutImageUrl} />
+      
+      {/* ✅ SEZIONE BMI - subito dopo Chi sono */}
+      {effectiveContent.bmiCalculator?.enabled && (
+        <BMICalculator
+          title={effectiveContent.bmiCalculator.title}
+          subtitle={effectiveContent.bmiCalculator.subtitle}
+          colorPalette={effectiveContent.colorPalette}
+        />
+      )}
+      
       {effectiveContent.images && effectiveContent.images.length > 0 && (
         <LandingImages images={effectiveContent.images} />
       )}
@@ -330,14 +340,6 @@ export default function LandingClient() {
         </div>
       </section>
       
-      {/* ✅ NUOVA SEZIONE: Calcolatore BMI - se abilitato */}
-      {effectiveContent.bmiCalculator?.enabled && (
-        <BMICalculator
-          title={effectiveContent.bmiCalculator.title}
-          subtitle={effectiveContent.bmiCalculator.subtitle}
-          colorPalette={effectiveContent.colorPalette}
-        />
-      )}
       
       {/* Sezione Contatti - usa componente condiviso anche in locale */}
       <div id="contatti" className="border-t border-foreground/10">

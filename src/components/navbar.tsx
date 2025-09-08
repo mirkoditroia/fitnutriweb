@@ -23,10 +23,10 @@ const getNavigationItems = (siteContent: any) => {
   // Aggiungi BMI se attivato
   if (siteContent?.bmiCalculator?.enabled) {
     console.log("✅ BMI attivato - aggiungo alla navbar");
-    // Inserisci BMI dopo "Prenota" e prima di "Contatti"
-    const prenotaIndex = items.findIndex(item => item.href === "#booking");
-    if (prenotaIndex !== -1) {
-      items.splice(prenotaIndex + 1, 0, { name: "BMI", href: "#bmi-calculator" });
+    // Inserisci BMI dopo "Chi sono" e prima di "Pacchetti"
+    const chiSonoIndex = items.findIndex(item => item.href === "#chi-sono");
+    if (chiSonoIndex !== -1) {
+      items.splice(chiSonoIndex + 1, 0, { name: "BMI", href: "#bmi-calculator" });
     }
   } else {
     console.log("❌ BMI non attivato - navbar standard");
