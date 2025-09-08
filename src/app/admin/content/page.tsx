@@ -6,11 +6,19 @@ import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import { UploadButton } from "@/components/UploadButton";
 import { PALETTES, getPaletteConfig } from "@/lib/palettes";
+import { getStorage, ref, listAll, getMetadata, deleteObject, getDownloadURL } from "firebase/storage";
+import { getFirestore, collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { app } from "@/lib/firebase";
 
 export default function AdminContentPage() {
   const [content, setContent] = useState<SiteContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unusedFiles, setUnusedFiles] = useState<string[]>([]);
   const fieldCls = "bg-white text-black placeholder:text-black/70 border-foreground/30";
+
+  // Firebase instances
+  const storage = app ? getStorage(app) : null;
+  const db = app ? getFirestore(app) : null;
 
   useEffect(() => {
           getSiteContent().then((c) => {
@@ -115,7 +123,216 @@ export default function AdminContentPage() {
       });
   }, []);
 
+  // Load Firebase stats on component mount
+  useEffect(() => {
+    if (!loading && content) {
+      refreshStorageStats();
+      refreshDatabaseStats();
+    }
+  }, [loading, content]);
+
   if (loading || !content) return <main className="container py-8">Caricamento...</main>;
+
+  // Firebase Management Functions
+  const refreshStorageStats = async () => {
+    if (!storage) {
+      toast.error('Firebase Storage non configurato');
+      return;
+    }
+    
+    try {
+      const storageRef = ref(storage);
+      const result = await listAll(storageRef);
+      
+      let totalSize = 0;
+      let fileCount = 0;
+      
+      for (const itemRef of result.items) {
+        const metadata = await getMetadata(itemRef);
+        totalSize += metadata.size;
+        fileCount++;
+      }
+      
+      // Update UI
+      const storageUsedElement = document.getElementById('storage-used');
+      const storageBarElement = document.getElementById('storage-bar');
+      const totalFilesElement = document.getElementById('total-files');
+      
+      if (storageUsedElement) {
+        storageUsedElement.textContent = `${(totalSize / 1024 / 1024).toFixed(2)} MB`;
+      }
+      
+      if (storageBarElement) {
+        const percentage = Math.min((totalSize / (5 * 1024 * 1024 * 1024)) * 100, 100); // 5GB limit
+        storageBarElement.style.width = `${percentage}%`;
+      }
+      
+      if (totalFilesElement) {
+        totalFilesElement.textContent = fileCount.toString();
+      }
+      
+      toast.success(`Storage aggiornato: ${(totalSize / 1024 / 1024).toFixed(2)} MB, ${fileCount} file`);
+    } catch (error) {
+      console.error('Errore nel caricamento statistiche storage:', error);
+      toast.error('Errore nel caricamento statistiche storage');
+    }
+  };
+
+  const findUnusedFiles = async () => {
+    if (!storage) {
+      toast.error('Firebase Storage non configurato');
+      return;
+    }
+    
+    try {
+      const storageRef = ref(storage);
+      const result = await listAll(storageRef);
+      
+      const unusedFilesList: string[] = [];
+      
+      // Get all referenced files from database
+      const referencedFiles = new Set<string>();
+      
+      // Check site content for image references
+      if (content) {
+        if (content.heroBackgroundImage) referencedFiles.add(content.heroBackgroundImage);
+        if (content.aboutImageUrl) referencedFiles.add(content.aboutImageUrl);
+        if (content.navbarLogoImageUrl) referencedFiles.add(content.navbarLogoImageUrl);
+        
+        // Check images array
+        if (content.images) {
+          content.images.forEach(img => {
+            if (img.url) referencedFiles.add(img.url);
+          });
+        }
+        
+        // Check results photos
+        if (content.resultsSection?.photos) {
+          content.resultsSection.photos.forEach(photo => {
+            if (photo.url) referencedFiles.add(photo.url);
+          });
+        }
+      }
+      
+      // Check each file in storage
+      for (const itemRef of result.items) {
+        const downloadURL = await getDownloadURL(itemRef);
+        if (!referencedFiles.has(downloadURL)) {
+          unusedFilesList.push(itemRef.fullPath);
+        }
+      }
+      
+      setUnusedFiles(unusedFilesList);
+      toast.success(`Trovati ${unusedFilesList.length} file inutilizzati`);
+    } catch (error) {
+      console.error('Errore nella ricerca file inutilizzati:', error);
+      toast.error('Errore nella ricerca file inutilizzati');
+    }
+  };
+
+  const cleanupUnusedFiles = async () => {
+    if (!storage) {
+      toast.error('Firebase Storage non configurato');
+      return;
+    }
+    
+    if (unusedFiles.length === 0) return;
+    
+    try {
+      let deletedCount = 0;
+      
+      for (const filePath of unusedFiles) {
+        const fileRef = ref(storage, filePath);
+        await deleteObject(fileRef);
+        deletedCount++;
+      }
+      
+      setUnusedFiles([]);
+      toast.success(`${deletedCount} file eliminati con successo`);
+      
+      // Refresh storage stats
+      await refreshStorageStats();
+    } catch (error) {
+      console.error('Errore nell\'eliminazione file:', error);
+      toast.error('Errore nell\'eliminazione file');
+    }
+  };
+
+  const refreshDatabaseStats = async () => {
+    if (!db) {
+      toast.error('Firebase Firestore non configurato');
+      return;
+    }
+    
+    try {
+      // Get bookings count
+      const bookingsQuery = query(collection(db, 'bookings'));
+      const bookingsSnapshot = await getDocs(bookingsQuery);
+      const bookingsCount = bookingsSnapshot.size;
+      
+      // Get clients count
+      const clientsQuery = query(collection(db, 'clients'));
+      const clientsSnapshot = await getDocs(clientsQuery);
+      const clientsCount = clientsSnapshot.size;
+      
+      // Get packages count
+      const packagesQuery = query(collection(db, 'packages'));
+      const packagesSnapshot = await getDocs(packagesQuery);
+      const packagesCount = packagesSnapshot.size;
+      
+      // Update UI
+      const bookingsElement = document.getElementById('bookings-count');
+      const clientsElement = document.getElementById('clients-count');
+      const packagesElement = document.getElementById('packages-count');
+      
+      if (bookingsElement) bookingsElement.textContent = bookingsCount.toString();
+      if (clientsElement) clientsElement.textContent = clientsCount.toString();
+      if (packagesElement) packagesElement.textContent = packagesCount.toString();
+      
+      toast.success('Statistiche database aggiornate');
+    } catch (error) {
+      console.error('Errore nel caricamento statistiche database:', error);
+      toast.error('Errore nel caricamento statistiche database');
+    }
+  };
+
+  const listAllFiles = async () => {
+    if (!storage) {
+      toast.error('Firebase Storage non configurato');
+      return;
+    }
+    
+    try {
+      const storageRef = ref(storage);
+      const result = await listAll(storageRef);
+      
+      let fileList = 'File nello storage:\n\n';
+      
+      for (const itemRef of result.items) {
+        const metadata = await getMetadata(itemRef);
+        const sizeMB = (metadata.size / 1024 / 1024).toFixed(2);
+        fileList += `${itemRef.name} (${sizeMB} MB)\n`;
+      }
+      
+      // Show in console for now, could be improved with a modal
+      console.log(fileList);
+      toast.success(`Listati ${result.items.length} file (vedi console)`);
+    } catch (error) {
+      console.error('Errore nel listing file:', error);
+      toast.error('Errore nel listing file');
+    }
+  };
+
+  const optimizeImages = async () => {
+    try {
+      // This would typically involve re-uploading images with compression
+      // For now, just show a message
+      toast.success('Funzionalità di ottimizzazione immagini in sviluppo');
+    } catch (error) {
+      console.error('Errore nell\'ottimizzazione immagini:', error);
+      toast.error('Errore nell\'ottimizzazione immagini');
+    }
+  };
 
   const save = async () => {
     // ✅ DEBUG: Log completo del contenuto prima del salvataggio
@@ -1886,6 +2103,118 @@ export default function AdminContentPage() {
             💾 Salva Contenuti
           </Button>
         </div>
+
+        {/* 🔥 Firebase Management */}
+        <section className="space-y-4 mt-8">
+          <h2 className="font-semibold text-black">🔥 Firebase Management</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Storage Usage */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <h3 className="font-medium text-black mb-3">📊 Storage Usage</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Storage utilizzato:</span>
+                  <span className="text-sm font-medium" id="storage-used">Caricamento...</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full" id="storage-bar" style={{width: '0%'}}></div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">File totali:</span>
+                  <span className="text-sm font-medium" id="total-files">-</span>
+                </div>
+                <Button 
+                  onClick={refreshStorageStats}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  🔄 Aggiorna Statistiche
+                </Button>
+              </div>
+            </div>
+
+            {/* File Cleanup */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <h3 className="font-medium text-black mb-3">🧹 File Cleanup</h3>
+              <div className="space-y-3">
+                <div className="text-sm text-gray-600">
+                  Rimuovi file inutilizzati e ottimizza lo storage
+                </div>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={findUnusedFiles}
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    🔍 Trova File Inutilizzati
+                  </Button>
+                  <Button 
+                    onClick={cleanupUnusedFiles}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white"
+                    disabled={!unusedFiles.length}
+                  >
+                    🗑️ Elimina File Inutilizzati ({unusedFiles.length})
+                  </Button>
+                </div>
+                {unusedFiles.length > 0 && (
+                  <div className="text-xs text-gray-500">
+                    File inutilizzati trovati: {unusedFiles.length}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Database Stats */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <h3 className="font-medium text-black mb-3">📈 Database Statistics</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Prenotazioni:</span>
+                  <span className="text-sm font-medium" id="bookings-count">-</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Clienti:</span>
+                  <span className="text-sm font-medium" id="clients-count">-</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Pacchetti:</span>
+                  <span className="text-sm font-medium" id="packages-count">-</span>
+                </div>
+                <Button 
+                  onClick={refreshDatabaseStats}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  📊 Aggiorna Statistiche DB
+                </Button>
+              </div>
+            </div>
+
+            {/* Storage Actions */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <h3 className="font-medium text-black mb-3">⚡ Azioni Storage</h3>
+              <div className="space-y-3">
+                <div className="text-sm text-gray-600">
+                  Gestisci i file nello storage Firebase
+                </div>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={listAllFiles}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    📁 Lista Tutti i File
+                  </Button>
+                  <Button 
+                    onClick={optimizeImages}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    🖼️ Ottimizza Immagini
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
       </div>
     </>
   );
