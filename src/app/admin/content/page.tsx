@@ -34,6 +34,19 @@ export default function AdminContentPage() {
                 subtitle: "Cosa dicono i nostri clienti",
                 businessName: "GZ Nutrition",
                 reviews: []
+              },
+              // ✅ Aggiungi Legal Info se non esiste
+              legalInfo: c.legalInfo ?? {
+                companyName: "GZnutrition",
+                showLegalLinks: true,
+                cookieBanner: {
+                  enabled: true,
+                  title: "🍪 Utilizzo dei Cookie",
+                  message: "Utilizziamo i cookie per migliorare la tua esperienza di navigazione e per fornire funzionalità personalizzate. Continuando a navigare accetti l'utilizzo dei cookie.",
+                  acceptText: "Accetta",
+                  declineText: "Rifiuta",
+                  learnMoreText: "Scopri di più"
+                }
               }
             } : { 
               heroTitle: "", 
@@ -53,6 +66,19 @@ export default function AdminContentPage() {
                 subtitle: "Cosa dicono i nostri clienti",
                 businessName: "GZ Nutrition",
                 reviews: []
+              },
+              // ✅ Legal Info di default
+              legalInfo: {
+                companyName: "GZnutrition",
+                showLegalLinks: true,
+                cookieBanner: {
+                  enabled: true,
+                  title: "🍪 Utilizzo dei Cookie",
+                  message: "Utilizziamo i cookie per migliorare la tua esperienza di navigazione e per fornire funzionalità personalizzate. Continuando a navigare accetti l'utilizzo dei cookie.",
+                  acceptText: "Accetta",
+                  declineText: "Rifiuta",
+                  learnMoreText: "Scopri di più"
+                }
               }
             };
             
@@ -1370,6 +1396,325 @@ export default function AdminContentPage() {
                 </div>
               </div>
             )}
+          </div>
+        </section>
+
+        {/* ✅ NUOVA SEZIONE: Legal Compliance */}
+        <section className="space-y-4 mt-8">
+          <h2 className="font-semibold text-black">⚖️ Informazioni Legali</h2>
+          
+          <div className="space-y-4">
+            <div className="text-sm text-black/70 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <strong>⚖️ Legal Compliance:</strong>
+              <ul className="list-disc list-inside mt-1 space-y-1">
+                <li>Configura informazioni aziendali per il footer (P.IVA, CF, etc.)</li>
+                <li>Gestisci consenso GDPR per il form di prenotazione</li>
+                <li>Configura banner cookie e policy</li>
+                <li>Link a Privacy Policy, Cookie Policy e Termini di Servizio</li>
+              </ul>
+            </div>
+
+            {/* Informazioni aziendali */}
+            <div className="space-y-4 p-4 border border-foreground/10 rounded-lg">
+              <h3 className="font-medium text-black">🏢 Informazioni Aziendali</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Nome Azienda
+                  </label>
+                  <input
+                    type="text"
+                    value={content.legalInfo?.companyName || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        companyName: e.target.value
+                      }
+                    })}
+                    placeholder="GZnutrition"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Partita IVA
+                  </label>
+                  <input
+                    type="text"
+                    value={content.legalInfo?.vatNumber || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        vatNumber: e.target.value
+                      }
+                    })}
+                    placeholder="IT12345678901"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Codice Fiscale
+                  </label>
+                  <input
+                    type="text"
+                    value={content.legalInfo?.taxCode || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        taxCode: e.target.value
+                      }
+                    })}
+                    placeholder="RSSMRA80A01H501U"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Email Legale
+                  </label>
+                  <input
+                    type="email"
+                    value={content.legalInfo?.email || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        email: e.target.value
+                      }
+                    })}
+                    placeholder="info@gznutrition.com"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-black">
+                  Indirizzo Legale
+                </label>
+                <textarea
+                  value={content.legalInfo?.registeredAddress || ""}
+                  onChange={(e) => setContent({
+                    ...content,
+                    legalInfo: {
+                      ...content.legalInfo,
+                      registeredAddress: e.target.value
+                    }
+                  })}
+                  placeholder="Via Roma 123, 00100 Roma (RM)"
+                  rows={2}
+                  className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-black">
+                  Testo Footer Personalizzato
+                </label>
+                <input
+                  type="text"
+                  value={content.legalInfo?.footerText || ""}
+                  onChange={(e) => setContent({
+                    ...content,
+                    legalInfo: {
+                      ...content.legalInfo,
+                      footerText: e.target.value
+                    }
+                  })}
+                  placeholder="Testo aggiuntivo per il footer"
+                  className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                />
+              </div>
+            </div>
+
+            {/* GDPR e Privacy */}
+            <div className="space-y-4 p-4 border border-foreground/10 rounded-lg">
+              <h3 className="font-medium text-black">🔒 GDPR e Privacy</h3>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2 text-black">
+                  Testo Consenso GDPR
+                </label>
+                <textarea
+                  value={content.legalInfo?.gdprConsentText || ""}
+                  onChange={(e) => setContent({
+                    ...content,
+                    legalInfo: {
+                      ...content.legalInfo,
+                      gdprConsentText: e.target.value
+                    }
+                  })}
+                  placeholder="Testo personalizzato per il consenso GDPR nel form..."
+                  rows={3}
+                  className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                />
+                <p className="text-xs text-gray-600 mt-1">
+                  Se vuoto, verrà usato il testo di default conforme al GDPR
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Privacy Policy URL
+                  </label>
+                  <input
+                    type="url"
+                    value={content.legalInfo?.privacyPolicyUrl || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        privacyPolicyUrl: e.target.value
+                      }
+                    })}
+                    placeholder="https://gznutrition.com/privacy"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Cookie Policy URL
+                  </label>
+                  <input
+                    type="url"
+                    value={content.legalInfo?.cookiePolicyUrl || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        cookiePolicyUrl: e.target.value
+                      }
+                    })}
+                    placeholder="https://gznutrition.com/cookies"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Termini di Servizio URL
+                  </label>
+                  <input
+                    type="url"
+                    value={content.legalInfo?.termsOfServiceUrl || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        termsOfServiceUrl: e.target.value
+                      }
+                    })}
+                    placeholder="https://gznutrition.com/terms"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Cookie Banner */}
+            <div className="space-y-4 p-4 border border-foreground/10 rounded-lg">
+              <h3 className="font-medium text-black">🍪 Cookie Banner</h3>
+              
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="cookieBannerEnabled"
+                  checked={content.legalInfo?.cookieBanner?.enabled !== false}
+                  onChange={(e) => setContent({
+                    ...content,
+                    legalInfo: {
+                      ...content.legalInfo,
+                      cookieBanner: {
+                        ...content.legalInfo?.cookieBanner,
+                        enabled: e.target.checked
+                      }
+                    }
+                  })}
+                  className="w-4 h-4 text-primary bg-background border-foreground/20 rounded focus:ring-primary focus:ring-2"
+                />
+                <label htmlFor="cookieBannerEnabled" className="text-sm text-black">
+                  Abilita banner cookie
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Titolo Banner
+                  </label>
+                  <input
+                    type="text"
+                    value={content.legalInfo?.cookieBanner?.title || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        cookieBanner: {
+                          ...content.legalInfo?.cookieBanner,
+                          title: e.target.value
+                        }
+                      }
+                    })}
+                    placeholder="🍪 Utilizzo dei Cookie"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-black">
+                    Testo Pulsante Accetta
+                  </label>
+                  <input
+                    type="text"
+                    value={content.legalInfo?.cookieBanner?.acceptText || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      legalInfo: {
+                        ...content.legalInfo,
+                        cookieBanner: {
+                          ...content.legalInfo?.cookieBanner,
+                          acceptText: e.target.value
+                        }
+                      }
+                    })}
+                    placeholder="Accetta"
+                    className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-black">
+                  Messaggio Banner
+                </label>
+                <textarea
+                  value={content.legalInfo?.cookieBanner?.message || ""}
+                  onChange={(e) => setContent({
+                    ...content,
+                    legalInfo: {
+                      ...content.legalInfo,
+                      cookieBanner: {
+                        ...content.legalInfo?.cookieBanner,
+                        message: e.target.value
+                      }
+                    }
+                  })}
+                  placeholder="Messaggio personalizzato per il banner cookie..."
+                  rows={2}
+                  className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                />
+              </div>
+            </div>
           </div>
         </section>
         </div>

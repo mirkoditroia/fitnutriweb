@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { CookieBanner } from "@/components/CookieBanner";
 import ToasterProvider from "@/components/toaster-provider";
 import { generateCSSVariables, getPaletteConfig } from "@/lib/palettes";
 import { getSiteContent } from "@/lib/datasource";
@@ -146,6 +147,7 @@ export default async function RootLayout({
         <ToasterProvider />
         {children}
         <Footer />
+        <CookieBanner />
       </body>
     </html>
   );

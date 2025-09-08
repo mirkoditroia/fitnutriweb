@@ -32,6 +32,10 @@ const schema = z.object({
   packageId: z.string().optional(),
   // priority rimossa
   notes: z.string().optional(), // Note del cliente (sezione "Parlami di te")
+  // ✅ GDPR Compliance
+  gdprConsent: z.boolean().refine(val => val === true, {
+    message: "Devi accettare il trattamento dei dati personali per continuare"
+  }),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -286,6 +290,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       slot: "",
       notes: "",
       packageId: directState.selectedPackageId || "",
+      gdprConsent: false, // ✅ GDPR Compliance
       // preferenza canale rimossa
     },
   });
@@ -638,6 +643,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       setValue("date", "");
       setValue("slot", "");
       setValue("notes", "");
+      setValue("gdprConsent", false); // ✅ GDPR Compliance
       setSelectedDate("");
       setAvailableSlots([]);
       // Reset del pacchetto selezionato per tornare al selettore
@@ -1019,6 +1025,42 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           />
           
         </div>
+
+        {/* GDPR Consent - Solo se non in modalità admin */}
+        {!adminMode && (
+          <div className="form-surface p-4">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="gdprConsent"
+                {...register("gdprConsent")}
+                className="mt-1 w-4 h-4 text-primary bg-background border-foreground/20 rounded focus:ring-primary focus:ring-2"
+              />
+              <div className="flex-1">
+                <label htmlFor="gdprConsent" className="text-sm text-black cursor-pointer">
+                  <span className="font-medium">Accetto il trattamento dei dati personali *</span>
+                  <p className="text-xs text-foreground/70 mt-1">
+                    {siteContent?.legalInfo?.gdprConsentText || 
+                      "Acconsento al trattamento dei miei dati personali per la gestione della prenotazione e per ricevere comunicazioni relative al servizio, ai sensi del GDPR (Regolamento UE 2016/679). I dati saranno utilizzati esclusivamente per le finalità indicate e non saranno comunicati a terzi."}
+                  </p>
+                  {siteContent?.legalInfo?.privacyPolicyUrl && (
+                    <a 
+                      href={siteContent.legalInfo.privacyPolicyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline text-xs mt-1 inline-block"
+                    >
+                      Leggi la Privacy Policy
+                    </a>
+                  )}
+                </label>
+                {errors.gdprConsent && (
+                  <p className="text-destructive text-sm mt-1">{errors.gdprConsent.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* CAPTCHA - Solo se abilitato e non in modalità admin */}
         {!adminMode && siteContent?.recaptchaEnabled && siteContent?.recaptchaSiteKey && (

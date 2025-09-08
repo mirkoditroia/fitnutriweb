@@ -253,6 +253,37 @@ export interface SiteContent {
     placeId?: string; // Google Place ID per link diretto alle recensioni
     fallbackReviews?: GoogleReview[]; // Recensioni manuali gestite da admin
   };
+  
+  // ✅ LEGAL COMPLIANCE: Informazioni legali per footer e GDPR
+  legalInfo?: {
+    // Informazioni aziendali
+    companyName?: string; // Nome dell'azienda (default: "GZnutrition")
+    vatNumber?: string; // Partita IVA
+    taxCode?: string; // Codice fiscale
+    registeredAddress?: string; // Indirizzo legale
+    email?: string; // Email legale/contatto
+    phone?: string; // Telefono legale
+    
+    // Footer personalizzabile
+    footerText?: string; // Testo personalizzato per il footer
+    showLegalLinks?: boolean; // Mostra link legali nel footer (default: true)
+    
+    // GDPR e Privacy
+    gdprConsentText?: string; // Testo per consenso GDPR nel form
+    privacyPolicyUrl?: string; // URL della privacy policy
+    cookiePolicyUrl?: string; // URL della cookie policy
+    termsOfServiceUrl?: string; // URL dei termini di servizio
+    
+    // Cookie banner
+    cookieBanner?: {
+      enabled?: boolean; // Abilita banner cookie (default: true)
+      title?: string; // Titolo del banner
+      message?: string; // Messaggio del banner
+      acceptText?: string; // Testo pulsante accetta
+      declineText?: string; // Testo pulsante rifiuta
+      learnMoreText?: string; // Testo link "scopri di più"
+    };
+  };
 }
 
 export type Availability = {
