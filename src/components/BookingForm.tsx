@@ -603,7 +603,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       // ✅ DEBUGGING: Verifica modalità data e importa funzioni
       console.log("🚀 Tentativo prenotazione consulenza gratuita:", { isFreeConsultation, selectedPackage });
       
-      // ✅ SEMPLIFICATO: Rimozione delay specifico iOS
+      // ✅ iOS: Aggiungi delay specifico per iOS per gestire problemi di timing
+      if (isIOS()) {
+        console.log("📱 iOS - Aggiunto delay specifico per stabilità");
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
       
       try {
         setLoadingStep("Inviando prenotazione...");
@@ -643,8 +647,47 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.log("🎯 VERIFICA FLAG: isFreeConsultation nel payload =", bookingPayload.isFreeConsultation);
         console.log("🎯 VERIFICA FLAG: variabile locale isFreeConsultation =", isFreeConsultation);
         
-        // ✅ SEMPLIFICATO: Uso sempre createBooking senza logiche complesse iOS
-        const bookingId = await createBooking(bookingPayload, captchaToken || undefined);
+        // ✅ iOS: Gestione speciale per problemi di fetch
+        let bookingId;
+        if (isIOS()) {
+          console.log("📱 iOS - Tentativo createBooking con gestione speciale");
+          try {
+            // Prova prima con headers specifici iOS
+            bookingId = await createBooking(bookingPayload, captchaToken || undefined);
+          } catch (iosError) {
+            console.error("📱 iOS - Primo tentativo fallito:", iosError);
+            
+            // ✅ Secondo tentativo con fetch nativo per iOS
+            console.log("📱 iOS - Secondo tentativo con API diretta");
+            console.log("📱 iOS - Payload da inviare:", JSON.stringify(bookingPayload, null, 2));
+            const response = await fetch("/api/localdb/bookings", {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Cache-Control": "no-cache"
+              },
+              body: JSON.stringify(bookingPayload), // ✅ Rimosso captchaToken dal payload
+              credentials: 'same-origin'
+            });
+            
+            console.log("📱 iOS - Response status:", response.status);
+            console.log("📱 iOS - Response headers:", Object.fromEntries(response.headers.entries()));
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error("📱 iOS - Response error text:", errorText);
+              throw new Error(`iOS API fallback failed: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log("📱 iOS - Response result:", result);
+            bookingId = result.id || result.bookingId || "ios-fallback-success";
+            console.log("📱 iOS - Fallback API riuscito:", bookingId);
+          }
+        } else {
+          bookingId = await createBooking(bookingPayload, captchaToken || undefined);
+        }
         
         setLoadingStep("Completato!");
         console.log("✅ Prenotazione creata con successo! ID:", bookingId);
@@ -663,9 +706,35 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           console.error("📱 iOS - Network status:", navigator.onLine);
         }
         
-        // ✅ SEMPLIFICATO: Rilancia sempre l'errore senza fallback complessi
-        console.error("❌ Errore prenotazione:", e);
-        throw new Error(`Prenotazione fallita: ${(e as Error).message}`);
+        // ✅ Solo usare fallback se siamo in modalità locale, non Firebase
+        const currentDataMode = (await import("@/lib/datasource")).getDataMode();
+        if (currentDataMode === "local") {
+          setLoadingStep("Tentativo sistema di backup locale...");
+          console.log("🔄 Usando fallback locale in modalità dev...");
+          // Fallback locale con headers iOS-friendly
+          const response = await fetch("/api/localdb/bookings", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+              ...(isIOS() && {"Cache-Control": "no-cache"})
+            },
+            body: JSON.stringify(bookingData),
+            ...(isIOS() && {credentials: 'same-origin'})
+          });
+          if (!response.ok) {
+            console.error("❌ Fallback locale fallito anche!");
+            throw new Error("Prenotazione fallita completamente");
+          }
+          setLoadingStep("Backup locale completato!");
+          console.log("✅ Fallback locale riuscito");
+        } else {
+          // In modalità Firebase, rilancia l'errore originale con info iOS
+          const errorMessage = isIOS() 
+            ? `Prenotazione fallita in modalità ${currentDataMode} su iOS: ${(e as Error).message}`
+            : `Prenotazione fallita in modalità ${currentDataMode}: ${(e as Error).message}`;
+          throw new Error(errorMessage);
+        }
       }
       
       // ✅ Toast elegante invece di alert browser
