@@ -64,7 +64,7 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        transform,
+        transform: `${transform} translateZ(0)`,
         opacity,
         transition: isDragging ? 'none' : 'transform 0.2s ease-out, opacity 0.2s ease-out',
         cursor: isMobile ? (isDragging ? 'grabbing' : 'grab') : 'default',
@@ -77,16 +77,14 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
       }}
       className={`${isDragging ? 'select-none' : ''} touch-none`}
     >
-      <div style={{ transform: 'translateZ(0)' }}>
-        {children}
-      </div>
+      {children}
       {/* Swipe indicator for mobile */}
       {isMobile && dragX > 20 && (
         <div 
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs pointer-events-none"
+          className="absolute right-2 top-1/2 text-gray-400 text-xs pointer-events-none"
           style={{ 
             opacity: Math.min(1, dragX / 100),
-            transform: `translateY(-50%) translateZ(0)`,
+            transform: `translateY(-50%)`,
             transition: 'none'
           }}
         >
