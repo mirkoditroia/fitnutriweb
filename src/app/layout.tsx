@@ -32,29 +32,56 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "GZnutrition — Trasformazione fisica e performance",
-    template: "%s | GZnutrition",
-  },
-  description:
-    "Coaching nutrizionale e training per giovani adulti: estetica, performance, risultati misurabili.",
-  metadataBase: new URL("https://gznutrition.example"),
-  openGraph: {
-    title: "GZnutrition — Trasformazione fisica e performance",
-    description:
-      "Coaching nutrizionale e training per giovani adulti: estetica, performance, risultati misurabili.",
-    type: "website",
-    locale: "it_IT",
-    siteName: "GZnutrition",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "GZnutrition — Trasformazione fisica e performance",
-    description:
-      "Coaching nutrizionale e training per giovani adulti: estetica, performance, risultati misurabili.",
-  },
-};
+// Genera metadata dinamicamente basandosi sui contenuti del sito
+async function generateMetadata(): Promise<Metadata> {
+  let siteContent: any = null;
+  
+  try {
+    siteContent = await getSiteContent();
+  } catch (error) {
+    console.error('❌ [METADATA] Errore nel caricamento contenuti:', error);
+  }
+
+  // Fallback defaults
+  const defaultTitle = "GZnutrition — Trasformazione fisica e performance";
+  const defaultDescription = "Coaching nutrizionale e training per giovani adulti: estetica, performance, risultati misurabili.";
+  const defaultSiteUrl = "https://gznutrition.example";
+  
+  // Usa contenuti dinamici se disponibili
+  const title = siteContent?.metaTags?.title || siteContent?.heroTitle || defaultTitle;
+  const description = siteContent?.metaTags?.description || siteContent?.heroSubtitle || defaultDescription;
+  const siteUrl = siteContent?.metaTags?.siteUrl || defaultSiteUrl;
+  const siteName = siteContent?.metaTags?.siteName || siteContent?.siteName || "GZnutrition";
+  const ogImage = siteContent?.metaTags?.image || siteContent?.heroBackgroundImage;
+  const ogType = siteContent?.metaTags?.ogType || "website";
+  const locale = siteContent?.metaTags?.locale || "it_IT";
+  const twitterCard = siteContent?.metaTags?.twitterCard || "summary_large_image";
+
+  return {
+    title: {
+      default: title,
+      template: `%s | ${siteName}`,
+    },
+    description,
+    metadataBase: new URL(siteUrl),
+    openGraph: {
+      title,
+      description,
+      type: ogType as any,
+      locale,
+      siteName,
+      ...(ogImage && { images: [{ url: ogImage }] }),
+    },
+    twitter: {
+      card: twitterCard as any,
+      title,
+      description,
+      ...(ogImage && { images: [ogImage] }),
+    },
+  };
+}
+
+export const metadata: Metadata = await generateMetadata();
 
 export default async function RootLayout({
   children,

@@ -267,6 +267,18 @@ export interface SiteContent {
       description?: string; // Descrizione opzionale del risultato
     }>;
   };
+
+  // Meta tag per link preview sui social media
+  metaTags?: {
+    title?: string; // Titolo del sito per Open Graph (default: titolo hero)
+    description?: string; // Descrizione del sito per Open Graph (default: sottotitolo hero)
+    siteUrl?: string; // URL del sito (es. "https://gznutrition.it")
+    image?: string; // Immagine per Open Graph (preview sui social)
+    twitterCard?: "summary" | "summary_large_image"; // Tipo di card Twitter (default: "summary_large_image")
+    ogType?: string; // Tipo Open Graph (default: "website")
+    locale?: string; // Lingua del sito (default: "it_IT")
+    siteName?: string; // Nome del sito per Open Graph (default: "GZnutrition")
+  };
   
   // Email cliente rimossa - troppo complessa
   

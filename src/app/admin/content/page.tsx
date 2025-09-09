@@ -36,6 +36,17 @@ export default function AdminContentPage() {
                 businessName: "GZ Nutrition",
                 reviews: []
               },
+              // ✅ Aggiungi Meta Tags se non esistono
+              metaTags: c.metaTags ?? {
+                title: "",
+                description: "",
+                siteUrl: "",
+                image: "",
+                siteName: "GZnutrition",
+                twitterCard: "summary_large_image" as "summary" | "summary_large_image",
+                ogType: "website",
+                locale: "it_IT"
+              },
               // ✅ Aggiungi Legal Info se non esiste
               legalInfo: c.legalInfo ?? {
                 companyName: "GZnutrition",
@@ -108,6 +119,17 @@ export default function AdminContentPage() {
                 businessName: "GZ Nutrition",
                 reviews: []
               },
+              // ✅ Meta Tags di default
+              metaTags: {
+                title: "",
+                description: "",
+                siteUrl: "",
+                image: "",
+                siteName: "GZnutrition",
+                twitterCard: "summary_large_image" as "summary" | "summary_large_image",
+                ogType: "website",
+                locale: "it_IT"
+              },
               // ✅ Legal Info di default
               legalInfo: {
                 companyName: "GZnutrition",
@@ -140,6 +162,7 @@ export default function AdminContentPage() {
     await debugLog("📊 BMI Calculator config:", content.bmiCalculator);
     await debugLog("⭐ Google Reviews config:", content.googleReviews);
     await debugLog("⚖️ LegalInfo config:", content.legalInfo);
+    await debugLog("🔗 Meta tags config:", content.metaTags);
     
     try {
       await upsertSiteContent(content);
@@ -2121,6 +2144,221 @@ export default function AdminContentPage() {
           </div>
 
         </section>
+
+        {/* ✅ SEZIONE META TAG PER LINK PREVIEW */}
+        <section className="bg-card p-6 rounded-lg border border-border mb-8">
+          <h3 className="text-xl font-semibold text-foreground mb-4">
+            🔗 Meta Tag per Link Preview
+          </h3>
+          <p className="text-muted-foreground text-sm mb-6">
+            Configura come appare il tuo sito quando viene condiviso sui social media (Facebook, Twitter, WhatsApp, etc.)
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Titolo Open Graph */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-black">
+                Titolo per Social Media
+              </label>
+              <Input
+                value={content.metaTags?.title || ""}
+                onChange={(e) => setContent({
+                  ...content,
+                  metaTags: {
+                    ...content.metaTags,
+                    title: e.target.value
+                  }
+                })}
+                placeholder="Es. GZnutrition — Trasformazione fisica"
+                className={fieldCls}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Se vuoto, usa il titolo della sezione Hero
+              </p>
+            </div>
+
+            {/* Descrizione Open Graph */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-black">
+                Descrizione per Social Media
+              </label>
+              <textarea
+                value={content.metaTags?.description || ""}
+                onChange={(e) => setContent({
+                  ...content,
+                  metaTags: {
+                    ...content.metaTags,
+                    description: e.target.value
+                  }
+                })}
+                placeholder="Breve descrizione del tuo servizio..."
+                rows={3}
+                className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Se vuoto, usa il sottotitolo della sezione Hero
+              </p>
+            </div>
+
+            {/* URL del sito */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-black">
+                URL del Sito
+              </label>
+              <Input
+                value={content.metaTags?.siteUrl || ""}
+                onChange={(e) => setContent({
+                  ...content,
+                  metaTags: {
+                    ...content.metaTags,
+                    siteUrl: e.target.value
+                  }
+                })}
+                placeholder="https://gznutrition.it"
+                className={fieldCls}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                URL completo del tuo sito web
+              </p>
+            </div>
+
+            {/* Nome del sito */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-black">
+                Nome del Sito
+              </label>
+              <Input
+                value={content.metaTags?.siteName || ""}
+                onChange={(e) => setContent({
+                  ...content,
+                  metaTags: {
+                    ...content.metaTags,
+                    siteName: e.target.value
+                  }
+                })}
+                placeholder="GZnutrition"
+                className={fieldCls}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Nome che appare nei link condivisi
+              </p>
+            </div>
+
+            {/* Immagine Open Graph */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-2 text-black">
+                Immagine per Link Preview
+              </label>
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <Input
+                    value={content.metaTags?.image || ""}
+                    onChange={(e) => setContent({
+                      ...content,
+                      metaTags: {
+                        ...content.metaTags,
+                        image: e.target.value
+                      }
+                    })}
+                    placeholder="URL dell'immagine di anteprima"
+                    className={fieldCls}
+                  />
+                </div>
+                <UploadButton
+                  onUploaded={(url: string) => setContent({
+                    ...content,
+                    metaTags: {
+                      ...content.metaTags,
+                      image: url
+                    }
+                  })}
+                  folder="meta"
+                  label="📤 Carica Immagine"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Dimensioni consigliate: 1200x630px. Se vuoto, usa l'immagine di sfondo della sezione Hero
+              </p>
+              {content.metaTags?.image && (
+                <div className="mt-3">
+                  <img
+                    src={content.metaTags.image}
+                    alt="Preview"
+                    className="max-w-sm h-auto rounded border"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Opzioni avanzate */}
+            <div className="md:col-span-2">
+              <div className="bg-muted/50 p-4 rounded border">
+                <h4 className="font-medium text-foreground mb-3">Opzioni Avanzate</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Tipo Twitter Card */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-black">
+                      Tipo Twitter Card
+                    </label>
+                    <select
+                      value={content.metaTags?.twitterCard || "summary_large_image"}
+                      onChange={(e) => setContent({
+                        ...content,
+                        metaTags: {
+                          ...content.metaTags,
+                          twitterCard: e.target.value as "summary" | "summary_large_image"
+                        }
+                      })}
+                      className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
+                    >
+                      <option value="summary_large_image">Immagine Grande</option>
+                      <option value="summary">Immagine Piccola</option>
+                    </select>
+                  </div>
+
+                  {/* Lingua/Locale */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-black">
+                      Lingua del Sito
+                    </label>
+                    <Input
+                      value={content.metaTags?.locale || "it_IT"}
+                      onChange={(e) => setContent({
+                        ...content,
+                        metaTags: {
+                          ...content.metaTags,
+                          locale: e.target.value
+                        }
+                      })}
+                      placeholder="it_IT"
+                      className={fieldCls}
+                    />
+                  </div>
+
+                  {/* Tipo Open Graph */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-black">
+                      Tipo Open Graph
+                    </label>
+                    <Input
+                      value={content.metaTags?.ogType || "website"}
+                      onChange={(e) => setContent({
+                        ...content,
+                        metaTags: {
+                          ...content.metaTags,
+                          ogType: e.target.value
+                        }
+                      })}
+                      placeholder="website"
+                      className={fieldCls}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         </div>
 
         {/* Pulsante salva */}
@@ -2131,6 +2369,7 @@ export default function AdminContentPage() {
               await debugLog("🔍 DEBUG - Stato attuale content:", content);
               await debugLog("📊 DEBUG - BMI config:", content.bmiCalculator);
               await debugLog("⭐ DEBUG - Reviews config:", content.googleReviews);
+              await debugLog("🔗 DEBUG - Meta tags config:", content.metaTags);
               toast.success("🔍 Debug info logged to console");
             }}
             variant="outline"
