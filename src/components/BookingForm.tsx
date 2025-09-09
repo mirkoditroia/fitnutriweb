@@ -659,6 +659,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             
             // ✅ Secondo tentativo con fetch nativo per iOS
             console.log("📱 iOS - Secondo tentativo con API diretta");
+            console.log("📱 iOS - Payload da inviare:", JSON.stringify(bookingPayload, null, 2));
             const response = await fetch("/api/localdb/bookings", {
               method: "POST",
               headers: { 
@@ -666,18 +667,21 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                 "Accept": "application/json",
                 "Cache-Control": "no-cache"
               },
-              body: JSON.stringify({
-                ...bookingPayload,
-                captchaToken: captchaToken || undefined
-              }),
+              body: JSON.stringify(bookingPayload), // ✅ Rimosso captchaToken dal payload
               credentials: 'same-origin'
             });
             
+            console.log("📱 iOS - Response status:", response.status);
+            console.log("📱 iOS - Response headers:", Object.fromEntries(response.headers.entries()));
+            
             if (!response.ok) {
-              throw new Error(`iOS API fallback failed: ${response.status}`);
+              const errorText = await response.text();
+              console.error("📱 iOS - Response error text:", errorText);
+              throw new Error(`iOS API fallback failed: ${response.status} - ${errorText}`);
             }
             
             const result = await response.json();
+            console.log("📱 iOS - Response result:", result);
             bookingId = result.id || result.bookingId || "ios-fallback-success";
             console.log("📱 iOS - Fallback API riuscito:", bookingId);
           }
