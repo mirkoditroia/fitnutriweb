@@ -1,6 +1,8 @@
 // ✅ INTEGRAZIONE GOOGLE PLACES API per recensioni vere
 // Recupera automaticamente recensioni reali da Google Business
 
+import { debugLogSync } from '@/lib/debugUtils';
+
 export interface GoogleReview {
   id: string;
   name: string;
@@ -69,11 +71,11 @@ export async function fetchGoogleReviews(
   apiKey?: string
 ): Promise<GoogleReview[]> {
   
-  console.log("🌐 fetchGoogleReviews chiamato:", { placeId, hasApiKey: !!apiKey });
+  debugLogSync("🌐 fetchGoogleReviews chiamato:", { placeId, hasApiKey: !!apiKey });
   
   // Se non abbiamo API key o Place ID, usa fallback
   if (!apiKey || !placeId) {
-    console.log("⚠️ API Key o Place ID mancanti, uso fallback reviews");
+    debugLogSync("⚠️ API Key o Place ID mancanti, uso fallback reviews");
     return defaultFallbackReviews;
   }
   
@@ -81,7 +83,7 @@ export async function fetchGoogleReviews(
     // Costruisci URL Google Places API
     const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
     
-    console.log("📡 Chiamata Google Places API:", url.replace(apiKey, '[API_KEY_HIDDEN]'));
+    debugLogSync("📡 Chiamata Google Places API:", url.replace(apiKey, '[API_KEY_HIDDEN]'));
     
     // Chiamata API (tramite proxy per evitare CORS)
     const response = await fetch(`/api/google-places-proxy?place_id=${placeId}&api_key=${apiKey}`);
@@ -91,17 +93,17 @@ export async function fetchGoogleReviews(
     }
     
     const data: GooglePlacesResponse = await response.json();
-    console.log("📥 Risposta Google Places:", data);
+    debugLogSync("📥 Risposta Google Places:", data);
     
     if (data.status !== 'OK') {
       throw new Error(`Google Places API Status: ${data.status} - ${data.error_message || 'Unknown error'}`);
     }
     
     const reviews = data.result?.reviews || [];
-    console.log(`📊 Trovate ${reviews.length} recensioni da Google`);
+    debugLogSync(`📊 Trovate ${reviews.length} recensioni da Google`);
     
     if (reviews.length === 0) {
-      console.log("📭 Nessuna recensione trovata, uso fallback");
+      debugLogSync("📭 Nessuna recensione trovata, uso fallback");
       return defaultFallbackReviews;
     }
     
@@ -116,12 +118,12 @@ export async function fetchGoogleReviews(
       source: 'google' as const
     }));
     
-    console.log("✅ Recensioni Google trasformate:", googleReviews);
+    debugLogSync("✅ Recensioni Google trasformate:", googleReviews);
     return googleReviews;
     
   } catch (error) {
     console.error("❌ Errore recupero recensioni Google:", error);
-    console.log("🔄 Fallback alle recensioni predefinite");
+    debugLogSync("🔄 Fallback alle recensioni predefinite");
     return defaultFallbackReviews;
   }
 }
@@ -149,7 +151,7 @@ export async function getGoogleReviewsWithCache(
   cachedReviews?: GoogleReview[]
 ): Promise<{ reviews: GoogleReview[]; lastFetched: string }> {
   
-  console.log("🔄 getGoogleReviewsWithCache:", { 
+  debugLogSync("🔄 getGoogleReviewsWithCache:", { 
     placeId, 
     hasApiKey: !!apiKey, 
     lastFetched, 
@@ -159,7 +161,7 @@ export async function getGoogleReviewsWithCache(
   
   // Se abbiamo recensioni in cache e non è tempo di refresh, usale
   if (cachedReviews?.length && !shouldRefreshReviews(lastFetched)) {
-    console.log("📂 Uso recensioni da cache (meno di 1 ora fa)");
+    debugLogSync("📂 Uso recensioni da cache (meno di 1 ora fa)");
     return {
       reviews: cachedReviews,
       lastFetched: lastFetched!
@@ -167,7 +169,7 @@ export async function getGoogleReviewsWithCache(
   }
   
   // Recupera nuove recensioni da API
-  console.log("🆕 Recupero nuove recensioni da Google Places API");
+  debugLogSync("🆕 Recupero nuove recensioni da Google Places API");
   const reviews = await fetchGoogleReviews(placeId, apiKey);
   
   return {

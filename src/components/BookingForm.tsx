@@ -7,6 +7,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getAvailabilityByDate, getSiteContent } from "@/lib/datasource";
+import { debugLog, debugLogSync } from "@/lib/debugUtils";
 import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday } from "date-fns";
 import { it } from "date-fns/locale";
 import { type Package } from "@/lib/data";
@@ -262,7 +263,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   // ✅ ASCOLTA CAMBIAMENTI DELLO STATO DIRETTO
   useEffect(() => {
     const handleDirectStateChange = (event: CustomEvent) => {
-      console.log("🔄 DirectState cambiato:", event.detail);
+      debugLogSync("🔄 DirectState cambiato:", event.detail);
       setDirectStateLocal(event.detail);
     };
 
@@ -275,11 +276,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   
   // ✅ LOGICA COMPLETA: isFreeConsultation da directState O da pacchetto promozionale
   const isFreeConsultation = directState.isFreeConsultation || selectedPackage?.isPromotional === true;
-  console.log("🎯 BookingForm - isFreeConsultation:", isFreeConsultation);
-  console.log("🎯 BookingForm - directState completo:", directState);
-  console.log("🎯 BookingForm - selectedPackage promozionale:", selectedPackage?.isPromotional);
-  console.log("🎯 BookingForm - fonte consulenza gratuita:", directState.isFreeConsultation ? "popup" : selectedPackage?.isPromotional ? "dropdown pacchetto promozionale" : "nessuna");
-  console.log("📅 BookingForm - selectedDate:", selectedDate);
+  debugLogSync("🎯 BookingForm - isFreeConsultation:", isFreeConsultation);
+  debugLogSync("🎯 BookingForm - directState completo:", directState);
+  debugLogSync("🎯 BookingForm - selectedPackage promozionale:", selectedPackage?.isPromotional);
+  debugLogSync("🎯 BookingForm - fonte consulenza gratuita:", directState.isFreeConsultation ? "popup" : selectedPackage?.isPromotional ? "dropdown pacchetto promozionale" : "nessuna");
+  debugLogSync("📅 BookingForm - selectedDate:", selectedDate);
 
   // Schema di validazione con validazione personalizzata
   const validationSchema = schema.refine((data) => {
@@ -313,18 +314,18 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
   // NUOVO SISTEMA DIRETTO: Carica pacchetti e applica stato
   useEffect(() => {
-    console.log("BookingForm: NUOVO SISTEMA - Inizializzazione");
+    debugLogSync("BookingForm: NUOVO SISTEMA - Inizializzazione");
     
         // 1. Carica i pacchetti direttamente
     const loadPackages = async () => {
       try {
-        console.log("BookingForm: Caricamento pacchetti...");
+        debugLogSync("BookingForm: Caricamento pacchetti...");
         const pkgs = await getPackages();
-        console.log("BookingForm: Pacchetti caricati:", pkgs);
-        console.log("🎯 PACCHETTI PROMOZIONALI TROVATI:", pkgs.filter(p => p.isPromotional));
-        console.log("🎯 TUTTI I PACCHETTI CON FLAG PROMOZIONALE:", pkgs.map(p => ({ title: p.title, isPromotional: p.isPromotional })));
-        console.log("🎯 TUTTI GLI ID DEI PACCHETTI:", pkgs.map(p => p.id));
-        console.log("🎯 PACCHETTO FREE-CONSULTATION ESISTE?", pkgs.some(p => p.id === 'free-consultation'));
+        debugLogSync("BookingForm: Pacchetti caricati:", pkgs);
+        debugLogSync("🎯 PACCHETTI PROMOZIONALI TROVATI:", pkgs.filter(p => p.isPromotional));
+        debugLogSync("🎯 TUTTI I PACCHETTI CON FLAG PROMOZIONALE:", pkgs.map(p => ({ title: p.title, isPromotional: p.isPromotional })));
+        debugLogSync("🎯 TUTTI GLI ID DEI PACCHETTI:", pkgs.map(p => p.id));
+        debugLogSync("🎯 PACCHETTO FREE-CONSULTATION ESISTE?", pkgs.some(p => p.id === 'free-consultation'));
         
         const finalPackages = pkgs || [];
         setPackages(finalPackages);
@@ -332,18 +333,18 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         
         // 2. Applica lo stato diretto
         const currentDirectState = getDirectState();
-        console.log("BookingForm: Stato diretto attuale:", currentDirectState);
+        debugLogSync("BookingForm: Stato diretto attuale:", currentDirectState);
         
         if (currentDirectState.selectedPackageId && finalPackages.length > 0) {
-          console.log("BookingForm: Cercando pacchetto con ID:", currentDirectState.selectedPackageId);
-          console.log("BookingForm: Pacchetti disponibili:", finalPackages.map(p => ({ id: p.id, title: p.title, isPromotional: p.isPromotional })));
+          debugLogSync("BookingForm: Cercando pacchetto con ID:", currentDirectState.selectedPackageId);
+          debugLogSync("BookingForm: Pacchetti disponibili:", finalPackages.map(p => ({ id: p.id, title: p.title, isPromotional: p.isPromotional })));
           const selectedPkg = finalPackages.find(p => p.id === currentDirectState.selectedPackageId);
-          console.log("BookingForm: Pacchetto trovato:", selectedPkg);
+          debugLogSync("BookingForm: Pacchetto trovato:", selectedPkg);
           
           if (selectedPkg) {
             setSelectedPackage(selectedPkg);
             setValue("packageId", selectedPkg.id || "");
-            console.log("BookingForm: SUCCESSO - Form precompilato con:", selectedPkg.title);
+            debugLogSync("BookingForm: SUCCESSO - Form precompilato con:", selectedPkg.title);
           } else {
             console.error("BookingForm: ERRORE - Pacchetto non trovato con ID:", currentDirectState.selectedPackageId);
           }
@@ -357,11 +358,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     
     // 3. Ascolta i cambiamenti di stato diretto
     const handleDirectStateChange = (event: CustomEvent) => {
-      console.log("BookingForm: Cambio stato diretto:", event.detail);
+      debugLogSync("BookingForm: Cambio stato diretto:", event.detail);
       setDirectStateLocal(event.detail);
       
       if (event.detail.selectedPackageId && packagesRef.current.length > 0) {
-        console.log("BookingForm: Evento directStateChange - Cercando pacchetto con ID:", event.detail.selectedPackageId);
+        debugLogSync("BookingForm: Evento directStateChange - Cercando pacchetto con ID:", event.detail.selectedPackageId);
         console.log("BookingForm: Pacchetti disponibili per evento:", packagesRef.current.map(p => ({ id: p.id, title: p.title, isPromotional: p.isPromotional })));
         const selectedPkg = packagesRef.current.find(p => p.id === event.detail.selectedPackageId);
         console.log("BookingForm: Pacchetto trovato per evento:", selectedPkg);
