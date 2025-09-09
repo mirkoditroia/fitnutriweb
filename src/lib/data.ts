@@ -1567,11 +1567,38 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
       }
     };
   }
+
+  // ✅ ASSICURATI che metaTags sia sempre presente con valori di default
+  if (!sanitized.metaTags) {
+    sanitized.metaTags = {
+      title: "",
+      description: "",
+      siteUrl: "",
+      image: "",
+      siteName: "GZnutrition",
+      twitterCard: "summary_large_image",
+      ogType: "website",
+      locale: "it_IT"
+    };
+  } else {
+    // Se metaTags esiste, assicurati che tutti i campi necessari siano presenti
+    sanitized.metaTags = {
+      title: sanitized.metaTags.title || "",
+      description: sanitized.metaTags.description || "",
+      siteUrl: sanitized.metaTags.siteUrl || "",
+      image: sanitized.metaTags.image || "",
+      siteName: sanitized.metaTags.siteName || "GZnutrition",
+      twitterCard: sanitized.metaTags.twitterCard || "summary_large_image",
+      ogType: sanitized.metaTags.ogType || "website",
+      locale: sanitized.metaTags.locale || "it_IT"
+    };
+  }
   
   debugLogSync("🔥 [Firebase] Content sanitizzato:", sanitized);
   debugLogSync("🔥 [Firebase] BMI sanitizzato:", sanitized.bmiCalculator);
   debugLogSync("🔥 [Firebase] Reviews sanitizzato:", sanitized.googleReviews);
   debugLogSync("🔥 [Firebase] LegalInfo sanitizzato:", sanitized.legalInfo);
+  debugLogSync("🔥 [Firebase] 🔗 META TAGS sanitizzato:", sanitized.metaTags);
   
   debugLogSync("🔥 [Firebase] Chiamando setDoc...");
   await setDoc(col.content(db as Firestore), sanitized, { merge: true });
