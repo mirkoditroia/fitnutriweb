@@ -56,6 +56,8 @@ export default function GoogleReviews({
   const paletteConfig = getPaletteConfig(colorPalette);
   const primary = paletteConfig?.primary || "#0B5E0B";
   const accent = paletteConfig?.accent || "#00D084";
+  const secondaryBg = paletteConfig?.secondaryBg || "#F8FAFC";
+  const border = paletteConfig?.border || "#E2E8F0";
 
   // ✅ Carica solo recensioni manuali (semplificato)
   useEffect(() => {
@@ -74,15 +76,25 @@ export default function GoogleReviews({
     : `https://www.google.com/search?q=${encodeURIComponent(businessName + " recensioni")}`;
 
   return (
-    <section id="recensioni" className="py-16 bg-gradient-to-br from-gray-50 to-white">
+    <section 
+      id="recensioni" 
+      className="py-16"
+      style={{ background: `linear-gradient(135deg, ${secondaryBg} 0%, ${paletteConfig?.background || '#FFFFFF'} 100%)` }}
+    >
       <div className="container max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+          <h2 
+            className="text-3xl md:text-4xl font-bold mb-4"
+            style={{ color: paletteConfig?.foreground || '#1F2937' }}
+          >
             {title}
           </h2>
           {subtitle && (
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+            <p 
+              className="text-lg max-w-2xl mx-auto mb-6"
+              style={{ color: paletteConfig?.secondaryText || '#6B7280' }}
+            >
               {subtitle}
             </p>
           )}
@@ -91,15 +103,32 @@ export default function GoogleReviews({
           {placeId && (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               {/* Google Rating Badge */}
-              <div className="flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg border">
+              <div 
+                className="flex items-center gap-3 rounded-full px-6 py-3 shadow-lg border"
+                style={{ 
+                  backgroundColor: paletteConfig?.card || '#FFFFFF',
+                  borderColor: border
+                }}
+              >
                 <img 
                   src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
                   alt="Google" 
                   className="w-6 h-6"
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Recensioni Google</span>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                  <span 
+                    className="text-sm"
+                    style={{ color: paletteConfig?.secondaryText || '#6B7280' }}
+                  >
+                    Recensioni Google
+                  </span>
+                  <span 
+                    className="px-2 py-1 text-xs rounded-full font-medium"
+                    style={{ 
+                      backgroundColor: `${primary}20`,
+                      color: primary
+                    }}
+                  >
                     ⭐ Verificate
                   </span>
                 </div>
@@ -128,7 +157,11 @@ export default function GoogleReviews({
             {currentReviews.map((review) => (
             <div 
               key={review.id} 
-              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+              className="rounded-2xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+              style={{ 
+                backgroundColor: paletteConfig?.card || '#FFFFFF',
+                borderColor: border
+              }}
             >
               {/* Header con avatar e info */}
               <div className="flex items-start gap-4 mb-4">
@@ -152,11 +185,17 @@ export default function GoogleReviews({
                 
                 {/* Nome e data */}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800 text-lg">
+                  <h3 
+                    className="font-semibold text-lg"
+                    style={{ color: paletteConfig?.foreground || '#1F2937' }}
+                  >
                     {review.name}
                   </h3>
                   {review.date && (
-                    <p className="text-sm text-gray-500">
+                    <p 
+                      className="text-sm"
+                      style={{ color: paletteConfig?.secondaryText || '#6B7280' }}
+                    >
                       {review.date}
                     </p>
                   )}
@@ -176,7 +215,10 @@ export default function GoogleReviews({
               </div>
 
               {/* Testo recensione */}
-              <blockquote className="text-gray-700 leading-relaxed">
+              <blockquote 
+                className="leading-relaxed"
+                style={{ color: paletteConfig?.foreground || '#374151' }}
+              >
                 "{review.text}"
               </blockquote>
             </div>
@@ -188,10 +230,13 @@ export default function GoogleReviews({
         {!loading && currentReviews.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">⭐</div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            <h3 
+              className="text-xl font-semibold mb-2"
+              style={{ color: paletteConfig?.foreground || '#374151' }}
+            >
               Recensioni in arrivo
             </h3>
-            <p className="text-gray-500">
+            <p style={{ color: paletteConfig?.secondaryText || '#6B7280' }}>
               Le prime recensioni dei nostri clienti appariranno presto qui.
             </p>
           </div>
@@ -203,7 +248,16 @@ export default function GoogleReviews({
             href={googleReviewsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="inline-flex items-center gap-2 transition-colors"
+            style={{ 
+              color: paletteConfig?.secondaryText || '#6B7280'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = paletteConfig?.foreground || '#1F2937';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = paletteConfig?.secondaryText || '#6B7280';
+            }}
           >
             <span>Vedi tutte le recensioni su</span>
             <img 

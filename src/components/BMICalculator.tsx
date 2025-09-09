@@ -30,6 +30,8 @@ export default function BMICalculator({
   const paletteConfig = getPaletteConfig(colorPalette);
   const primary = paletteConfig?.primary || "#0B5E0B";
   const accent = paletteConfig?.accent || "#00D084";
+  const secondaryBg = paletteConfig?.secondaryBg || "#F8FAFC";
+  const border = paletteConfig?.border || "#E2E8F0";
 
   // Calcola BMI in tempo reale
   useEffect(() => {
@@ -67,7 +69,7 @@ export default function BMICalculator({
         </div>
         
         {/* Barra colorata BMI */}
-        <div className="relative h-4 rounded-full overflow-hidden bg-gradient-to-r from-blue-400 via-green-400 via-yellow-400 to-red-400">
+        <div className="relative h-4 rounded-full overflow-hidden" style={{ background: `linear-gradient(to right, #3B82F6 0%, ${primary} 40%, #F59E0B 70%, #EF4444 100%)` }}>
           {/* Indicatore posizione */}
           <div 
             className="absolute top-0 bottom-0 w-1 bg-white border-2 border-gray-800 rounded-full transform -translate-x-1/2 transition-all duration-500"
@@ -86,15 +88,25 @@ export default function BMICalculator({
   };
 
   return (
-    <section id="bmi-calculator" className="py-16 px-4 bg-gradient-to-br from-gray-50 to-white">
+    <section 
+      id="bmi-calculator" 
+      className="py-16 px-4"
+      style={{ background: `linear-gradient(135deg, ${secondaryBg} 0%, ${paletteConfig?.background || '#FFFFFF'} 100%)` }}
+    >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+          <h2 
+            className="text-3xl md:text-4xl font-bold mb-4"
+            style={{ color: paletteConfig?.foreground || '#1F2937' }}
+          >
             {title}
           </h2>
           {subtitle && (
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p 
+              className="text-lg max-w-2xl mx-auto"
+              style={{ color: paletteConfig?.secondaryText || '#6B7280' }}
+            >
               {subtitle}
             </p>
           )}
@@ -103,14 +115,23 @@ export default function BMICalculator({
         {/* Calcolatore */}
         <div className="max-w-2xl mx-auto">
           <div 
-            className="bg-white rounded-2xl shadow-xl p-8 border-t-4"
-            style={{ borderTopColor: primary }}
+            className="rounded-2xl shadow-xl p-8 border-t-4"
+            style={{ 
+              backgroundColor: paletteConfig?.card || '#FFFFFF',
+              borderTopColor: primary,
+              border: `1px solid ${border}`,
+              borderTopWidth: '4px'
+            }}
           >
             {/* Input Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Peso */}
               <div className="space-y-2">
-                <label htmlFor="weight" className="block text-sm font-semibold text-gray-700">
+                <label 
+                  htmlFor="weight" 
+                  className="block text-sm font-semibold"
+                  style={{ color: paletteConfig?.foreground || '#374151' }}
+                >
                   ⚖️ Peso (kg)
                 </label>
                 <div className="relative">
@@ -137,7 +158,11 @@ export default function BMICalculator({
 
               {/* Altezza */}
               <div className="space-y-2">
-                <label htmlFor="height" className="block text-sm font-semibold text-gray-700">
+                <label 
+                  htmlFor="height" 
+                  className="block text-sm font-semibold"
+                  style={{ color: paletteConfig?.foreground || '#374151' }}
+                >
                   📏 Altezza (cm)
                 </label>
                 <div className="relative">
@@ -175,10 +200,16 @@ export default function BMICalculator({
                 </div>
 
                 {/* Categoria */}
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                <h3 
+                  className="text-2xl font-bold mb-2"
+                  style={{ color: paletteConfig?.foreground || '#1F2937' }}
+                >
                   {category.category}
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p 
+                  className="mb-6"
+                  style={{ color: paletteConfig?.secondaryText || '#6B7280' }}
+                >
                   {category.description}
                 </p>
 
@@ -186,8 +217,17 @@ export default function BMICalculator({
                 <BMIIndicator />
 
                 {/* Nota disclaimer */}
-                <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <p className="text-sm text-amber-800">
+                <div 
+                  className="mt-8 p-4 border rounded-xl"
+                  style={{ 
+                    backgroundColor: paletteConfig?.muted || '#F1F5F9',
+                    borderColor: border
+                  }}
+                >
+                  <p 
+                    className="text-sm"
+                    style={{ color: paletteConfig?.foreground || '#1F2937' }}
+                  >
                     <strong>⚠️ Nota:</strong> Il BMI è un indicatore generale. Per una valutazione 
                     completa della tua salute, consulta sempre un professionista qualificato.
                   </p>
@@ -199,34 +239,58 @@ export default function BMICalculator({
             {!bmi && (
               <div className="text-center py-8">
                 <div className="text-6xl mb-4">🤔</div>
-                <p className="text-gray-500">
+                <p style={{ color: paletteConfig?.secondaryText || '#6B7280' }}>
                   Inserisci peso e altezza per calcolare il tuo BMI
                 </p>
               </div>
             )}
           </div>
 
-          {/* Informazioni aggiuntive */}
+            {/* Informazioni aggiuntive */}
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-white rounded-xl p-4 shadow-md">
+            <div 
+              className="rounded-xl p-4 shadow-md border"
+              style={{ 
+                backgroundColor: paletteConfig?.card || '#FFFFFF',
+                borderColor: border
+              }}
+            >
               <div className="w-4 h-4 bg-blue-400 rounded mx-auto mb-2"></div>
-              <div className="text-xs font-semibold text-gray-600">Sottopeso</div>
-              <div className="text-xs text-gray-500">&lt; 18.5</div>
+              <div className="text-xs font-semibold" style={{ color: paletteConfig?.foreground || '#374151' }}>Sottopeso</div>
+              <div className="text-xs" style={{ color: paletteConfig?.secondaryText || '#6B7280' }}>&lt; 18.5</div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-md">
-              <div className="w-4 h-4 bg-green-400 rounded mx-auto mb-2"></div>
-              <div className="text-xs font-semibold text-gray-600">Normale</div>
-              <div className="text-xs text-gray-500">18.5 - 24.9</div>
+            <div 
+              className="rounded-xl p-4 shadow-md border"
+              style={{ 
+                backgroundColor: paletteConfig?.card || '#FFFFFF',
+                borderColor: border
+              }}
+            >
+              <div className="w-4 h-4 rounded mx-auto mb-2" style={{ backgroundColor: primary }}></div>
+              <div className="text-xs font-semibold" style={{ color: paletteConfig?.foreground || '#374151' }}>Normale</div>
+              <div className="text-xs" style={{ color: paletteConfig?.secondaryText || '#6B7280' }}>18.5 - 24.9</div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-md">
+            <div 
+              className="rounded-xl p-4 shadow-md border"
+              style={{ 
+                backgroundColor: paletteConfig?.card || '#FFFFFF',
+                borderColor: border
+              }}
+            >
               <div className="w-4 h-4 bg-yellow-400 rounded mx-auto mb-2"></div>
-              <div className="text-xs font-semibold text-gray-600">Sovrappeso</div>
-              <div className="text-xs text-gray-500">25 - 29.9</div>
+              <div className="text-xs font-semibold" style={{ color: paletteConfig?.foreground || '#374151' }}>Sovrappeso</div>
+              <div className="text-xs" style={{ color: paletteConfig?.secondaryText || '#6B7280' }}>25 - 29.9</div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-md">
+            <div 
+              className="rounded-xl p-4 shadow-md border"
+              style={{ 
+                backgroundColor: paletteConfig?.card || '#FFFFFF',
+                borderColor: border
+              }}
+            >
               <div className="w-4 h-4 bg-red-400 rounded mx-auto mb-2"></div>
-              <div className="text-xs font-semibold text-gray-600">Obesità</div>
-              <div className="text-xs text-gray-500">&gt; 30</div>
+              <div className="text-xs font-semibold" style={{ color: paletteConfig?.foreground || '#374151' }}>Obesità</div>
+              <div className="text-xs" style={{ color: paletteConfig?.secondaryText || '#6B7280' }}>&gt; 30</div>
             </div>
           </div>
         </div>
