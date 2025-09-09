@@ -9,6 +9,7 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
   const startX = useRef(0);
   const currentX = useRef(0);
   const [isMobile, setIsMobile] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -21,6 +22,7 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile) return;
+    e.preventDefault();
     setIsDragging(true);
     startX.current = e.touches[0].clientX;
     currentX.current = e.touches[0].clientX;
@@ -28,6 +30,7 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isMobile || !isDragging) return;
+    e.preventDefault();
     currentX.current = e.touches[0].clientX;
     const deltaX = currentX.current - startX.current;
     
@@ -37,8 +40,9 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isMobile || !isDragging) return;
+    e.preventDefault();
     setIsDragging(false);
     
     // If swiped more than 100px, dismiss the toast
@@ -55,26 +59,37 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
 
   return (
     <div
+      ref={containerRef}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
         transform,
         opacity,
-        transition: isDragging ? 'none' : 'all 0.2s ease-out',
-        cursor: isMobile ? 'grab' : 'default',
+        transition: isDragging ? 'none' : 'transform 0.2s ease-out, opacity 0.2s ease-out',
+        cursor: isMobile ? (isDragging ? 'grabbing' : 'grab') : 'default',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         WebkitTouchCallout: 'none',
+        WebkitUserDrag: 'none',
+        position: 'relative',
+        width: '100%',
+        willChange: isDragging ? 'transform, opacity' : 'auto',
       }}
-      className={isDragging ? 'select-none' : ''}
+      className={`${isDragging ? 'select-none' : ''} touch-none`}
     >
-      {children}
+      <div style={{ transform: 'translateZ(0)' }}>
+        {children}
+      </div>
       {/* Swipe indicator for mobile */}
       {isMobile && dragX > 20 && (
         <div 
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"
-          style={{ opacity: Math.min(1, dragX / 100) }}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs pointer-events-none"
+          style={{ 
+            opacity: Math.min(1, dragX / 100),
+            transform: `translateY(-50%) translateZ(0)`,
+            transition: 'none'
+          }}
         >
           👆 Scorri per chiudere
         </div>
