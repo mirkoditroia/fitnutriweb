@@ -77,20 +77,23 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
       }}
       className={`${isDragging ? 'select-none' : ''} touch-none`}
     >
-      {children}
-      {/* Swipe indicator for mobile */}
-      {isMobile && dragX > 20 && (
-        <div 
-          className="absolute right-2 top-1/2 text-gray-400 text-xs pointer-events-none"
-          style={{ 
-            opacity: Math.min(1, dragX / 100),
-            transform: `translateY(-50%)`,
-            transition: 'none'
-          }}
-        >
-          👆 Scorri per chiudere
+      <div className="flex items-center justify-between w-full">
+        <div className="flex-1">
+          {children}
         </div>
-      )}
+        {/* Swipe indicator for mobile - inline con il contenuto */}
+        {isMobile && dragX > 20 && (
+          <div 
+            className="ml-2 text-gray-400 text-xs pointer-events-none flex-shrink-0"
+            style={{ 
+              opacity: Math.min(1, dragX / 100),
+              transition: 'none'
+            }}
+          >
+            👆 Scorri
+          </div>
+        )}
+      </div>
     </div>
   );
 }

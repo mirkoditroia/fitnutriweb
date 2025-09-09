@@ -545,20 +545,32 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     if (isSubmitting) {
       return;
     }
+
+    // 🕵️ BLOCCO COMPLETO per modalità incognito
+    if (isIncognito()) {
+      toast.error("⚠️ La prenotazione non è disponibile in modalità incognito. Per continuare, apri il sito in modalità normale.", {
+        duration: 6000,
+        position: 'top-center',
+        style: {
+          background: '#dc2626',
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 24px',
+          fontSize: '16px',
+          boxShadow: '0 10px 25px rgba(220, 38, 38, 0.3)',
+          maxWidth: '90vw'
+        },
+      });
+      return; // STOP - Non continuare
+    }
     
-    // ✅ iOS e Incognito debugging
+    // ✅ iOS debugging
     if (isIOS()) {
       console.log("📱 iOS DETECTED - Form submission attempt");
       console.log("📱 Form data:", data);
       console.log("📱 CAPTCHA token:", captchaToken ? "presente" : "assente");
       console.log("📱 User agent:", navigator.userAgent);
-    }
-    
-    if (isIncognito()) {
-      console.log("🕵️ INCOGNITO MODE DETECTED - Form submission attempt");
-      console.log("🕵️ CAPTCHA token:", captchaToken ? "presente" : "assente");
-      console.log("🕵️ User agent:", navigator.userAgent);
-      console.log("🕵️ Network online:", navigator.onLine);
     }
     
     // Consenti esplicitamente l'invio anche senza pacchetto in Admin
@@ -579,52 +591,33 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       return;
     }
 
-    // Verifica CAPTCHA se abilitato (skip per admin e modalità incognito problematiche)
-    const isIncognitoMode = isIncognito();
-    
+    // Verifica CAPTCHA se abilitato (skip per admin)
     if (!adminMode && siteContent?.recaptchaEnabled && !captchaToken) {
-      // ✅ Modalità incognito: Avviso ma permetti invio
-      if (isIncognitoMode) {
-        console.log("🕵️ Modalità incognito rilevata - reCAPTCHA può essere problematico");
-        toast("⚠️ Modalità incognito rilevata. Tentativo di invio senza CAPTCHA...", {
-          duration: 4000,
-          style: {
-            background: colors.warning,
-            color: 'white',
-            fontWeight: '600',
-            borderRadius: '12px',
-            padding: '16px 24px',
-            fontSize: '14px',
-          }
-        });
-        // Continua senza CAPTCHA in modalità incognito
-      } else {
-        // ✅ iOS: Prova a re-renderizzare il reCAPTCHA se fallisce
-        if (isIOS() && recaptchaRef.current) {
-          console.log("📱 iOS - Tentativo re-render reCAPTCHA");
-          try {
-            recaptchaRef.current.reset();
-            await new Promise(resolve => setTimeout(resolve, 500));
-          } catch (error) {
-            console.error("📱 iOS - Errore re-render reCAPTCHA:", error);
-          }
+      // ✅ iOS: Prova a re-renderizzare il reCAPTCHA se fallisce
+      if (isIOS() && recaptchaRef.current) {
+        console.log("📱 iOS - Tentativo re-render reCAPTCHA");
+        try {
+          recaptchaRef.current.reset();
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error("📱 iOS - Errore re-render reCAPTCHA:", error);
         }
-        
-        toast.error("Completa la verifica CAPTCHA per continuare", {
-          duration: 3000,
-          position: 'top-center',
-          style: {
-            background: colors.warning,
-            color: 'white',
-            fontWeight: '600',
-            borderRadius: '12px',
-            padding: '16px 24px',
-            fontSize: '16px',
-            boxShadow: `0 10px 25px ${colors.warning}30`
-          },
-        });
-        return;
       }
+      
+      toast.error("Completa la verifica CAPTCHA per continuare", {
+        duration: 3000,
+        position: 'top-center',
+        style: {
+          background: colors.warning,
+          color: 'white',
+          fontWeight: '600',
+          borderRadius: '12px',
+          padding: '16px 24px',
+          fontSize: '16px',
+          boxShadow: `0 10px 25px ${colors.warning}30`
+        },
+      });
+      return;
     }
 
     setIsSubmitting(true);
@@ -916,6 +909,25 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
   return (
     <div className="section-surface p-6 sm:p-8 space-y-6">
+      {/* ⚠️ AVVISO MODALITÀ INCOGNITO */}
+      {isIncognito() && (
+        <div className="rounded-xl p-4 bg-red-50 border border-red-200 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
+              <span className="text-lg">🕵️</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-red-800">
+                ⚠️ Modalità Incognito Rilevata
+              </h3>
+              <p className="text-sm text-red-700 mt-1">
+                La prenotazione non è disponibile in modalità incognito. Per continuare, <strong>apri il sito in modalità normale</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Banner per pacchetto selezionato */}
       {selectedPackage && (
         <div className={`rounded-xl p-4 shadow-md ${showPromotionalBanner ? 'bg-green-50 border border-green-200' : 'border border-foreground/20 bg-background/70 backdrop-blur-sm'}`}>
@@ -1294,7 +1306,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {/* Submit */}
         <Button
           type="submit"
-          disabled={isSubmitting || (!adminMode && siteContent?.recaptchaEnabled && !captchaToken && !isIncognito())}
+          disabled={isSubmitting || (!adminMode && siteContent?.recaptchaEnabled && !captchaToken)}
           className="w-full relative transition-all duration-300"
           style={{
             background: isSubmitting 
