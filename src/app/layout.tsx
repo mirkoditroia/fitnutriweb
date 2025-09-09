@@ -66,7 +66,11 @@ export default async function RootLayout({
   let initialSiteContent: any = null;
   
   try {
+    console.log('🏗️ [LAYOUT] Caricamento contenuti sito...');
     const siteContent = await getSiteContent();
+    console.log('🏗️ [LAYOUT] Contenuti caricati:', !!siteContent);
+    console.log('🏗️ [LAYOUT] Favicon trovato:', siteContent?.favicon || 'nessuno');
+    
     if (siteContent) {
       // Store full site content for navbar (both local and production)
       initialSiteContent = siteContent;
@@ -84,10 +88,12 @@ export default async function RootLayout({
       
       // Extract palette from server content 
       serverPalette = siteContent.colorPalette || 'gz-default';
+    } else {
+      console.log('🏗️ [LAYOUT] Nessun contenuto caricato - usando defaults');
     }
   } catch (error) {
     // Fallback to defaults if fetch fails
-    console.log('Failed to fetch site content for SSR:', error);
+    console.error('🏗️ [LAYOUT] Errore nel caricamento contenuti per SSR:', error);
   }
 
   // Generate CSS variables using server palette
@@ -154,6 +160,9 @@ export default async function RootLayout({
         {children}
         <Footer />
         <CookieBanner />
+        <script dangerouslySetInnerHTML={{
+          __html: `console.log('🏗️ [LAYOUT-CLIENT] Favicon passato al FaviconManager:', ${JSON.stringify(initialSiteContent?.favicon || null)});`
+        }} />
       </body>
     </html>
   );

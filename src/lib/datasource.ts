@@ -442,6 +442,8 @@ export async function createClientFromPendingBooking(booking: Booking): Promise<
 
 export async function getSiteContent(): Promise<SiteContent | null> {
   const mode = getDataMode();
+  console.log("[getSiteContent] Modalità:", mode, "Server:", typeof window === "undefined");
+  
   if (mode === "firebase") return fb_getSiteContent();
   if (mode === "demo") return fetchDemo<SiteContent>("/demo/siteContent.json", { 
     heroTitle: "", 
@@ -469,11 +471,26 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
     }
   });
-  if (typeof window === "undefined") return null;
   try {
-    const res = await fetch("/api/localdb/siteContent", { cache: "no-store" });
-    if (res.ok) return (await res.json()) as SiteContent;
-  } catch {}
+    // In modalità locale, la chiamata API deve funzionare sia lato server che client
+    const baseUrl = typeof window === "undefined" 
+      ? process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : "http://localhost:3000"
+      : "";
+    
+    console.log("[getSiteContent] Tentativo caricamento da:", `${baseUrl}/api/localdb/siteContent`);
+    const res = await fetch(`${baseUrl}/api/localdb/siteContent`, { cache: "no-store" });
+    console.log("[getSiteContent] Risposta API:", res.status, res.statusText);
+    
+    if (res.ok) {
+      const content = (await res.json()) as SiteContent;
+      console.log("[getSiteContent] Contenuto caricato, favicon:", content?.favicon || "nessuno");
+      return content;
+    }
+  } catch (error) {
+    console.error("[getSiteContent] Errore nel caricamento locale:", error);
+  }
   return { 
     heroTitle: "", 
     heroSubtitle: "", 
@@ -496,6 +513,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     studiosSectionTitle: "🏢 I Nostri Studi",
     studiosSectionSubtitle: "",
     colorPalette: "gz-default" as const,
+    favicon: undefined, // Aggiunto per completezza del tipo
     googleCalendar: {
       isEnabled: false,
       calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
