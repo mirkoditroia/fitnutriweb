@@ -79,7 +79,9 @@ export async function GET() {
     }
     
     const data = readFileSync(filePath, "utf-8");
-    return NextResponse.json(JSON.parse(data));
+    const parsedData = JSON.parse(data);
+    debugLogSync("[API siteContent] 🔗 META TAGS letti dal file:", parsedData.metaTags);
+    return NextResponse.json(parsedData);
   } catch (error) {
     console.error("Error reading siteContent:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -91,6 +93,7 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     debugLogSync("[API siteContent] Ricevuti dati per salvataggio:", Object.keys(data));
     debugLogSync("[API siteContent] Favicon nel payload:", data.favicon || "NESSUN FAVICON");
+    debugLogSync("[API siteContent] 🔗 META TAGS nel payload:", data.metaTags);
     
     writeFileSync(filePath, JSON.stringify(data, null, 2));
     debugLogSync("[API siteContent] File salvato con successo:", filePath);

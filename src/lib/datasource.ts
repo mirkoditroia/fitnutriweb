@@ -531,6 +531,7 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
   debugLogSync("[upsertSiteContent] 📊 BMI config being saved:", content.bmiCalculator);
   debugLogSync("[upsertSiteContent] ⭐ Reviews config being saved:", content.googleReviews);
   debugLogSync("[upsertSiteContent] ⚖️ LegalInfo config being saved:", content.legalInfo);
+  debugLogSync("[upsertSiteContent] 🔗 META TAGS being saved:", content.metaTags);
   debugLogSync("[upsertSiteContent] 🎯 FAVICON being saved:", content.favicon || "NESSUN FAVICON");
   
   if (mode === "firebase") {
