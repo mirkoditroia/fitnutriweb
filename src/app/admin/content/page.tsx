@@ -18,6 +18,9 @@ export default function AdminContentPage() {
             debugLog("🔄 CARICAMENTO INIZIALE contenuti:", c);
             debugLog("📊 BMI config caricato:", c?.bmiCalculator);
             debugLog("⭐ Reviews config caricato:", c?.googleReviews);
+            debugLog("🔗 Meta tags config CARICATO dal database:", c?.metaTags);
+            debugLog("🔗 Meta tags - title caricato:", c?.metaTags?.title);
+            debugLog("🔗 Meta tags - description caricato:", c?.metaTags?.description);
             
             // ✅ FALLBACK MIGLIORATO: se contenuto esiste ma mancano le nuove feature, le aggiungiamo
             const finalContent = c ? {
@@ -148,6 +151,9 @@ export default function AdminContentPage() {
             debugLog("✅ CONTENUTO FINALE nello stato:", finalContent);
             debugLog("📊 BMI finale:", finalContent.bmiCalculator);
             debugLog("⭐ Reviews finale:", finalContent.googleReviews);
+            debugLog("🔗 Meta tags FINALE dopo fallback:", finalContent.metaTags);
+            debugLog("🔗 Meta tags finale - title:", finalContent.metaTags?.title);
+            debugLog("🔗 Meta tags finale - description:", finalContent.metaTags?.description);
             
             setContent(finalContent);
             setLoading(false);
@@ -162,10 +168,19 @@ export default function AdminContentPage() {
     await debugLog("📊 BMI Calculator config:", content.bmiCalculator);
     await debugLog("⭐ Google Reviews config:", content.googleReviews);
     await debugLog("⚖️ LegalInfo config:", content.legalInfo);
-    await debugLog("🔗 Meta tags config:", content.metaTags);
+    await debugLog("🔗 Meta tags config PRIMA del salvataggio:", content.metaTags);
+    await debugLog("🔗 Meta tags - title:", content.metaTags?.title);
+    await debugLog("🔗 Meta tags - description:", content.metaTags?.description);
+    await debugLog("🔗 Meta tags - siteUrl:", content.metaTags?.siteUrl);
     
     try {
       await upsertSiteContent(content);
+      
+      // ✅ DEBUG: Verifica che il salvataggio sia andato a buon fine
+      await debugLog("✅ SALVATAGGIO COMPLETATO - rileggo i dati per verificare...");
+      const savedContent = await getSiteContent();
+      await debugLog("🔍 CONTENUTO DOPO IL SALVATAGGIO:", savedContent);
+      await debugLog("🔗 Meta tags DOPO il salvataggio:", savedContent?.metaTags);
       
       // ✅ CONFERMA SALVATAGGIO con dettagli
       toast.success(`✅ Contenuti salvati con successo!${content.bmiCalculator?.enabled ? " (BMI: ✅)" : ""}${content.googleReviews?.enabled !== false ? " (Reviews: ⭐)" : ""}`, {

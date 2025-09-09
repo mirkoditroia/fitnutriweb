@@ -190,58 +190,30 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
   // Glass navbar using CSS variables
   const headerClasses = 'backdrop-blur-xl border-b border-white/15 shadow-lg shadow-black/30';
 
-  // ✅ Gestione scroll navbar con approccio più robusto
-  useEffect(() => {
-    const navbar = document.querySelector('header');
-    if (!navbar) return;
+  // ✅ Soluzione semplice: blocca scroll solo sulla navbar con CSS
+  const handleNavbarWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
-    const preventScroll = (e: Event) => {
+  const handleNavbarTouch = (e: React.TouchEvent) => {
+    // Su mobile permetti solo il tap, non lo swipe
+    if (e.touches.length > 1) {
       e.preventDefault();
-      e.stopPropagation();
-      return false;
-    };
-
-    const handleMouseEnter = () => {
-      // Disabilita scroll del body quando si entra nella navbar
-      document.body.style.overflow = 'hidden';
-      
-      // Aggiungi listeners per bloccare tutti i tipi di scroll
-      navbar.addEventListener('wheel', preventScroll, { passive: false });
-      navbar.addEventListener('scroll', preventScroll, { passive: false });
-      navbar.addEventListener('touchmove', preventScroll, { passive: false });
-    };
-
-    const handleMouseLeave = () => {
-      // Riabilita scroll del body quando si esce dalla navbar
-      document.body.style.overflow = 'unset';
-      
-      // Rimuovi listeners
-      navbar.removeEventListener('wheel', preventScroll);
-      navbar.removeEventListener('scroll', preventScroll);
-      navbar.removeEventListener('touchmove', preventScroll);
-    };
-
-    navbar.addEventListener('mouseenter', handleMouseEnter);
-    navbar.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      navbar.removeEventListener('mouseenter', handleMouseEnter);
-      navbar.removeEventListener('mouseleave', handleMouseLeave);
-      navbar.removeEventListener('wheel', preventScroll);
-      navbar.removeEventListener('scroll', preventScroll);
-      navbar.removeEventListener('touchmove', preventScroll);
-      // Assicurati che lo scroll sia riabilitato alla pulizia
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
+    }
+  };
 
   return (
         <header 
           className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${headerClasses}`} 
           style={{ 
             backgroundColor: 'var(--navbar-bg)', 
-            color: 'var(--navbar-text)'
+            color: 'var(--navbar-text)',
+            // ✅ CSS semplice per bloccare scroll sulla navbar
+            overscrollBehavior: 'contain'
           }}
+          onWheel={handleNavbarWheel}
+          onTouchStart={handleNavbarTouch}
         >
           <div className="container mx-auto px-4">
             <div className="flex h-16 items-center justify-between">
