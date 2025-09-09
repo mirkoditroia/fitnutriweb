@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
 import { getSiteContent, upsertSiteContent } from "@/lib/datasource";
+import { refreshDebugCache } from "@/lib/debugUtils";
 import type { SiteContent } from "@/lib/data";
 
 export default function AdminSettingsPage() {
@@ -34,6 +35,10 @@ export default function AdminSettingsPage() {
     setSaving(true);
     try {
       await upsertSiteContent(content);
+      
+      // Forza il refresh della cache dei log di debug
+      refreshDebugCache();
+      
       toast.success("Impostazioni salvate con successo!");
     } catch (error) {
       console.error("Error saving settings:", error);
@@ -315,6 +320,44 @@ export default function AdminSettingsPage() {
                     Email del service account Google per l'autenticazione
                   </p>
                 </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Debug Settings */}
+        <section className="space-y-4">
+          <h2 className="font-semibold text-lg text-black">🐛 Impostazioni Debug</h2>
+          <p className="text-sm text-black/70">
+            Controlla la visualizzazione dei log di debug nella console del browser.
+          </p>
+          
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={content.debugLogsEnabled !== false}
+                onChange={(e) => setContent({...content, debugLogsEnabled: e.target.checked})}
+                className="rounded border-border"
+              />
+              <label className="text-sm font-medium text-black">
+                Abilita log di debug in console
+              </label>
+            </div>
+            
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                💡 <strong>Info:</strong> I log di debug mostrano informazioni dettagliate sul funzionamento del sistema.
+                Disabilita questa opzione in produzione per migliorare le performance e ridurre il rumore nella console.
+              </p>
+            </div>
+            
+            {content.debugLogsEnabled !== false && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-700">
+                  ⚠️ I log di debug sono attualmente <strong>abilitati</strong>. 
+                  Ricorda di disabilitarli in produzione.
+                </p>
               </div>
             )}
           </div>

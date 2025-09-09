@@ -15,6 +15,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
+import { debugLog, debugError } from "./debugUtils";
 
 // Funzione per inviare notifica email per nuova prenotazione al dottore
 async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string, colorPalette?: string) {
@@ -335,6 +336,9 @@ export interface SiteContent {
       };
     };
   };
+  
+  // Debug Settings
+  debugLogsEnabled?: boolean; // Abilita/disabilita i log di debug in console (default: true)
 }
 
 export type Availability = {
@@ -1114,23 +1118,23 @@ export async function getClientByEmail(email: string): Promise<ClientCard | null
 
 // Site content
 export async function getSiteContent(): Promise<SiteContent | null> {
-  console.log("getSiteContent: Inizio funzione");
-  console.log("getSiteContent: Database configurato:", !!db);
-  console.log("getSiteContent: Tipo database:", typeof db);
+  await debugLog("getSiteContent: Inizio funzione");
+  await debugLog("getSiteContent: Database configurato:", !!db);
+  await debugLog("getSiteContent: Tipo database:", typeof db);
   
   if (!db) {
-    console.log("getSiteContent: Database non configurato, return null");
+    await debugLog("getSiteContent: Database non configurato, return null");
     return null;
   }
   
   try {
-    console.log("getSiteContent: Caricamento contenuto da Firebase...");
+    await debugLog("getSiteContent: Caricamento contenuto da Firebase...");
   const snap = await getDoc(col.content(db as Firestore));
-    console.log("getSiteContent: Snap ricevuto:", snap);
-    console.log("getSiteContent: Snap exists:", snap.exists());
+    await debugLog("getSiteContent: Snap ricevuto:", snap);
+    await debugLog("getSiteContent: Snap exists:", snap.exists());
     
     if (!snap.exists()) {
-      console.log("getSiteContent: Nessun contenuto trovato in Firebase, creo contenuto di default");
+      await debugLog("getSiteContent: Nessun contenuto trovato in Firebase, creo contenuto di default");
       
       // Crea contenuto di default e salvalo in Firebase
       const defaultContent: SiteContent = {
@@ -1194,6 +1198,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         },
         colorPalette: "gz-default" as const,
         favicon: undefined, // ✅ AGGIUNTO: Favicon di default (undefined)
+        debugLogsEnabled: true, // ✅ AGGIUNTO: Debug logs abilitati di default
         notificationEmail: "mirkoditroia@gmail.com", // Default notification email
         businessName: "GZ Nutrition", // Default business name
         recaptchaEnabled: false, // CAPTCHA disabilitato di default per sviluppo
@@ -1209,7 +1214,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       // Salva il contenuto di default in Firebase
       try {
         await upsertSiteContent(defaultContent);
-        console.log("getSiteContent: Contenuto di default salvato in Firebase");
+        await debugLog("getSiteContent: Contenuto di default salvato in Firebase");
         return defaultContent;
       } catch (saveError) {
         console.error("getSiteContent: Errore nel salvare contenuto di default:", saveError);
@@ -1219,7 +1224,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     }
     
     const data = snap.data();
-    console.log("getSiteContent: Contenuto caricato da Firebase:", data);
+    await debugLog("getSiteContent: Contenuto caricato da Firebase:", data);
     console.log("getSiteContent: Contatti - phone:", data.contactPhone);
     console.log("getSiteContent: Contatti - email:", data.contactEmail);
     console.log("getSiteContent: Contatti - addresses:", data.contactAddresses);
@@ -1311,6 +1316,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       },
       colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
       favicon: data.favicon || undefined, // ✅ AGGIUNTO: Mapping del favicon da Firebase
+      debugLogsEnabled: data.debugLogsEnabled !== false, // ✅ AGGIUNTO: Debug logs abilitati di default
       notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com",
       businessName: data.businessName || "GZ Nutrition",
       recaptchaEnabled: data.recaptchaEnabled === true, // Default false, esplicito true per abilitare
@@ -1421,15 +1427,15 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       }
     };
     
-    console.log("getSiteContent: Contenuto finale mappato:", siteContent);
-    console.log("🔍 getSiteContent: BMI raw da DB:", data.bmiCalculator);
-    console.log("🔍 getSiteContent: BMI mappato finale:", siteContent.bmiCalculator);
-    console.log("🔍 getSiteContent: Reviews raw da DB:", data.googleReviews);
-    console.log("🔍 getSiteContent: Reviews mappate finale:", siteContent.googleReviews);
-    console.log("🔍 getSiteContent: LegalInfo raw da DB:", data.legalInfo);
-    console.log("🔍 getSiteContent: LegalInfo mappato finale:", siteContent.legalInfo);
-    console.log("🎯 getSiteContent: FAVICON raw da DB:", data.favicon);
-    console.log("🎯 getSiteContent: FAVICON mappato finale:", siteContent.favicon);
+    await debugLog("getSiteContent: Contenuto finale mappato:", siteContent);
+    await debugLog("🔍 getSiteContent: BMI raw da DB:", data.bmiCalculator);
+    await debugLog("🔍 getSiteContent: BMI mappato finale:", siteContent.bmiCalculator);
+    await debugLog("🔍 getSiteContent: Reviews raw da DB:", data.googleReviews);
+    await debugLog("🔍 getSiteContent: Reviews mappate finale:", siteContent.googleReviews);
+    await debugLog("🔍 getSiteContent: LegalInfo raw da DB:", data.legalInfo);
+    await debugLog("🔍 getSiteContent: LegalInfo mappato finale:", siteContent.legalInfo);
+    await debugLog("🎯 getSiteContent: FAVICON raw da DB:", data.favicon);
+    await debugLog("🎯 getSiteContent: FAVICON mappato finale:", siteContent.favicon);
     return siteContent;
   } catch (error) {
     console.error("getSiteContent: Errore nel caricamento da Firebase:", error);
@@ -1440,12 +1446,12 @@ export async function getSiteContent(): Promise<SiteContent | null> {
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
   
-  console.log("🔥 [Firebase] upsertSiteContent chiamato");
-  console.log("🔥 [Firebase] Content originale:", content);
-  console.log("🔥 [Firebase] BMI config:", content.bmiCalculator);
-  console.log("🔥 [Firebase] Reviews config:", content.googleReviews);
-  console.log("🔥 [Firebase] LegalInfo config:", content.legalInfo);
-  console.log("🎯 [Firebase] FAVICON config:", content.favicon || "NESSUN FAVICON");
+  await debugLog("🔥 [Firebase] upsertSiteContent chiamato");
+  await debugLog("🔥 [Firebase] Content originale:", content);
+  await debugLog("🔥 [Firebase] BMI config:", content.bmiCalculator);
+  await debugLog("🔥 [Firebase] Reviews config:", content.googleReviews);
+  await debugLog("🔥 [Firebase] LegalInfo config:", content.legalInfo);
+  await debugLog("🎯 [Firebase] FAVICON config:", content.favicon || "NESSUN FAVICON");
   
   // Firestore non accetta valori undefined: rimuoviamoli in modo sicuro
   const sanitized = JSON.parse(JSON.stringify(content));

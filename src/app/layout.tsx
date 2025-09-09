@@ -9,6 +9,7 @@ import FaviconManager from "@/components/FaviconManager";
 import { generateCSSVariables, getPaletteConfig } from "@/lib/palettes";
 import { getSiteContent } from "@/lib/datasource";
 import { getDataMode } from "@/lib/datamode";
+import { debugLogSync } from "@/lib/debugUtils";
 
 type BrandCfg = { 
   mode: "image" | "text"; 
@@ -66,10 +67,10 @@ export default async function RootLayout({
   let initialSiteContent: any = null;
   
   try {
-    console.log('🏗️ [LAYOUT] Caricamento contenuti sito...');
+    debugLogSync('🏗️ [LAYOUT] Caricamento contenuti sito...');
     const siteContent = await getSiteContent();
-    console.log('🏗️ [LAYOUT] Contenuti caricati:', !!siteContent);
-    console.log('🏗️ [LAYOUT] Favicon trovato:', siteContent?.favicon || 'nessuno');
+    debugLogSync('🏗️ [LAYOUT] Contenuti caricati:', !!siteContent);
+    debugLogSync('🏗️ [LAYOUT] Favicon trovato:', siteContent?.favicon || 'nessuno');
     
     if (siteContent) {
       // Store full site content for navbar (both local and production)
@@ -89,7 +90,7 @@ export default async function RootLayout({
       // Extract palette from server content 
       serverPalette = siteContent.colorPalette || 'gz-default';
     } else {
-      console.log('🏗️ [LAYOUT] Nessun contenuto caricato - usando defaults');
+      debugLogSync('🏗️ [LAYOUT] Nessun contenuto caricato - usando defaults');
     }
   } catch (error) {
     // Fallback to defaults if fetch fails
