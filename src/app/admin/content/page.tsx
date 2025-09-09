@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getSiteContent, upsertSiteContent, type SiteContent } from "@/lib/datasource";
+import { debugLog } from "@/lib/debugUtils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
@@ -14,9 +15,9 @@ export default function AdminContentPage() {
 
   useEffect(() => {
           getSiteContent().then((c) => {
-            console.log("🔄 CARICAMENTO INIZIALE contenuti:", c);
-            console.log("📊 BMI config caricato:", c?.bmiCalculator);
-            console.log("⭐ Reviews config caricato:", c?.googleReviews);
+            debugLog("🔄 CARICAMENTO INIZIALE contenuti:", c);
+            debugLog("📊 BMI config caricato:", c?.bmiCalculator);
+            debugLog("⭐ Reviews config caricato:", c?.googleReviews);
             
             // ✅ FALLBACK MIGLIORATO: se contenuto esiste ma mancano le nuove feature, le aggiungiamo
             const finalContent = c ? {
@@ -122,9 +123,9 @@ export default function AdminContentPage() {
               }
             };
             
-            console.log("✅ CONTENUTO FINALE nello stato:", finalContent);
-            console.log("📊 BMI finale:", finalContent.bmiCalculator);
-            console.log("⭐ Reviews finale:", finalContent.googleReviews);
+            debugLog("✅ CONTENUTO FINALE nello stato:", finalContent);
+            debugLog("📊 BMI finale:", finalContent.bmiCalculator);
+            debugLog("⭐ Reviews finale:", finalContent.googleReviews);
             
             setContent(finalContent);
             setLoading(false);
@@ -135,10 +136,10 @@ export default function AdminContentPage() {
 
   const save = async () => {
     // ✅ DEBUG: Log completo del contenuto prima del salvataggio
-    console.log("🔍 SALVATAGGIO CONTENUTI - Oggetto completo:", content);
-    console.log("📊 BMI Calculator config:", content.bmiCalculator);
-    console.log("⭐ Google Reviews config:", content.googleReviews);
-    console.log("⚖️ LegalInfo config:", content.legalInfo);
+    await debugLog("🔍 SALVATAGGIO CONTENUTI - Oggetto completo:", content);
+    await debugLog("📊 BMI Calculator config:", content.bmiCalculator);
+    await debugLog("⭐ Google Reviews config:", content.googleReviews);
+    await debugLog("⚖️ LegalInfo config:", content.legalInfo);
     
     try {
       await upsertSiteContent(content);
@@ -152,19 +153,19 @@ export default function AdminContentPage() {
         }
       });
       
-      console.log("✅ SALVATAGGIO COMPLETATO con successo");
+      await debugLog("✅ SALVATAGGIO COMPLETATO con successo");
       
       // ✅ NOTIFICA: Invia evento per aggiornare navbar e altri componenti
       window.dispatchEvent(new CustomEvent('contentUpdated'));
-      console.log("📡 Evento 'contentUpdated' inviato per aggiornare navbar");
+      await debugLog("📡 Evento 'contentUpdated' inviato per aggiornare navbar");
       
       // ✅ VERIFICA: Ricarica i contenuti dal database per confermare il salvataggio
       setTimeout(async () => {
         try {
           const reloadedContent = await getSiteContent();
-          console.log("🔄 CONTENUTI RICARICATI dal database:", reloadedContent);
-          console.log("🔍 BMI dopo ricaricamento:", reloadedContent?.bmiCalculator);
-          console.log("🔍 Reviews dopo ricaricamento:", reloadedContent?.googleReviews);
+          await debugLog("🔄 CONTENUTI RICARICATI dal database:", reloadedContent);
+          await debugLog("🔍 BMI dopo ricaricamento:", reloadedContent?.bmiCalculator);
+          await debugLog("🔍 Reviews dopo ricaricamento:", reloadedContent?.googleReviews);
           
           if (reloadedContent?.bmiCalculator?.enabled !== content.bmiCalculator?.enabled) {
             console.warn("⚠️ MISMATCH BMI: salvato =", content.bmiCalculator?.enabled, "ricaricato =", reloadedContent?.bmiCalculator?.enabled);
@@ -654,8 +655,8 @@ export default function AdminContentPage() {
                   const updatedContent = { ...content, favicon: url };
                   setContent(updatedContent);
                   
-                  console.log("🔍 [ADMIN] Favicon URL ricevuto:", url);
-                  console.log("🔍 [ADMIN] Content aggiornato con favicon:", updatedContent.favicon);
+                  await debugLog("🔍 [ADMIN] Favicon URL ricevuto:", url);
+                  await debugLog("🔍 [ADMIN] Content aggiornato con favicon:", updatedContent.favicon);
                   
                   // Auto-salva dopo l'upload del favicon
                   try {
@@ -668,7 +669,7 @@ export default function AdminContentPage() {
                     });
                     window.dispatchEvent(faviconUpdateEvent);
                     
-                    console.log("🎯 Evento faviconUpdated emesso per:", url);
+                    await debugLog("🎯 Evento faviconUpdated emesso per:", url);
                   } catch (error) {
                     console.error("Errore nel salvare il favicon:", error);
                     toast.error("❌ Favicon caricato ma errore nel salvataggio. Clicca 'Salva Contenuti' manualmente.");
@@ -2126,10 +2127,10 @@ export default function AdminContentPage() {
         <div className="flex justify-between items-center pt-6 border-t border-foreground/10 mt-8">
           {/* Debug button */}
           <Button 
-            onClick={() => {
-              console.log("🔍 DEBUG - Stato attuale content:", content);
-              console.log("📊 DEBUG - BMI config:", content.bmiCalculator);
-              console.log("⭐ DEBUG - Reviews config:", content.googleReviews);
+            onClick={async () => {
+              await debugLog("🔍 DEBUG - Stato attuale content:", content);
+              await debugLog("📊 DEBUG - BMI config:", content.bmiCalculator);
+              await debugLog("⭐ DEBUG - Reviews config:", content.googleReviews);
               toast.success("🔍 Debug info logged to console");
             }}
             variant="outline"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
+import { debugLogSync } from "@/lib/debugUtils";
 
 const dataDir = join(process.cwd(), "data");
 const filePath = join(dataDir, "siteContent.json");
@@ -88,11 +89,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    console.log("[API siteContent] Ricevuti dati per salvataggio:", Object.keys(data));
-    console.log("[API siteContent] Favicon nel payload:", data.favicon || "NESSUN FAVICON");
+    debugLogSync("[API siteContent] Ricevuti dati per salvataggio:", Object.keys(data));
+    debugLogSync("[API siteContent] Favicon nel payload:", data.favicon || "NESSUN FAVICON");
     
     writeFileSync(filePath, JSON.stringify(data, null, 2));
-    console.log("[API siteContent] File salvato con successo:", filePath);
+    debugLogSync("[API siteContent] File salvato con successo:", filePath);
     
     return NextResponse.json({ success: true });
   } catch (error) {

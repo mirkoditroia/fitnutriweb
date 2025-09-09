@@ -20,7 +20,7 @@ import { debugLog, debugError, debugLogSync } from "./debugUtils";
 // Funzione per inviare notifica email per nuova prenotazione al dottore
 async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string, colorPalette?: string) {
   try {
-    console.log("📤 sendBookingNotification chiamata con:", { 
+    debugLogSync("📤 sendBookingNotification chiamata con:", { 
       bookingId: booking.id, 
       isFreeConsultation: booking.isFreeConsultation,
       packageTitle,
@@ -43,12 +43,12 @@ async function sendBookingNotification(booking: Booking, packageTitle?: string, 
       }),
     });
 
-    console.log("📬 Risposta Firebase Functions:", response.status);
+    debugLogSync("📬 Risposta Firebase Functions:", response.status);
     const result = await response.json();
-    console.log("📋 Risultato email:", result);
+    debugLogSync("📋 Risultato email:", result);
     
     if (result.success) {
-      console.log('✅ Booking notification sent successfully:', result.sentTo);
+      debugLogSync('✅ Booking notification sent successfully:', result.sentTo);
     } else {
       console.error('❌ Failed to send booking notification:', result.message);
     }
@@ -365,21 +365,21 @@ const col = {
 // Packages
 export async function getPackages(): Promise<Package[]> {
   if (!db) {
-    console.log("getPackages: Database non configurato");
+    debugLogSync("getPackages: Database non configurato");
     return [];
   }
   
   try {
-    console.log("getPackages: Caricamento pacchetti da Firebase...");
+    debugLogSync("getPackages: Caricamento pacchetti da Firebase...");
   const database = db as Firestore;
     const snap = await getDocs(query(col.packages(database), orderBy("createdAt", "desc")));
     
-    console.log("getPackages: Snap ricevuto:", snap);
-    console.log("getPackages: Numero documenti:", snap.docs.length);
+    debugLogSync("getPackages: Snap ricevuto:", snap);
+    debugLogSync("getPackages: Numero documenti:", snap.docs.length);
     
     const packages = snap.docs.map((d) => {
       const data = d.data();
-      console.log(`getPackages: Documento ${d.id}:`, data);
+      debugLogSync(`getPackages: Documento ${d.id}:`, data);
       
       // Mapping completo per Firebase con tutti i campi necessari
       const mappedPackage: Package = {
@@ -402,11 +402,11 @@ export async function getPackages(): Promise<Package[]> {
         createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt) : undefined
       };
       
-      console.log(`getPackages: Pacchetto mappato ${d.id}:`, mappedPackage);
+      debugLogSync(`getPackages: Pacchetto mappato ${d.id}:`, mappedPackage);
       return mappedPackage;
     });
     
-    console.log("getPackages: Pacchetti processati:", packages);
+    debugLogSync("getPackages: Pacchetti processati:", packages);
     return packages;
   } catch (error) {
     console.error("getPackages: Errore nel caricamento da Firebase:", error);
@@ -480,7 +480,7 @@ export async function listBookings(): Promise<Booking[]> {
 }
 
 export async function createBooking(b: Booking, captchaToken?: string): Promise<string> {
-  console.log("🔥 createBooking Firebase iniziato:", { 
+  debugLogSync("🔥 createBooking Firebase iniziato:", { 
     isFreeConsultation: b.isFreeConsultation, 
     slot: b.slot, 
     date: b.date,
@@ -494,7 +494,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   const siteContent = await getSiteContent();
   if (siteContent?.recaptchaEnabled && captchaToken) {
     try {
-      console.log("🔑 Inizio verifica CAPTCHA con token:", captchaToken ? captchaToken.substring(0, 20) + "..." : "null");
+      debugLogSync("🔑 Inizio verifica CAPTCHA con token:", captchaToken ? captchaToken.substring(0, 20) + "..." : "null");
       
       const response = await fetch('https://verifycaptcha-4ks3j6nupa-uc.a.run.app', {
         method: 'POST',
@@ -502,17 +502,17 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
         body: JSON.stringify({ token: captchaToken })
       });
       
-      console.log("📡 Risposta Firebase Function status:", response.status);
+      debugLogSync("📡 Risposta Firebase Function status:", response.status);
       
       const result = await response.json();
-      console.log("🔍 Risultato verifica CAPTCHA:", result);
+      debugLogSync("🔍 Risultato verifica CAPTCHA:", result);
       
       if (!result.success) {
         console.error("❌ CAPTCHA verifica fallita:", result.message, result.errors);
         throw new Error(`Verifica CAPTCHA fallita: ${result.message || 'Errore sconosciuto'}`);
       }
       
-      console.log("✅ CAPTCHA verificato con successo!");
+      debugLogSync("✅ CAPTCHA verificato con successo!");
     } catch (error) {
       console.error("💥 Errore verifica CAPTCHA:", error);
       throw new Error("Errore nella verifica CAPTCHA. Riprova.");
@@ -528,9 +528,9 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   
   // ✅ STANDARDIZZA FORMATO DATA prima della validazione
   const dateString = b.date.includes('T') ? b.date.split('T')[0] : b.date;
-  console.log("🔍 FORMATO DATA DEBUG:");
-  console.log("📅 Data originale dal form:", b.date);
-  console.log("📅 Data standardizzata per query:", dateString);
+  debugLogSync("🔍 FORMATO DATA DEBUG:");
+  debugLogSync("📅 Data originale dal form:", b.date);
+  debugLogSync("📅 Data standardizzata per query:", dateString);
   
   // Controlla che lo slot sia effettivamente disponibile
   const availability = await getAvailabilityByDate(dateString);
@@ -540,8 +540,8 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   if (b.isFreeConsultation) {
     // ✅ CORRETO: Per consulenze gratuite, usa SOLO slot promozionali dedicati
     pool = availability?.freeConsultationSlots ?? [];
-    console.log("🔍 Consulenza gratuita - Slot promozionali disponibili:", pool.length, "slot");
-    console.log("📅 Slot richiesto:", b.slot);
+    debugLogSync("🔍 Consulenza gratuita - Slot promozionali disponibili:", pool.length, "slot");
+    debugLogSync("📅 Slot richiesto:", b.slot);
     
     if (pool.length === 0) {
       throw new Error("❌ Nessun slot per consulenze gratuite disponibile per questa data");
@@ -563,7 +563,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     throw new Error("L'orario selezionato non è più disponibile");
   }
   
-  console.log("✅ Slot validato correttamente:", b.slot);
+  debugLogSync("✅ Slot validato correttamente:", b.slot);
   
   // Get package title for calendar event
   let packageTitle: string | undefined;
@@ -582,7 +582,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     }
   }
 
-  console.log("💾 Salvando prenotazione nel database...");
+  debugLogSync("💾 Salvando prenotazione nel database...");
   const added = await addDoc(col.bookings(db as Firestore), {
     clientId: b.clientId ?? null,
     name: b.name,
@@ -601,14 +601,14 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     createdAt: serverTimestamp(),
   });
   
-  console.log("✅ Prenotazione salvata con ID:", added.id);
+  debugLogSync("✅ Prenotazione salvata con ID:", added.id);
   
   // Rimuovi lo slot occupato dalla disponibilità (blocca anche in pending)
   if (b.isFreeConsultation) {
     // ✅ CORRETTO: Per consulenze gratuite, rimuovi SOLO da slot promozionali
     const nextFreeSlots = (availability?.freeConsultationSlots ?? []).filter((slot) => slot !== b.slot);
-    console.log("🗑️ Rimuovendo slot promozionale:", b.slot);
-    console.log("📋 Slot promozionali rimanenti:", nextFreeSlots);
+    debugLogSync("🗑️ Rimuovendo slot promozionale:", b.slot);
+    debugLogSync("📋 Slot promozionali rimanenti:", nextFreeSlots);
     await upsertAvailabilityForDate(
       dateString, 
       availability.onlineSlots ?? availability.slots ?? [], 
@@ -687,7 +687,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
         await updateDoc(doc(db as Firestore, "bookings", added.id), {
           googleCalendarEventId: calendarEventId
         });
-        console.log("Google Calendar event created and linked to booking:", calendarEventId);
+        debugLogSync("Google Calendar event created and linked to booking:", calendarEventId);
       }
     }
   } catch (error) {
@@ -697,7 +697,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
 
   // Invia notifica email al nutrizionista per nuova prenotazione
   try {
-    console.log("📧 Preparando invio email notifica...");
+    debugLogSync("📧 Preparando invio email notifica...");
     const bookingWithId = { ...b, id: added.id };
     
     // Ottieni l'email di notifica, nome business e palette dalle impostazioni
@@ -706,9 +706,9 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     const businessName = siteContent?.businessName || "GZ Nutrition";
     const colorPalette = siteContent?.colorPalette || "gz-default";
     
-    console.log("📬 Inviando email a:", notificationEmail, "per", packageTitle);
+    debugLogSync("📬 Inviando email a:", notificationEmail, "per", packageTitle);
     await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName, colorPalette);
-    console.log("✅ Email al dottore inviata con successo!");
+    debugLogSync("✅ Email al dottore inviata con successo!");
     
     // Email al nutrizionista completata - sistema funzionante
     
@@ -794,7 +794,7 @@ export async function updateBooking(booking: Booking): Promise<void> {
         ? !!(await ensureCalendarEvent(existingBooking.googleCalendarEventId, booking, packageTitle))
         : await deleteCalendarEvent(existingBooking.googleCalendarEventId);
       if (success) {
-        console.log(booking.status === "confirmed" ? "Google Calendar event updated:" : "Google Calendar event deleted (booking not confirmed):", existingBooking.googleCalendarEventId);
+        debugLogSync(booking.status === "confirmed" ? "Google Calendar event updated:" : "Google Calendar event deleted (booking not confirmed):", existingBooking.googleCalendarEventId);
       } else {
         console.error("Failed to update Google Calendar event:", existingBooking.googleCalendarEventId);
       }
@@ -820,7 +820,7 @@ export async function updateBooking(booking: Booking): Promise<void> {
         const newEventId = await ensureCalendarEvent(undefined, booking, packageTitle);
         if (newEventId) {
           await setDoc(doc(db as Firestore, "bookings", booking.id), { googleCalendarEventId: newEventId }, { merge: true });
-          console.log("Google Calendar event created for existing booking:", newEventId);
+          debugLogSync("Google Calendar event created for existing booking:", newEventId);
         }
       }
     } catch (error) {
@@ -970,7 +970,7 @@ export async function deleteBooking(bookingId: string): Promise<void> {
         try {
           const success = await deleteCalendarEvent(bookingData.googleCalendarEventId);
           if (success) {
-            console.log("Google Calendar event deleted:", bookingData.googleCalendarEventId);
+            debugLogSync("Google Calendar event deleted:", bookingData.googleCalendarEventId);
           } else {
             console.error("Failed to delete Google Calendar event:", bookingData.googleCalendarEventId);
           }
@@ -1226,13 +1226,13 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     
     const data = snap.data();
     debugLogSync("getSiteContent: Contenuto caricato da Firebase:", data);
-    console.log("getSiteContent: Contatti - phone:", data.contactPhone);
-    console.log("getSiteContent: Contatti - email:", data.contactEmail);
-    console.log("getSiteContent: Contatti - addresses:", data.contactAddresses);
-    console.log("getSiteContent: Contatti - social:", data.socialChannels);
-    console.log("getSiteContent: Popup - freeConsultationPopup:", data.freeConsultationPopup);
-    console.log("getSiteContent: Popup - isEnabled:", data.freeConsultationPopup?.isEnabled);
-    console.log("getSiteContent: Popup - title:", data.freeConsultationPopup?.title);
+    debugLogSync("getSiteContent: Contatti - phone:", data.contactPhone);
+    debugLogSync("getSiteContent: Contatti - email:", data.contactEmail);
+    debugLogSync("getSiteContent: Contatti - addresses:", data.contactAddresses);
+    debugLogSync("getSiteContent: Contatti - social:", data.socialChannels);
+    debugLogSync("getSiteContent: Popup - freeConsultationPopup:", data.freeConsultationPopup);
+    debugLogSync("getSiteContent: Popup - isEnabled:", data.freeConsultationPopup?.isEnabled);
+    debugLogSync("getSiteContent: Popup - title:", data.freeConsultationPopup?.title);
     
     // Forza sempre valori di default se i campi sono vuoti o undefined
     const siteContent = {
@@ -1556,30 +1556,30 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
     };
   }
   
-  console.log("🔥 [Firebase] Content sanitizzato:", sanitized);
-  console.log("🔥 [Firebase] BMI sanitizzato:", sanitized.bmiCalculator);
-  console.log("🔥 [Firebase] Reviews sanitizzato:", sanitized.googleReviews);
-  console.log("🔥 [Firebase] LegalInfo sanitizzato:", sanitized.legalInfo);
+  debugLogSync("🔥 [Firebase] Content sanitizzato:", sanitized);
+  debugLogSync("🔥 [Firebase] BMI sanitizzato:", sanitized.bmiCalculator);
+  debugLogSync("🔥 [Firebase] Reviews sanitizzato:", sanitized.googleReviews);
+  debugLogSync("🔥 [Firebase] LegalInfo sanitizzato:", sanitized.legalInfo);
   
-  console.log("🔥 [Firebase] Chiamando setDoc...");
+  debugLogSync("🔥 [Firebase] Chiamando setDoc...");
   await setDoc(col.content(db as Firestore), sanitized, { merge: true });
-  console.log("🔥 [Firebase] ✅ setDoc completato con successo");
+  debugLogSync("🔥 [Firebase] ✅ setDoc completato con successo");
 }
 
 // Availability
 export async function getAvailabilityByDate(date: string): Promise<Availability | null> {
   if (!db) return null;
   
-  console.log("🔍 getAvailabilityByDate Firebase per data:", date);
+  debugLogSync("🔍 getAvailabilityByDate Firebase per data:", date);
   const snap = await getDoc(col.availability(db as Firestore, date));
   
   if (!snap.exists()) {
-    console.log("❌ Nessun documento availability trovato per data:", date);
+    debugLogSync("❌ Nessun documento availability trovato per data:", date);
     return null;
   }
   
   const data = snap.data() as DocumentData;
-  console.log("📊 Dati raw da Firebase per", date, ":", data);
+  debugLogSync("📊 Dati raw da Firebase per", date, ":", data);
   
   const result = { 
     date,
@@ -1590,8 +1590,8 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
     freeConsultationSlots: Array.isArray(data.freeConsultationSlots) ? data.freeConsultationSlots : []
   };
   
-  console.log("✅ Availability processata:", result);
-  console.log("🎯 freeConsultationSlots trovati:", result.freeConsultationSlots);
+  debugLogSync("✅ Availability processata:", result);
+  debugLogSync("🎯 freeConsultationSlots trovati:", result.freeConsultationSlots);
   
   return result;
 }
@@ -1813,7 +1813,7 @@ export async function getClientProgress(clientId: string): Promise<ClientProgres
     return results;
   } catch (error) {
     // Se l'indice non è ancora pronto, usa una query senza ordinamento
-    console.log("Indice non ancora pronto, uso query senza ordinamento");
+    debugLogSync("Indice non ancora pronto, uso query senza ordinamento");
     const q = query(
       collection(db as Firestore, "clientProgress"),
       where("clientId", "==", clientId)

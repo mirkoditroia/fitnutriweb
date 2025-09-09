@@ -79,9 +79,9 @@ async function sendLocalBookingNotification(booking: Booking): Promise<void> {
 
     const result = await response.json();
     if (result.success) {
-      console.log('✅ Booking notification (dottore) sent successfully:', result.sentTo);
+      debugLogSync('✅ Booking notification (dottore) sent successfully:', result.sentTo);
       if (booking.isFreeConsultation) {
-        console.log('📧 Email sent for free consultation booking');
+        debugLogSync('📧 Email sent for free consultation booking');
       }
     } else {
       console.error('❌ Failed to send booking notification:', result.message);
@@ -289,7 +289,7 @@ export async function updateBooking(booking: Booking): Promise<void> {
     // ✅ RIMOSSA gestione localdb/availability - causava problemi di sincronizzazione
     // In modalità Firebase, la disponibilità è gestita automaticamente da Firebase
     // In modalità local, la gestione locale funziona tramite altri meccanismi
-    console.log("📋 Prenotazione aggiornata:", booking.id, "- gestione disponibilità delegata al sistema principale");
+    debugLogSync("📋 Prenotazione aggiornata:", booking.id, "- gestione disponibilità delegata al sistema principale");
   } catch (error) {
     console.error("Error updating booking:", error);
     throw error;
@@ -313,7 +313,7 @@ export async function deleteBooking(bookingId: string): Promise<void> {
     
     // ✅ RIMOSSA logica ripristino availability locale - causava problemi di sincronizzazione
     // Firebase gestisce automaticamente la disponibilità quando una prenotazione viene cancellata
-    console.log("📋 Prenotazione cancellata:", bookingToDelete?.id, "- availability gestita dal sistema principale");
+    debugLogSync("📋 Prenotazione cancellata:", bookingToDelete?.id, "- availability gestita dal sistema principale");
   } catch (error) {
     console.error("Error deleting booking:", error);
     throw error;
@@ -557,11 +557,11 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
 
 export async function getAvailabilityByDate(date: string): Promise<Availability | null> {
   const mode = getDataMode();
-  console.log("🌐 [SITO PUBBLICO] getAvailabilityByDate chiamata per:", date, "modalità:", mode);
+  debugLogSync("🌐 [SITO PUBBLICO] getAvailabilityByDate chiamata per:", date, "modalità:", mode);
   
   if (mode === "firebase") {
     const result = await fb_getAvailabilityByDate(date);
-    console.log("🔥 [SITO PUBBLICO] Risultato da Firebase:", result);
+    debugLogSync("🔥 [SITO PUBBLICO] Risultato da Firebase:", result);
     return result;
   }
   
@@ -571,7 +571,7 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
     const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[]; studioSlots?: Record<string, string[]> }>) : {};
     const dateData = all[date];
-    console.log("💾 [SITO PUBBLICO] Dati locali per", date, ":", dateData);
+    debugLogSync("💾 [SITO PUBBLICO] Dati locali per", date, ":", dateData);
     
     if (dateData) {
       const result = { 
@@ -582,10 +582,10 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
         slots: dateData.slots, 
         freeConsultationSlots: dateData.freeConsultationSlots ?? [] 
       };
-      console.log("✅ [SITO PUBBLICO] Risultato locale processato:", result);
+      debugLogSync("✅ [SITO PUBBLICO] Risultato locale processato:", result);
       return result;
     }
-    console.log("❌ [SITO PUBBLICO] Nessun dato trovato per:", date);
+    debugLogSync("❌ [SITO PUBBLICO] Nessun dato trovato per:", date);
     return { date, onlineSlots: [], inStudioSlots: [], freeConsultationSlots: [] } as Availability;
   } catch (error) { 
     console.error("❌ [SITO PUBBLICO] Errore caricamento dati:", error);

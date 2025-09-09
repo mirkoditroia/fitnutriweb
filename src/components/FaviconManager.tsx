@@ -1,12 +1,13 @@
 "use client";
 import { useEffect } from "react";
+import { debugLogSync } from "@/lib/debugUtils";
 
 interface FaviconManagerProps {
   initialFavicon?: string;
 }
 
 export default function FaviconManager({ initialFavicon }: FaviconManagerProps) {
-  console.log(`🚀 FaviconManager inizializzato con favicon: ${initialFavicon || 'nessuno'}`);
+  debugLogSync(`🚀 FaviconManager inizializzato con favicon: ${initialFavicon || 'nessuno'}`);
   
   const updateFavicon = (faviconUrl: string) => {
     if (!faviconUrl) {
@@ -34,7 +35,7 @@ export default function FaviconManager({ initialFavicon }: FaviconManagerProps) 
       if (faviconLink) {
         // Aggiorna semplicemente l'href esistente
         faviconLink.href = `${faviconUrl}?v=${Date.now()}`;
-        console.log(`🎯 Favicon href aggiornato: ${faviconUrl}`);
+        debugLogSync(`🎯 Favicon href aggiornato: ${faviconUrl}`);
       } else {
         // Se non esiste, creane uno nuovo (solo se il documento è pronto)
         if (document.head) {
@@ -43,7 +44,7 @@ export default function FaviconManager({ initialFavicon }: FaviconManagerProps) 
           faviconLink.type = 'image/x-icon';
           faviconLink.href = `${faviconUrl}?v=${Date.now()}`;
           document.head.appendChild(faviconLink);
-          console.log(`🎯 Nuovo favicon creato: ${faviconUrl}`);
+          debugLogSync(`🎯 Nuovo favicon creato: ${faviconUrl}`);
         } else {
           console.warn('Document head non disponibile');
         }
@@ -59,7 +60,7 @@ export default function FaviconManager({ initialFavicon }: FaviconManagerProps) 
     // Ascolta SOLO eventi custom per aggiornamenti immediati
     const handleFaviconUpdate = (event: CustomEvent) => {
       if (isMounted && event.detail?.favicon) {
-        console.log(`📡 Evento favicon ricevuto: ${event.detail.favicon}`);
+        debugLogSync(`📡 Evento favicon ricevuto: ${event.detail.favicon}`);
         updateFavicon(event.detail.favicon);
       }
     };
