@@ -64,9 +64,9 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        transform,
+        transform: `${transform} translateZ(0)`, // ✅ TUTTO si muove insieme
         opacity,
-        transition: isDragging ? 'none' : 'transform 0.2s ease-out, opacity 0.2s ease-out',
+        transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s ease-out',
         cursor: isMobile ? (isDragging ? 'grabbing' : 'grab') : 'default',
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -74,20 +74,22 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
         position: 'relative',
         width: '100%',
         willChange: isDragging ? 'transform, opacity' : 'auto',
+        // ✅ Assicura che tutto il contenuto si muova insieme
+        overflow: 'visible',
       }}
       className={`${isDragging ? 'select-none' : ''} touch-none`}
     >
-      <div style={{ transform: 'translateZ(0)' }}>
-        {children}
-      </div>
+      {/* ✅ Contenuto senza trasformazioni aggiuntive */}
+      {children}
+      
       {/* Swipe indicator for mobile */}
       {isMobile && dragX > 20 && (
         <div 
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs pointer-events-none"
+          className="absolute right-2 top-1/2 text-gray-400 text-xs pointer-events-none"
           style={{ 
             opacity: Math.min(1, dragX / 100),
-            transform: `translateY(-50%) translateZ(0)`,
-            transition: 'none'
+            transform: 'translateY(-50%)', // ✅ Solo centrato verticalmente
+            transition: 'opacity 0.1s ease-out'
           }}
         >
           👆 Scorri per chiudere

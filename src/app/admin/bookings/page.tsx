@@ -167,27 +167,21 @@ export default function AdminBookingsPage() {
       // ✅ FEEDBACK IMMEDIATO: Mostra il toast subito
       toast.success("Prenotazione confermata! Elaborazione in corso...");
       
-      // ✅ OPERAZIONI IN BACKGROUND: Esegui le operazioni pesanti senza bloccare l'UI
-      updateBooking(confirmedBooking).then(() => {
-        // Solo se serve, ricarica i dati per sincronizzare eventuali altre modifiche
-        // ma non blocchiamo l'UI per questo
-        console.log("✅ Booking confermato e cliente elaborato con successo");
-        
-        // Aggiorna solo se ci sono stati altri cambiamenti nel frattempo
-        setTimeout(() => {
-          loadData().catch(err => console.warn("Warning: Sincronizzazione dati fallita:", err));
-        }, 1000);
-        
-      }).catch(error => {
-        console.error("Errore nell'elaborazione background:", error);
-        
-        // ⚠️ ROLLBACK: Se il salvataggio fallisce, ripristina lo stato precedente
-        setItems(prevItems => 
-          prevItems.map(item => 
-            item.id === booking.id ? booking : item
-          )
-        );
-        toast.error("Errore nella conferma della prenotazione - ripristinato stato precedente");
+      // ✅ OPERAZIONI VELOCI: Mantieni il feedback immediato ma con operazioni più semplici
+      await updateBooking(confirmedBooking);
+      
+      // ✅ Creazione cliente se necessario
+      try {
+        await createClientFromPendingBooking(booking);
+      } catch (error) {
+        console.warn("Client creation failed (might already exist):", error);
+      }
+      
+      // ✅ RELOAD VELOCE: Ricarica i dati subito senza delay
+      await loadData();
+      
+      toast.success("Prenotazione confermata e cliente creato/aggiornato!", {
+        duration: 2000
       });
       
     } catch (error) {
