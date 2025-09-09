@@ -519,10 +519,25 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
   // RIMOSSO: Vecchio sistema di eventi sostituito da stato globale
 
+  // ✅ Funzione per rilevare iOS
+  const isIOS = () => {
+    if (typeof window === 'undefined') return false;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  };
+
   const onSubmit = async (data: FormValues) => {
     // ✅ Prevenzione doppi click
     if (isSubmitting) {
       return;
+    }
+    
+    // ✅ iOS debugging
+    if (isIOS()) {
+      console.log("📱 iOS DETECTED - Form submission attempt");
+      console.log("📱 Form data:", data);
+      console.log("📱 CAPTCHA token:", captchaToken ? "presente" : "assente");
+      console.log("📱 User agent:", navigator.userAgent);
     }
     
     // Consenti esplicitamente l'invio anche senza pacchetto in Admin
@@ -545,6 +560,17 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
     // Verifica CAPTCHA se abilitato (skip per admin)
     if (!adminMode && siteContent?.recaptchaEnabled && !captchaToken) {
+      // ✅ iOS: Prova a re-renderizzare il reCAPTCHA se fallisce
+      if (isIOS() && recaptchaRef.current) {
+        console.log("📱 iOS - Tentativo re-render reCAPTCHA");
+        try {
+          recaptchaRef.current.reset();
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error("📱 iOS - Errore re-render reCAPTCHA:", error);
+        }
+      }
+      
       toast.error("Completa la verifica CAPTCHA per continuare", {
         duration: 3000,
         position: 'top-center',
@@ -576,6 +602,13 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       
       // ✅ DEBUGGING: Verifica modalità data e importa funzioni
       console.log("🚀 Tentativo prenotazione consulenza gratuita:", { isFreeConsultation, selectedPackage });
+      
+      // ✅ iOS: Aggiungi delay specifico per iOS per gestire problemi di timing
+      if (isIOS()) {
+        console.log("📱 iOS - Aggiunto delay specifico per stabilità");
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
       try {
         setLoadingStep("Inviando prenotazione...");
         const { createBooking, getDataMode } = await import("@/lib/datasource");
@@ -583,6 +616,16 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.log("🔍 MODALITÀ DATA ATTIVA:", currentDataMode);
         console.log("🌐 NODE_ENV:", process.env.NODE_ENV);
         console.log("🔥 Firebase Config Present:", !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+        
+        // ✅ iOS debugging aggiuntivo
+        if (isIOS()) {
+          console.log("📱 iOS - Payload pre-invio:", {
+            name: bookingData.name,
+            email: bookingData.email,
+            captchaPresent: !!captchaToken,
+            dataMode: currentDataMode
+          });
+        }
         const bookingStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
         
         const bookingPayload = {
@@ -604,7 +647,43 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.log("🎯 VERIFICA FLAG: isFreeConsultation nel payload =", bookingPayload.isFreeConsultation);
         console.log("🎯 VERIFICA FLAG: variabile locale isFreeConsultation =", isFreeConsultation);
         
-        const bookingId = await createBooking(bookingPayload, captchaToken || undefined);
+        // ✅ iOS: Gestione speciale per problemi di fetch
+        let bookingId;
+        if (isIOS()) {
+          console.log("📱 iOS - Tentativo createBooking con gestione speciale");
+          try {
+            // Prova prima con headers specifici iOS
+            bookingId = await createBooking(bookingPayload, captchaToken || undefined);
+          } catch (iosError) {
+            console.error("📱 iOS - Primo tentativo fallito:", iosError);
+            
+            // ✅ Secondo tentativo con fetch nativo per iOS
+            console.log("📱 iOS - Secondo tentativo con API diretta");
+            const response = await fetch("/api/localdb/bookings", {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Cache-Control": "no-cache"
+              },
+              body: JSON.stringify({
+                ...bookingPayload,
+                captchaToken: captchaToken || undefined
+              }),
+              credentials: 'same-origin'
+            });
+            
+            if (!response.ok) {
+              throw new Error(`iOS API fallback failed: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            bookingId = result.id || result.bookingId || "ios-fallback-success";
+            console.log("📱 iOS - Fallback API riuscito:", bookingId);
+          }
+        } else {
+          bookingId = await createBooking(bookingPayload, captchaToken || undefined);
+        }
         
         setLoadingStep("Completato!");
         console.log("✅ Prenotazione creata con successo! ID:", bookingId);
@@ -616,16 +695,28 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         console.error("❌ Errore createBooking principale:", e);
         console.error("❌ Dettaglio errore:", (e as Error).message);
         
+        // ✅ iOS: Gestione errori specifica
+        if (isIOS()) {
+          console.error("📱 iOS - Errore specifico:", e);
+          console.error("📱 iOS - User agent:", navigator.userAgent);
+          console.error("📱 iOS - Network status:", navigator.onLine);
+        }
+        
         // ✅ Solo usare fallback se siamo in modalità locale, non Firebase
         const currentDataMode = (await import("@/lib/datasource")).getDataMode();
         if (currentDataMode === "local") {
           setLoadingStep("Tentativo sistema di backup locale...");
           console.log("🔄 Usando fallback locale in modalità dev...");
-          // Fallback locale
+          // Fallback locale con headers iOS-friendly
           const response = await fetch("/api/localdb/bookings", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+              ...(isIOS() && {"Cache-Control": "no-cache"})
+            },
             body: JSON.stringify(bookingData),
+            ...(isIOS() && {credentials: 'same-origin'})
           });
           if (!response.ok) {
             console.error("❌ Fallback locale fallito anche!");
@@ -634,8 +725,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           setLoadingStep("Backup locale completato!");
           console.log("✅ Fallback locale riuscito");
         } else {
-          // In modalità Firebase, rilancia l'errore originale
-          throw new Error(`Prenotazione fallita in modalità ${currentDataMode}: ${(e as Error).message}`);
+          // In modalità Firebase, rilancia l'errore originale con info iOS
+          const errorMessage = isIOS() 
+            ? `Prenotazione fallita in modalità ${currentDataMode} su iOS: ${(e as Error).message}`
+            : `Prenotazione fallita in modalità ${currentDataMode}: ${(e as Error).message}`;
+          throw new Error(errorMessage);
         }
       }
       
@@ -685,9 +779,25 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       }
     } catch (error) {
       console.error("Errore:", error);
-      // ✅ Toast elegante per errori
-      toast.error("Errore nell'invio della prenotazione. Riprova.", {
-        duration: 4000,
+      
+      // ✅ iOS: Log errore dettagliato
+      if (isIOS()) {
+        console.error("📱 iOS - Errore finale:", {
+          error: error,
+          message: (error as Error).message,
+          userAgent: navigator.userAgent,
+          network: navigator.onLine,
+          captchaToken: captchaToken ? "presente" : "assente"
+        });
+      }
+      
+      // ✅ Toast elegante per errori con messaggio specifico iOS
+      const errorMessage = isIOS() 
+        ? "Errore su iOS. Prova a ricaricare la pagina e ripetere l'operazione."
+        : "Errore nell'invio della prenotazione. Riprova.";
+        
+      toast.error(errorMessage, {
+        duration: isIOS() ? 6000 : 4000,
         position: 'top-center',
         style: {
           background: colors.error,
@@ -702,8 +812,16 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     } finally {
       setIsSubmitting(false);
       setLoadingStep("");
+      
+      // ✅ iOS: Reset CAPTCHA con delay specifico
       if (recaptchaRef.current) {
-        recaptchaRef.current.reset();
+        if (isIOS()) {
+          setTimeout(() => {
+            recaptchaRef.current?.reset();
+          }, 300);
+        } else {
+          recaptchaRef.current.reset();
+        }
       }
     }
   };
@@ -1098,11 +1216,39 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             <ReCAPTCHA
               ref={recaptchaRef}
               sitekey={siteContent.recaptchaSiteKey}
-              onChange={(token) => setCaptchaToken(token)}
-              onExpired={() => setCaptchaToken(null)}
-              onError={() => setCaptchaToken(null)}
+              onChange={(token) => {
+                console.log("🔑 CAPTCHA onChange:", token ? "token ricevuto" : "token null");
+                if (isIOS()) {
+                  console.log("📱 iOS - CAPTCHA token ricevuto");
+                }
+                setCaptchaToken(token);
+              }}
+              onExpired={() => {
+                console.log("⏰ CAPTCHA expired");
+                if (isIOS()) {
+                  console.log("📱 iOS - CAPTCHA scaduto");
+                }
+                setCaptchaToken(null);
+              }}
+              onError={(error) => {
+                console.error("❌ CAPTCHA error:", error);
+                if (isIOS()) {
+                  console.error("📱 iOS - CAPTCHA errore:", error);
+                }
+                setCaptchaToken(null);
+              }}
+              onLoad={() => {
+                console.log("✅ CAPTCHA loaded");
+                if (isIOS()) {
+                  console.log("📱 iOS - CAPTCHA caricato");
+                }
+              }}
             />
-            
+            {isIOS() && (
+              <p className="text-xs text-gray-600 mt-2">
+                📱 Se il CAPTCHA non funziona, prova a ricaricare la pagina
+              </p>
+            )}
           </div>
         )}
 

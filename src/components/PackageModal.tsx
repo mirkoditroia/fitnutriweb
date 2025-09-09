@@ -10,19 +10,29 @@ type Props = {
 export function PackageModal({ pkg, onClose }: Props) {
   const [isOpen, setIsOpen] = useState(true);
 
-  useEffect(() => {
-    // Blocca lo scroll del body quando il modal è aperto
-    document.body.style.overflow = 'hidden';
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
-
   const handleClose = () => {
     setIsOpen(false);
     onClose();
   };
+
+  useEffect(() => {
+    // Blocca lo scroll del body quando il modal è aperto
+    document.body.style.overflow = 'hidden';
+    
+    // Gestione tasto ESC per chiudere il modal
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscKey);
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [handleClose]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -78,7 +88,7 @@ export function PackageModal({ pkg, onClose }: Props) {
         onClick={handleBackdropClick}
       >
         {/* Modal */}
-        <div className="bg-gradient-to-br from-background to-muted/20 text-foreground rounded-t-2xl md:rounded-2xl w-full max-w-3xl h-[90vh] md:max-h-[90vh] shadow-2xl border border-border/50 flex flex-col overflow-hidden">
+        <div className="bg-gradient-to-br from-background to-muted/20 text-foreground rounded-t-2xl md:rounded-2xl w-full max-w-3xl max-h-[80vh] md:max-h-[90vh] shadow-2xl border border-border/50 flex flex-col overflow-hidden">
           {/* Header - responsive spacing */}
           <div className="bg-gradient-to-br from-background to-muted/30 border-b border-border/30 p-4 md:p-6 lg:p-8">
             <div className="flex items-start justify-between gap-3">
@@ -93,16 +103,16 @@ export function PackageModal({ pkg, onClose }: Props) {
                 )}
               </div>
               <button 
-                className="flex-shrink-0 w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2 rounded-full md:rounded-md bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 transition-colors flex items-center justify-center" 
+                className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 transition-colors flex items-center justify-center shadow-md" 
                 onClick={handleClose} 
                 aria-label="Chiudi modal"
               >
-                <span className="text-lg md:text-base font-bold">✕</span>
+                <span className="text-xl md:text-2xl font-bold">✕</span>
               </button>
             </div>
           </div>
           {/* Content scrollable */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 overscroll-contain">
 
             {/* Immagine con overlay gradiente */}
             {pkg.imageUrl && (
@@ -166,6 +176,16 @@ export function PackageModal({ pkg, onClose }: Props) {
                 >
                   <span className="text-center">🚀 Prenota Ora</span>
                 </a>
+              </div>
+              
+              {/* Pulsante chiusura aggiuntivo per mobile */}
+              <div className="mt-6 md:hidden flex justify-center">
+                <button 
+                  onClick={handleClose}
+                  className="w-full py-3 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors border border-gray-300"
+                >
+                  ✕ Chiudi
+                </button>
               </div>
             </div>
           </div>
