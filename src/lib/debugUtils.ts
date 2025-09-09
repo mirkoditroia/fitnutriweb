@@ -1,5 +1,10 @@
 import { getSiteContent } from "@/lib/datasource";
 
+// ⚠️ ATTENZIONE: DIPENDENZA CIRCOLARE RISK!
+// Questo file importa getSiteContent, quindi getSiteContent NON DEVE mai importare
+// le funzioni async di questo file (debugLog, debugError, debugWarn).
+// SOLO debugLogSync è sicuro da usare in getSiteContent!
+
 // Cache per evitare troppe chiamate a getSiteContent
 let debugLogsCache: boolean | null = null;
 let cacheExpiry: number = 0;

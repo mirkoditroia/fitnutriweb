@@ -15,7 +15,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
-import { debugLog, debugError } from "./debugUtils";
+import { debugLog, debugError, debugLogSync } from "./debugUtils";
 
 // Funzione per inviare notifica email per nuova prenotazione al dottore
 async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string, colorPalette?: string) {
@@ -1118,23 +1118,24 @@ export async function getClientByEmail(email: string): Promise<ClientCard | null
 
 // Site content
 export async function getSiteContent(): Promise<SiteContent | null> {
-  await debugLog("getSiteContent: Inizio funzione");
-  await debugLog("getSiteContent: Database configurato:", !!db);
-  await debugLog("getSiteContent: Tipo database:", typeof db);
+  // ⚠️ IMPORTANTE: Usa SOLO debugLogSync qui per evitare dipendenze circolari!
+  debugLogSync("getSiteContent: Inizio funzione");
+  debugLogSync("getSiteContent: Database configurato:", !!db);
+  debugLogSync("getSiteContent: Tipo database:", typeof db);
   
   if (!db) {
-    await debugLog("getSiteContent: Database non configurato, return null");
+    debugLogSync("getSiteContent: Database non configurato, return null");
     return null;
   }
   
   try {
-    await debugLog("getSiteContent: Caricamento contenuto da Firebase...");
+    debugLogSync("getSiteContent: Caricamento contenuto da Firebase...");
   const snap = await getDoc(col.content(db as Firestore));
-    await debugLog("getSiteContent: Snap ricevuto:", snap);
-    await debugLog("getSiteContent: Snap exists:", snap.exists());
+    debugLogSync("getSiteContent: Snap ricevuto:", snap);
+    debugLogSync("getSiteContent: Snap exists:", snap.exists());
     
     if (!snap.exists()) {
-      await debugLog("getSiteContent: Nessun contenuto trovato in Firebase, creo contenuto di default");
+      debugLogSync("getSiteContent: Nessun contenuto trovato in Firebase, creo contenuto di default");
       
       // Crea contenuto di default e salvalo in Firebase
       const defaultContent: SiteContent = {
@@ -1214,7 +1215,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       // Salva il contenuto di default in Firebase
       try {
         await upsertSiteContent(defaultContent);
-        await debugLog("getSiteContent: Contenuto di default salvato in Firebase");
+        debugLogSync("getSiteContent: Contenuto di default salvato in Firebase");
         return defaultContent;
       } catch (saveError) {
         console.error("getSiteContent: Errore nel salvare contenuto di default:", saveError);
@@ -1224,7 +1225,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     }
     
     const data = snap.data();
-    await debugLog("getSiteContent: Contenuto caricato da Firebase:", data);
+    debugLogSync("getSiteContent: Contenuto caricato da Firebase:", data);
     console.log("getSiteContent: Contatti - phone:", data.contactPhone);
     console.log("getSiteContent: Contatti - email:", data.contactEmail);
     console.log("getSiteContent: Contatti - addresses:", data.contactAddresses);
@@ -1427,15 +1428,15 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       }
     };
     
-    await debugLog("getSiteContent: Contenuto finale mappato:", siteContent);
-    await debugLog("🔍 getSiteContent: BMI raw da DB:", data.bmiCalculator);
-    await debugLog("🔍 getSiteContent: BMI mappato finale:", siteContent.bmiCalculator);
-    await debugLog("🔍 getSiteContent: Reviews raw da DB:", data.googleReviews);
-    await debugLog("🔍 getSiteContent: Reviews mappate finale:", siteContent.googleReviews);
-    await debugLog("🔍 getSiteContent: LegalInfo raw da DB:", data.legalInfo);
-    await debugLog("🔍 getSiteContent: LegalInfo mappato finale:", siteContent.legalInfo);
-    await debugLog("🎯 getSiteContent: FAVICON raw da DB:", data.favicon);
-    await debugLog("🎯 getSiteContent: FAVICON mappato finale:", siteContent.favicon);
+    debugLogSync("getSiteContent: Contenuto finale mappato:", siteContent);
+    debugLogSync("🔍 getSiteContent: BMI raw da DB:", data.bmiCalculator);
+    debugLogSync("🔍 getSiteContent: BMI mappato finale:", siteContent.bmiCalculator);
+    debugLogSync("🔍 getSiteContent: Reviews raw da DB:", data.googleReviews);
+    debugLogSync("🔍 getSiteContent: Reviews mappate finale:", siteContent.googleReviews);
+    debugLogSync("🔍 getSiteContent: LegalInfo raw da DB:", data.legalInfo);
+    debugLogSync("🔍 getSiteContent: LegalInfo mappato finale:", siteContent.legalInfo);
+    debugLogSync("🎯 getSiteContent: FAVICON raw da DB:", data.favicon);
+    debugLogSync("🎯 getSiteContent: FAVICON mappato finale:", siteContent.favicon);
     return siteContent;
   } catch (error) {
     console.error("getSiteContent: Errore nel caricamento da Firebase:", error);
@@ -1446,12 +1447,12 @@ export async function getSiteContent(): Promise<SiteContent | null> {
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
   if (!db) throw new Error("Firestore not configured");
   
-  await debugLog("🔥 [Firebase] upsertSiteContent chiamato");
-  await debugLog("🔥 [Firebase] Content originale:", content);
-  await debugLog("🔥 [Firebase] BMI config:", content.bmiCalculator);
-  await debugLog("🔥 [Firebase] Reviews config:", content.googleReviews);
-  await debugLog("🔥 [Firebase] LegalInfo config:", content.legalInfo);
-  await debugLog("🎯 [Firebase] FAVICON config:", content.favicon || "NESSUN FAVICON");
+  debugLogSync("🔥 [Firebase] upsertSiteContent chiamato");
+  debugLogSync("🔥 [Firebase] Content originale:", content);
+  debugLogSync("🔥 [Firebase] BMI config:", content.bmiCalculator);
+  debugLogSync("🔥 [Firebase] Reviews config:", content.googleReviews);
+  debugLogSync("🔥 [Firebase] LegalInfo config:", content.legalInfo);
+  debugLogSync("🎯 [Firebase] FAVICON config:", content.favicon || "NESSUN FAVICON");
   
   // Firestore non accetta valori undefined: rimuoviamoli in modo sicuro
   const sanitized = JSON.parse(JSON.stringify(content));

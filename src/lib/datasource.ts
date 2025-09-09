@@ -27,7 +27,7 @@ import {
   upsertAvailabilityForDate as fb_upsertAvailabilityForDate,
 } from "@/lib/data";
 import { getDataMode } from "@/lib/datamode";
-import { debugLog, debugError } from "@/lib/debugUtils";
+import { debugLog, debugError, debugLogSync } from "@/lib/debugUtils";
 export type { Package, Booking, ClientCard, ClientProgress, SiteContent, Availability } from "@/lib/data";
 
 // ✅ ESPORTA getDataMode per debugging client-side
@@ -442,8 +442,9 @@ export async function createClientFromPendingBooking(booking: Booking): Promise<
 }
 
 export async function getSiteContent(): Promise<SiteContent | null> {
+  // ⚠️ IMPORTANTE: Usa SOLO debugLogSync qui per evitare dipendenze circolari!
   const mode = getDataMode();
-  await debugLog("[getSiteContent] Modalità:", mode, "Server:", typeof window === "undefined");
+  debugLogSync("[getSiteContent] Modalità:", mode, "Server:", typeof window === "undefined");
   
   if (mode === "firebase") return fb_getSiteContent();
   if (mode === "demo") return fetchDemo<SiteContent>("/demo/siteContent.json", { 
@@ -480,13 +481,13 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         : "http://localhost:3000"
       : "";
     
-    await debugLog("[getSiteContent] Tentativo caricamento da:", `${baseUrl}/api/localdb/siteContent`);
+    debugLogSync("[getSiteContent] Tentativo caricamento da:", `${baseUrl}/api/localdb/siteContent`);
     const res = await fetch(`${baseUrl}/api/localdb/siteContent`, { cache: "no-store" });
-    await debugLog("[getSiteContent] Risposta API:", res.status, res.statusText);
+    debugLogSync("[getSiteContent] Risposta API:", res.status, res.statusText);
     
     if (res.ok) {
       const content = (await res.json()) as SiteContent;
-      await debugLog("[getSiteContent] Contenuto caricato, favicon:", content?.favicon || "nessuno");
+      debugLogSync("[getSiteContent] Contenuto caricato, favicon:", content?.favicon || "nessuno");
       return content;
     }
   } catch (error) {
@@ -526,29 +527,29 @@ export async function getSiteContent(): Promise<SiteContent | null> {
 
 export async function upsertSiteContent(content: SiteContent): Promise<void> {
   const mode = getDataMode();
-  await debugLog("[upsertSiteContent] Current mode:", mode);
-  await debugLog("[upsertSiteContent] 📊 BMI config being saved:", content.bmiCalculator);
-  await debugLog("[upsertSiteContent] ⭐ Reviews config being saved:", content.googleReviews);
-  await debugLog("[upsertSiteContent] ⚖️ LegalInfo config being saved:", content.legalInfo);
-  await debugLog("[upsertSiteContent] 🎯 FAVICON being saved:", content.favicon || "NESSUN FAVICON");
+  debugLogSync("[upsertSiteContent] Current mode:", mode);
+  debugLogSync("[upsertSiteContent] 📊 BMI config being saved:", content.bmiCalculator);
+  debugLogSync("[upsertSiteContent] ⭐ Reviews config being saved:", content.googleReviews);
+  debugLogSync("[upsertSiteContent] ⚖️ LegalInfo config being saved:", content.legalInfo);
+  debugLogSync("[upsertSiteContent] 🎯 FAVICON being saved:", content.favicon || "NESSUN FAVICON");
   
   if (mode === "firebase") {
-    await debugLog("[upsertSiteContent] Using Firebase");
-    await debugLog("[upsertSiteContent] 🔥 Calling Firebase upsert...");
+    debugLogSync("[upsertSiteContent] Using Firebase");
+    debugLogSync("[upsertSiteContent] 🔥 Calling Firebase upsert...");
     await fb_upsertSiteContent(content);
-    await debugLog("[upsertSiteContent] ✅ Firebase upsert completed");
+    debugLogSync("[upsertSiteContent] ✅ Firebase upsert completed");
     return;
   }
   
   if (mode === "demo") {
-    await debugLog("[upsertSiteContent] Demo mode - throwing read-only error");
+    debugLogSync("[upsertSiteContent] Demo mode - throwing read-only error");
     throw new Error("Preprod demo read-only");
   }
   
-  await debugLog("[upsertSiteContent] Using local API");
-  await debugLog("[upsertSiteContent] 📤 Sending to local API...");
+  debugLogSync("[upsertSiteContent] Using local API");
+  debugLogSync("[upsertSiteContent] 📤 Sending to local API...");
   const response = await fetch("/api/localdb/siteContent", { method: "POST", body: JSON.stringify(content) });
-  await debugLog("[upsertSiteContent] 📥 Local API response:", response.status, response.statusText);
+  debugLogSync("[upsertSiteContent] 📥 Local API response:", response.status, response.statusText);
   if (!response.ok) {
     throw new Error(`Local API failed: ${response.status} ${response.statusText}`);
   }
