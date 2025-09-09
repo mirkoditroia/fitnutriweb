@@ -1248,7 +1248,6 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                 }
               }}
             />
-            
           </div>
         )}
 

@@ -190,6 +190,23 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
   // Glass navbar using CSS variables
   const headerClasses = 'backdrop-blur-xl border-b border-white/15 shadow-lg shadow-black/30';
 
+  // ✅ Previeni lo scroll del sito quando si interagisce con la navbar
+  const handleNavbarInteraction = (e: React.UIEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Permetti lo scroll solo se siamo nel menu dropdown mobile e c'è contenuto da scrollare
+    if (isOpen) {
+      const target = e.currentTarget as HTMLElement;
+      const dropdownMenu = target.querySelector('.mobile-dropdown');
+      if (dropdownMenu && dropdownMenu.scrollHeight > dropdownMenu.clientHeight) {
+        return; // Permetti scroll del menu dropdown
+      }
+    }
+    e.preventDefault(); // Blocca lo scroll del sito sottostante
+  };
+
   return (
         <header 
           className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${headerClasses}`} 
@@ -197,6 +214,9 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
             backgroundColor: 'var(--navbar-bg)', 
             color: 'var(--navbar-text)'
           }}
+          onScroll={handleNavbarInteraction}
+          onWheel={handleNavbarInteraction}
+          onTouchMove={handleTouchMove}
         >
           <div className="container mx-auto px-4">
             <div className="flex h-16 items-center justify-between">
@@ -237,14 +257,23 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
               </Link>
 
               {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center gap-1">
-                <div className={`flex items-center gap-1 backdrop-blur-lg rounded-full p-2 border bg-white/10 border-white/20`} style={{ color: 'var(--navbar-text)' }}>
+              <nav 
+                className="hidden md:flex items-center gap-1"
+                onWheel={handleNavbarInteraction}
+                onScroll={handleNavbarInteraction}
+              >
+                <div 
+                  className={`flex items-center gap-1 backdrop-blur-lg rounded-full p-2 border bg-white/10 border-white/20`} 
+                  style={{ color: 'var(--navbar-text)' }}
+                  onWheel={handleNavbarInteraction}
+                >
                   {getNavigationItems(siteContent).map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
                       className={`relative px-4 py-2 text-sm font-medium transition-all duration-300 rounded-full group opacity-85 hover:opacity-100 hover:bg-white/15`}
                       style={{ color: 'inherit' }}
+                      onWheel={handleNavbarInteraction}
                     >
                       <span className="relative z-10">{item.name}</span>
                       <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
@@ -255,6 +284,7 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                   href="/admin"
                   className={`ml-4 px-3 py-1 text-xs transition-colors duration-200 rounded-md opacity-80 hover:opacity-100 hover:bg-white/10`}
                   style={{ color: 'var(--navbar-text)' }}
+                  onWheel={handleNavbarInteraction}
                 >
                   Admin
                 </Link>
@@ -265,6 +295,7 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                 className={`md:hidden relative p-2 rounded-lg backdrop-blur-lg border transition-all duration-300 bg-black/40 border-white/15 hover:bg-black/50`}
                 style={{ color: 'var(--navbar-text)' }}
                 onClick={() => setIsOpen(!isOpen)}
+                onWheel={handleNavbarInteraction}
                 aria-label="Toggle menu"
               >
                 <div className="relative w-5 h-5">
@@ -275,7 +306,7 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
             </div>
 
             {/* Mobile Dropdown Menu */}
-            <div className={`md:hidden overflow-hidden transition-all duration-300 ${
+            <div className={`md:hidden overflow-hidden transition-all duration-300 mobile-dropdown ${
               isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             }`}>
               <div 
