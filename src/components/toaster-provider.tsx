@@ -71,7 +71,6 @@ function SwipeableToast({ t, children }: { t: any; children: React.ReactNode }) 
         userSelect: 'none',
         WebkitUserSelect: 'none',
         WebkitTouchCallout: 'none',
-        WebkitUserDrag: 'none',
         position: 'relative',
         width: '100%',
         willChange: isDragging ? 'transform, opacity' : 'auto',

@@ -154,14 +154,47 @@ export default function AdminBookingsPage() {
     if (!booking.id || confirmingBookingId) return; // Evita click multipli
     
     setConfirmingBookingId(booking.id);
+    
     try {
-      await updateBooking({ ...booking, status: "confirmed" });
-      await loadData(); // Reload to get fresh data
-      toast.success("Prenotazione confermata e cliente creato/aggiornato automaticamente!");
+      // ✅ OTTIMIZZAZIONE: Aggiorna immediatamente l'UI locale per feedback istantaneo
+      const confirmedBooking = { ...booking, status: "confirmed" as const };
+      setItems(prevItems => 
+        prevItems.map(item => 
+          item.id === booking.id ? confirmedBooking : item
+        )
+      );
+      
+      // ✅ FEEDBACK IMMEDIATO: Mostra il toast subito
+      toast.success("Prenotazione confermata! Elaborazione in corso...");
+      
+      // ✅ OPERAZIONI IN BACKGROUND: Esegui le operazioni pesanti senza bloccare l'UI
+      updateBooking(confirmedBooking).then(() => {
+        // Solo se serve, ricarica i dati per sincronizzare eventuali altre modifiche
+        // ma non blocchiamo l'UI per questo
+        console.log("✅ Booking confermato e cliente elaborato con successo");
+        
+        // Aggiorna solo se ci sono stati altri cambiamenti nel frattempo
+        setTimeout(() => {
+          loadData().catch(err => console.warn("Warning: Sincronizzazione dati fallita:", err));
+        }, 1000);
+        
+      }).catch(error => {
+        console.error("Errore nell'elaborazione background:", error);
+        
+        // ⚠️ ROLLBACK: Se il salvataggio fallisce, ripristina lo stato precedente
+        setItems(prevItems => 
+          prevItems.map(item => 
+            item.id === booking.id ? booking : item
+          )
+        );
+        toast.error("Errore nella conferma della prenotazione - ripristinato stato precedente");
+      });
+      
     } catch (error) {
       console.error("Error confirming booking:", error);
       toast.error("Errore nella conferma della prenotazione");
     } finally {
+      // ✅ RILASCIO IMMEDIATO: Non aspettiamo le operazioni in background
       setConfirmingBookingId(null);
     }
   };
@@ -174,9 +207,29 @@ export default function AdminBookingsPage() {
     if (!confirmed) return;
 
     try {
-      await deleteBooking(booking.id!);
-      await loadData(); // Reload to get fresh data
-      toast.success("Prenotazione rifiutata ed eliminata. Cliente creato/aggiornato con status inattivo.");
+      // ✅ OTTIMIZZAZIONE: Rimuovi immediatamente dalla UI per feedback veloce
+      setItems(prevItems => prevItems.filter(item => item.id !== booking.id));
+      toast.success("Prenotazione rifiutata! Elaborazione in corso...");
+      
+      // ✅ OPERAZIONI IN BACKGROUND
+      deleteBooking(booking.id!).then(() => {
+        console.log("✅ Prenotazione eliminata con successo");
+        
+        // Sincronizza dopo un breve delay
+        setTimeout(() => {
+          loadData().catch(err => console.warn("Warning: Sincronizzazione dati fallita:", err));
+        }, 1000);
+        
+      }).catch(error => {
+        console.error("Errore nell'elaborazione background:", error);
+        
+        // ⚠️ ROLLBACK: Ripristina la prenotazione in caso di errore
+        setItems(prevItems => [...prevItems, booking].sort((a, b) => 
+          new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
+        ));
+        toast.error("Errore nell'eliminazione della prenotazione - ripristinata");
+      });
+      
     } catch (error) {
       console.error("Error deleting booking:", error);
       toast.error("Errore nell'eliminazione della prenotazione");

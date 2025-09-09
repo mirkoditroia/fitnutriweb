@@ -840,46 +840,53 @@ export async function updateBooking(booking: Booking): Promise<void> {
     }
   }
 
+  // ✅ OTTIMIZZAZIONE: Esegui operazioni cliente e disponibilità in parallelo
+  const backgroundTasks: Promise<void>[] = [];
+  
   // If booking is confirmed, create or update client automatically
   if (booking.status === "confirmed") {
-    try {
-      // Check if client already exists
-      const existingClient = await getClientByEmail(booking.email);
-      
-      if (existingClient) {
-        // Update existing client with booking information
-        await upsertClient({
-          ...existingClient,
-          name: booking.name,
-          phone: booking.phone || existingClient.phone,
-          assignedPackage: booking.packageId || existingClient.assignedPackage,
-          status: "active",
-          source: existingClient.source || "website"
-        });
-      } else {
-        // Create new client from booking
-        const newClient: ClientCard = {
-          name: booking.name,
-          email: booking.email,
-          phone: booking.phone,
-          notes: `Cliente creato automaticamente dalla prenotazione confermata del ${new Date(booking.date).toLocaleDateString("it-IT")}`,
-          status: "active",
-          source: "website",
-          assignedPackage: booking.packageId,
-          goals: [],
-          medicalConditions: [],
-          allergies: [],
-          medications: [],
-          documents: [],
-          createdAt: new Date().toISOString()
-        };
+    const clientTask = (async () => {
+      try {
+        // Check if client already exists
+        const existingClient = await getClientByEmail(booking.email);
         
-        await upsertClient(newClient);
+        if (existingClient) {
+          // Update existing client with booking information
+          await upsertClient({
+            ...existingClient,
+            name: booking.name,
+            phone: booking.phone || existingClient.phone,
+            assignedPackage: booking.packageId || existingClient.assignedPackage,
+            status: "active",
+            source: existingClient.source || "website"
+          });
+        } else {
+          // Create new client from booking
+          const newClient: ClientCard = {
+            name: booking.name,
+            email: booking.email,
+            phone: booking.phone,
+            notes: `Cliente creato automaticamente dalla prenotazione confermata del ${new Date(booking.date).toLocaleDateString("it-IT")}`,
+            status: "active",
+            source: "website",
+            assignedPackage: booking.packageId,
+            goals: [],
+            medicalConditions: [],
+            allergies: [],
+            medications: [],
+            documents: [],
+            createdAt: new Date().toISOString()
+          };
+          
+          await upsertClient(newClient);
+        }
+      } catch (error) {
+        console.error("Error creating/updating client from booking:", error);
+        // Don't throw here as the main booking update was successful
       }
-    } catch (error) {
-      console.error("Error creating/updating client from booking:", error);
-      // Don't throw here as the main booking update was successful
-    }
+    })();
+    
+    backgroundTasks.push(clientTask);
   }
   
   // If booking is confirmed and has a slot, remove that slot from availability
