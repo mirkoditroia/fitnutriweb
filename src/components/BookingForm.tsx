@@ -1248,11 +1248,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
                 }
               }}
             />
-            {isIOS() && (
-              <p className="text-xs text-gray-600 mt-2">
-                📱 Se il CAPTCHA non funziona, prova a ricaricare la pagina
-              </p>
-            )}
+            
           </div>
         )}
 
