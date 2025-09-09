@@ -102,6 +102,17 @@ export default function AdminContentPage() {
               heroBackgroundImage: "", 
               images: [],
               colorPalette: "gz-default" as const,
+              // ✅ Meta Tags di default
+              metaTags: {
+                title: "",
+                description: "",
+                siteUrl: "",
+                image: "",
+                siteName: "GZnutrition",
+                twitterCard: "summary_large_image" as "summary" | "summary_large_image",
+                ogType: "website",
+                locale: "it_IT"
+              },
               sectionVisibility: {
                 hero: true,
                 about: true,
@@ -121,17 +132,6 @@ export default function AdminContentPage() {
                 subtitle: "Cosa dicono i nostri clienti",
                 businessName: "GZ Nutrition",
                 reviews: []
-              },
-              // ✅ Meta Tags di default
-              metaTags: {
-                title: "",
-                description: "",
-                siteUrl: "",
-                image: "",
-                siteName: "GZnutrition",
-                twitterCard: "summary_large_image" as "summary" | "summary_large_image",
-                ogType: "website",
-                locale: "it_IT"
               },
               // ✅ Legal Info di default
               legalInfo: {
@@ -2177,13 +2177,16 @@ export default function AdminContentPage() {
               </label>
               <Input
                 value={content.metaTags?.title || ""}
-                onChange={(e) => setContent({
-                  ...content,
-                  metaTags: {
-                    ...content.metaTags,
-                    title: e.target.value
-                  }
-                })}
+                onChange={(e) => {
+                  console.log("🔗 CAMBIO Meta title:", e.target.value);
+                  setContent({
+                    ...content,
+                    metaTags: {
+                      ...content.metaTags,
+                      title: e.target.value
+                    }
+                  });
+                }}
                 placeholder="Es. GZnutrition — Trasformazione fisica"
                 className={fieldCls}
               />
@@ -2199,13 +2202,16 @@ export default function AdminContentPage() {
               </label>
               <textarea
                 value={content.metaTags?.description || ""}
-                onChange={(e) => setContent({
-                  ...content,
-                  metaTags: {
-                    ...content.metaTags,
-                    description: e.target.value
-                  }
-                })}
+                onChange={(e) => {
+                  console.log("🔗 CAMBIO Meta description:", e.target.value);
+                  setContent({
+                    ...content,
+                    metaTags: {
+                      ...content.metaTags,
+                      description: e.target.value
+                    }
+                  });
+                }}
                 placeholder="Breve descrizione del tuo servizio..."
                 rows={3}
                 className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
