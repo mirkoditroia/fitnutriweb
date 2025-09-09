@@ -190,28 +190,50 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
   // Glass navbar using CSS variables
   const headerClasses = 'backdrop-blur-xl border-b border-white/15 shadow-lg shadow-black/30';
 
-  // ✅ Previeni lo scroll del sito quando si interagisce con la navbar
-  const handleWheelEvent = (e: React.WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
+  // ✅ Gestione scroll navbar con approccio più robusto
+  useEffect(() => {
+    const navbar = document.querySelector('header');
+    if (!navbar) return;
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    // Permetti lo scroll solo se siamo nel menu dropdown mobile e c'è contenuto da scrollare
-    if (isOpen) {
-      const dropdownMenu = e.currentTarget.querySelector('.mobile-dropdown');
-      if (dropdownMenu && dropdownMenu.scrollHeight > dropdownMenu.clientHeight) {
-        return; // Permetti scroll del menu dropdown
-      }
-    }
-    e.preventDefault(); // Blocca lo scroll del sito sottostante
-    e.stopPropagation();
-  };
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
 
-  const handleScrollEvent = (e: React.UIEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
+    const handleMouseEnter = () => {
+      // Disabilita scroll del body quando si entra nella navbar
+      document.body.style.overflow = 'hidden';
+      
+      // Aggiungi listeners per bloccare tutti i tipi di scroll
+      navbar.addEventListener('wheel', preventScroll, { passive: false });
+      navbar.addEventListener('scroll', preventScroll, { passive: false });
+      navbar.addEventListener('touchmove', preventScroll, { passive: false });
+    };
+
+    const handleMouseLeave = () => {
+      // Riabilita scroll del body quando si esce dalla navbar
+      document.body.style.overflow = 'unset';
+      
+      // Rimuovi listeners
+      navbar.removeEventListener('wheel', preventScroll);
+      navbar.removeEventListener('scroll', preventScroll);
+      navbar.removeEventListener('touchmove', preventScroll);
+    };
+
+    navbar.addEventListener('mouseenter', handleMouseEnter);
+    navbar.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      navbar.removeEventListener('mouseenter', handleMouseEnter);
+      navbar.removeEventListener('mouseleave', handleMouseLeave);
+      navbar.removeEventListener('wheel', preventScroll);
+      navbar.removeEventListener('scroll', preventScroll);
+      navbar.removeEventListener('touchmove', preventScroll);
+      // Assicurati che lo scroll sia riabilitato alla pulizia
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   return (
         <header 
@@ -220,19 +242,9 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
             backgroundColor: 'var(--navbar-bg)', 
             color: 'var(--navbar-text)'
           }}
-          onScroll={handleScrollEvent}
-          onWheel={handleWheelEvent}
-          onTouchMove={handleTouchMove}
         >
-          <div 
-            className="container mx-auto px-4"
-            onWheel={handleWheelEvent}
-            onTouchMove={handleTouchMove}
-          >
-            <div 
-              className="flex h-16 items-center justify-between"
-              onWheel={handleWheelEvent}
-            >
+          <div className="container mx-auto px-4">
+            <div className="flex h-16 items-center justify-between">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-2">
                 {brand?.mode === "image" && brand?.imageUrl ? (
@@ -270,15 +282,10 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
               </Link>
 
               {/* Desktop Navigation */}
-              <nav 
-                className="hidden md:flex items-center gap-1"
-                onWheel={handleWheelEvent}
-                onScroll={handleScrollEvent}
-              >
+              <nav className="hidden md:flex items-center gap-1">
                 <div 
                   className={`flex items-center gap-1 backdrop-blur-lg rounded-full p-2 border bg-white/10 border-white/20`} 
                   style={{ color: 'var(--navbar-text)' }}
-                  onWheel={handleWheelEvent}
                 >
                   {getNavigationItems(siteContent).map((item) => (
                     <Link
@@ -286,7 +293,6 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                       href={item.href}
                       className={`relative px-4 py-2 text-sm font-medium transition-all duration-300 rounded-full group opacity-85 hover:opacity-100 hover:bg-white/15`}
                       style={{ color: 'inherit' }}
-                      onWheel={handleWheelEvent}
                     >
                       <span className="relative z-10">{item.name}</span>
                       <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
@@ -297,7 +303,6 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                   href="/admin"
                   className={`ml-4 px-3 py-1 text-xs transition-colors duration-200 rounded-md opacity-80 hover:opacity-100 hover:bg-white/10`}
                   style={{ color: 'var(--navbar-text)' }}
-                  onWheel={handleWheelEvent}
                 >
                   Admin
                 </Link>
@@ -308,7 +313,6 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                 className={`md:hidden relative p-2 rounded-lg backdrop-blur-lg border transition-all duration-300 bg-black/40 border-white/15 hover:bg-black/50`}
                 style={{ color: 'var(--navbar-text)' }}
                 onClick={() => setIsOpen(!isOpen)}
-                onWheel={handleWheelEvent}
                 aria-label="Toggle menu"
               >
                 <div className="relative w-5 h-5">
@@ -319,21 +323,14 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
             </div>
 
             {/* Mobile Dropdown Menu */}
-            <div 
-              className={`md:hidden overflow-hidden transition-all duration-300 mobile-dropdown ${
-                isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-              }`}
-              onWheel={handleWheelEvent}
-            >
+            <div className={`md:hidden overflow-hidden transition-all duration-300 mobile-dropdown ${
+              isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}>
               <div 
                 className={`backdrop-blur-xl rounded-2xl mt-2 mb-4 shadow-lg bg-black border border-white/15`}
                 style={{ color: 'var(--navbar-text)' }}
-                onWheel={handleWheelEvent}
               >
-                <nav 
-                  className="p-4 space-y-2"
-                  onWheel={handleWheelEvent}
-                >
+                <nav className="p-4 space-y-2">
                   {getNavigationItems(siteContent).map((item, index) => (
                     <Link
                       key={item.name}
@@ -341,7 +338,6 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                       className={`block px-4 py-3 text-sm font-medium transition-all duration-300 rounded-xl group relative overflow-hidden opacity-85 hover:opacity-100 hover:bg-white/10`}
                       style={{ color: 'inherit', animationDelay: `${index * 50}ms` }}
                       onClick={() => setIsOpen(false)}
-                      onWheel={handleWheelEvent}
                     >
                       <span className="relative z-10">{item.name}</span>
                       <div className={`absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 translate-x-full group-hover:translate-x-0 transition-transform duration-300`} />
@@ -353,7 +349,6 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                       className={`block px-4 py-2 text-xs transition-colors duration-200 rounded-lg opacity-80 hover:opacity-100 hover:bg-white/10`}
                       style={{ color: 'inherit' }}
                       onClick={() => setIsOpen(false)}
-                      onWheel={handleWheelEvent}
                     >
                       Admin
                     </Link>

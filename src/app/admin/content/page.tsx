@@ -37,15 +37,15 @@ export default function AdminContentPage() {
                 reviews: []
               },
               // ✅ Aggiungi Meta Tags se non esistono
-              metaTags: c.metaTags ?? {
-                title: "",
-                description: "",
-                siteUrl: "",
-                image: "",
-                siteName: "GZnutrition",
-                twitterCard: "summary_large_image" as "summary" | "summary_large_image",
-                ogType: "website",
-                locale: "it_IT"
+              metaTags: {
+                title: c.metaTags?.title || "",
+                description: c.metaTags?.description || "",
+                siteUrl: c.metaTags?.siteUrl || "",
+                image: c.metaTags?.image || "",
+                siteName: c.metaTags?.siteName || "GZnutrition",
+                twitterCard: (c.metaTags?.twitterCard as "summary" | "summary_large_image") || "summary_large_image",
+                ogType: c.metaTags?.ogType || "website",
+                locale: c.metaTags?.locale || "it_IT"
               },
               // ✅ Aggiungi Legal Info se non esiste
               legalInfo: c.legalInfo ?? {
