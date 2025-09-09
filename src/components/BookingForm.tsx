@@ -526,18 +526,39 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   };
 
-  // ✅ Funzione per rilevare modalità incognito
+  // ✅ Funzione per rilevare modalità incognito (migliorata)
   const isIncognito = () => {
     if (typeof window === 'undefined') return false;
+    
+    // Test multipli per maggiore affidabilità
     try {
-      // Test per Chrome/Safari incognito
+      // Test 1: localStorage
       const testKey = `incognito-test-${Date.now()}`;
       localStorage.setItem(testKey, 'test');
       localStorage.removeItem(testKey);
-      return false;
     } catch {
+      console.log("🕵️ INCOGNITO: Rilevato tramite localStorage test");
       return true;
     }
+    
+    try {
+      // Test 2: sessionStorage
+      const testKey = `session-test-${Date.now()}`;
+      sessionStorage.setItem(testKey, 'test');
+      sessionStorage.removeItem(testKey);
+    } catch {
+      console.log("🕵️ INCOGNITO: Rilevato tramite sessionStorage test");
+      return true;
+    }
+    
+    // Test 3: IndexedDB (per Firefox incognito)
+    if (!window.indexedDB) {
+      console.log("🕵️ INCOGNITO: Rilevato tramite IndexedDB test");
+      return true;
+    }
+    
+    console.log("🕵️ INCOGNITO: Non rilevato - modalità normale");
+    return false;
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -547,7 +568,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     }
 
     // 🕵️ BLOCCO COMPLETO per modalità incognito
-    if (isIncognito()) {
+    const incognitoDetected = isIncognito();
+    console.log("🕵️ Controllo incognito nel submit:", incognitoDetected);
+    
+    if (incognitoDetected) {
+      console.log("🚫 BLOCCO: Form submission bloccato per modalità incognito");
       toast.error("⚠️ La prenotazione non è disponibile in modalità incognito. Per continuare, apri il sito in modalità normale.", {
         duration: 6000,
         position: 'top-center',
@@ -591,8 +616,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       return;
     }
 
-    // Verifica CAPTCHA se abilitato (skip per admin)
-    if (!adminMode && siteContent?.recaptchaEnabled && !captchaToken) {
+    // Verifica CAPTCHA se abilitato (skip per admin e modalità incognito)
+    if (!adminMode && siteContent?.recaptchaEnabled && !captchaToken && !incognitoDetected) {
       // ✅ iOS: Prova a re-renderizzare il reCAPTCHA se fallisce
       if (isIOS() && recaptchaRef.current) {
         console.log("📱 iOS - Tentativo re-render reCAPTCHA");
@@ -1306,7 +1331,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         {/* Submit */}
         <Button
           type="submit"
-          disabled={isSubmitting || (!adminMode && siteContent?.recaptchaEnabled && !captchaToken)}
+          disabled={isSubmitting || (!adminMode && siteContent?.recaptchaEnabled && !captchaToken) || isIncognito()}
           className="w-full relative transition-all duration-300"
           style={{
             background: isSubmitting 
@@ -1353,13 +1378,15 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             </div>
           )}
           <span className={`font-semibold transition-all duration-300 ${isSubmitting ? "ml-8" : ""}`}>
-            {isSubmitting 
-              ? "Invio in corso..." 
-              : !selectedPackage
-                ? "Invia richiesta"
-                : showPromotionalBanner 
-                  ? "Prenota Consultazione Gratuita" 
-                  : "Prenota Consulenza"
+            {isIncognito()
+              ? "🕵️ Non disponibile in modalità incognito"
+              : isSubmitting 
+                ? "Invio in corso..." 
+                : !selectedPackage
+                  ? "Invia richiesta"
+                  : showPromotionalBanner 
+                    ? "Prenota Consultazione Gratuita" 
+                    : "Prenota Consulenza"
             }
           </span>
         </Button>
