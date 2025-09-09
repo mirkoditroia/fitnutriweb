@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CookieBanner } from "@/components/CookieBanner";
 import ToasterProvider from "@/components/toaster-provider";
+import FaviconManager from "@/components/FaviconManager";
 import { generateCSSVariables, getPaletteConfig } from "@/lib/palettes";
 import { getSiteContent } from "@/lib/datasource";
 import { getDataMode } from "@/lib/datamode";
@@ -141,12 +142,10 @@ export default async function RootLayout({
         {initialBrand?.mode === 'image' && initialBrand.imageUrl && (
           <link rel="preload" as="image" href={initialBrand.imageUrl} />
         )}
-        {/* Favicon dinamico */}
-        {initialSiteContent?.favicon && (
-          <link rel="icon" href={initialSiteContent.favicon} />
-        )}
+        {/* Favicon dinamico gestito da FaviconManager component */}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 font-sans`}>
+        <FaviconManager initialFavicon={initialSiteContent?.favicon} />
         <Navbar initialBrand={initialBrand} initialSiteContent={initialSiteContent} />
         <ToasterProvider />
         {children}
