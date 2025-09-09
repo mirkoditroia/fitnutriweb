@@ -1221,6 +1221,17 @@ export async function getSiteContent(): Promise<SiteContent | null> {
           title: "🎯 Risultati dei Nostri Clienti",
           subtitle: "Trasformazioni reali di persone reali. Questi sono alcuni dei successi raggiunti insieme.",
           photos: []
+        },
+        // ✅ AGGIUNTO: metaTags di default nel contenuto iniziale
+        metaTags: {
+          title: "",
+          description: "",
+          siteUrl: "",
+          image: "",
+          siteName: "GZnutrition",
+          twitterCard: "summary_large_image" as const,
+          ogType: "website",
+          locale: "it_IT"
         }
       };
       
@@ -1329,6 +1340,26 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       },
       colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
       favicon: data.favicon || undefined, // ✅ AGGIUNTO: Mapping del favicon da Firebase
+      // ✅ AGGIUNTO: Mapping dei metaTags da Firebase
+      metaTags: data.metaTags ? {
+        title: data.metaTags.title || "",
+        description: data.metaTags.description || "",
+        siteUrl: data.metaTags.siteUrl || "",
+        image: data.metaTags.image || "",
+        siteName: data.metaTags.siteName || "GZnutrition",
+        twitterCard: (data.metaTags.twitterCard as "summary" | "summary_large_image") || "summary_large_image",
+        ogType: data.metaTags.ogType || "website",
+        locale: data.metaTags.locale || "it_IT"
+      } : {
+        title: "",
+        description: "",
+        siteUrl: "",
+        image: "",
+        siteName: "GZnutrition",
+        twitterCard: "summary_large_image" as const,
+        ogType: "website",
+        locale: "it_IT"
+      },
       debugLogsEnabled: data.debugLogsEnabled !== false, // ✅ AGGIUNTO: Debug logs abilitati di default
       notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com",
       businessName: data.businessName || "GZ Nutrition",
@@ -1449,6 +1480,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     debugLogSync("🔍 getSiteContent: LegalInfo mappato finale:", siteContent.legalInfo);
     debugLogSync("🎯 getSiteContent: FAVICON raw da DB:", data.favicon);
     debugLogSync("🎯 getSiteContent: FAVICON mappato finale:", siteContent.favicon);
+    debugLogSync("🔗 getSiteContent: META TAGS raw da DB:", data.metaTags);
+    debugLogSync("🔗 getSiteContent: META TAGS mappati finale:", siteContent.metaTags);
     return siteContent;
   } catch (error) {
     console.error("getSiteContent: Errore nel caricamento da Firebase:", error);
