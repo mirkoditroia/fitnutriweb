@@ -1,6 +1,5 @@
 "use client";
 import { useEffect } from "react";
-import { getSiteContent } from "@/lib/datasource";
 
 interface FaviconManagerProps {
   initialFavicon?: string;
@@ -8,6 +7,7 @@ interface FaviconManagerProps {
 
 export default function FaviconManager({ initialFavicon }: FaviconManagerProps) {
   console.log(`🚀 FaviconManager inizializzato con favicon: ${initialFavicon || 'nessuno'}`);
+  
   const updateFavicon = (faviconUrl: string) => {
     if (!faviconUrl) {
       console.warn('updateFavicon chiamato senza URL');
@@ -15,65 +15,48 @@ export default function FaviconManager({ initialFavicon }: FaviconManagerProps) 
     }
 
     try {
-      // Rimuovi tutti i favicon esistenti in modo sicuro
-      const existingFavicons = document.querySelectorAll('link[rel*="icon"]');
-      existingFavicons.forEach(link => {
-        try {
-          if (link && link.parentNode) {
-            link.parentNode.removeChild(link);
-          }
-        } catch (error) {
-          console.warn('Errore nella rimozione del favicon esistente:', error);
-        }
-      });
-      
-      // Aggiungi il nuovo favicon con cache busting
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      link.type = 'image/x-icon';
-      link.href = `${faviconUrl}?v=${Date.now()}`;
-      
-      // Verifica che head esista prima di aggiungere
-      if (document.head) {
-        document.head.appendChild(link);
-        console.log(`🎯 Favicon aggiornato: ${faviconUrl}`);
+      // Aspetta che il DOM sia completamente caricato
+      if (document.readyState !== 'loading') {
+        doUpdateFavicon(faviconUrl);
       } else {
-        console.warn('Document head non disponibile per aggiungere il favicon');
+        document.addEventListener('DOMContentLoaded', () => doUpdateFavicon(faviconUrl));
       }
     } catch (error) {
       console.error('Errore nell\'aggiornamento del favicon:', error);
     }
   };
 
-  const checkForFaviconUpdates = async () => {
+  const doUpdateFavicon = (faviconUrl: string) => {
     try {
-      const siteContent = await getSiteContent();
-      if (siteContent?.favicon) {
-        // Controlla se il favicon è diverso da quello attuale
-        const currentFavicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-        const currentUrl = currentFavicon?.href?.split('?')[0]; // Rimuovi query parameters
-        const newUrl = siteContent.favicon;
-        
-        if (!currentFavicon || currentUrl !== newUrl) {
-          console.log(`🔄 Favicon change detected: ${currentUrl} -> ${newUrl}`);
-          updateFavicon(siteContent.favicon);
+      // Strategia semplificata: cerca il favicon esistente e aggiorna solo l'href
+      let faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      
+      if (faviconLink) {
+        // Aggiorna semplicemente l'href esistente
+        faviconLink.href = `${faviconUrl}?v=${Date.now()}`;
+        console.log(`🎯 Favicon href aggiornato: ${faviconUrl}`);
+      } else {
+        // Se non esiste, creane uno nuovo (solo se il documento è pronto)
+        if (document.head) {
+          faviconLink = document.createElement('link');
+          faviconLink.rel = 'icon';
+          faviconLink.type = 'image/x-icon';
+          faviconLink.href = `${faviconUrl}?v=${Date.now()}`;
+          document.head.appendChild(faviconLink);
+          console.log(`🎯 Nuovo favicon creato: ${faviconUrl}`);
+        } else {
+          console.warn('Document head non disponibile');
         }
       }
     } catch (error) {
-      console.error("Errore nel controllare il favicon:", error);
+      console.error('Errore in doUpdateFavicon:', error);
     }
   };
 
   useEffect(() => {
     let isMounted = true;
-    let intervalId: NodeJS.Timeout | null = null;
 
-    // Imposta il favicon iniziale se disponibile
-    if (initialFavicon && isMounted) {
-      updateFavicon(initialFavicon);
-    }
-
-    // Ascolta eventi custom per aggiornamenti immediati
+    // Ascolta SOLO eventi custom per aggiornamenti immediati
     const handleFaviconUpdate = (event: CustomEvent) => {
       if (isMounted && event.detail?.favicon) {
         console.log(`📡 Evento favicon ricevuto: ${event.detail.favicon}`);
@@ -81,41 +64,20 @@ export default function FaviconManager({ initialFavicon }: FaviconManagerProps) 
       }
     };
 
-    // Controlla aggiornamenti periodicamente (solo per backup)
-    const startPolling = () => {
-      if (intervalId) clearInterval(intervalId);
-      intervalId = setInterval(() => {
-        if (isMounted) {
-          checkForFaviconUpdates();
-        }
-      }, 10000); // Ridotto a 10 secondi per essere meno aggressivo
-    };
-
-    // Setup iniziale
-    const setupFavicon = async () => {
-      if (isMounted) {
-        console.log('🔧 Setup FaviconManager: controllo aggiornamenti...');
-        await checkForFaviconUpdates();
-        console.log('🔧 Setup FaviconManager: avvio polling...');
-        startPolling();
-      }
-    };
-
-    // Aggiungi event listener
+    // Aggiungi event listener per eventi custom
     window.addEventListener('faviconUpdated', handleFaviconUpdate as EventListener);
-    
-    // Setup iniziale ritardato per evitare race conditions
-    setTimeout(() => {
-      if (isMounted) {
-        setupFavicon();
-      }
-    }, 100);
+
+    // Imposta il favicon iniziale dopo un breve delay per evitare race conditions
+    if (initialFavicon && isMounted) {
+      setTimeout(() => {
+        if (isMounted) {
+          updateFavicon(initialFavicon);
+        }
+      }, 50);
+    }
 
     return () => {
       isMounted = false;
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
       window.removeEventListener('faviconUpdated', handleFaviconUpdate as EventListener);
     };
   }, [initialFavicon]);

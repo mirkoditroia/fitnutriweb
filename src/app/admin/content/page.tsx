@@ -666,14 +666,6 @@ export default function AdminContentPage() {
                     window.dispatchEvent(faviconUpdateEvent);
                     
                     console.log("🎯 Evento faviconUpdated emesso per:", url);
-                    
-                    // Forza un refresh della pagina dopo 2 secondi per assicurarsi che sia persistente
-                    setTimeout(() => {
-                      console.log("🔄 Verifica persistence favicon...");
-                      window.dispatchEvent(new CustomEvent('faviconUpdated', {
-                        detail: { favicon: url }
-                      }));
-                    }, 2000);
                   } catch (error) {
                     console.error("Errore nel salvare il favicon:", error);
                     toast.error("❌ Favicon caricato ma errore nel salvataggio. Clicca 'Salva Contenuti' manualmente.");
