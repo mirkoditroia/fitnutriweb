@@ -7,24 +7,42 @@ interface FaviconManagerProps {
 }
 
 export default function FaviconManager({ initialFavicon }: FaviconManagerProps) {
+  console.log(`🚀 FaviconManager inizializzato con favicon: ${initialFavicon || 'nessuno'}`);
   const updateFavicon = (faviconUrl: string) => {
-    // Rimuovi tutti i favicon esistenti
-    const existingFavicons = document.querySelectorAll('link[rel*="icon"]');
-    existingFavicons.forEach(link => link.remove());
-    
-    // Aggiungi il nuovo favicon con cache busting
-    const link = document.createElement('link');
-    link.rel = 'icon';
-    link.href = `${faviconUrl}?v=${Date.now()}`;
-    document.head.appendChild(link);
-    
-    // Aggiungi anche shortcut icon per compatibilità
-    const shortcutLink = document.createElement('link');
-    shortcutLink.rel = 'shortcut icon';
-    shortcutLink.href = `${faviconUrl}?v=${Date.now()}`;
-    document.head.appendChild(shortcutLink);
-    
-    console.log(`🎯 Favicon aggiornato: ${faviconUrl}`);
+    if (!faviconUrl) {
+      console.warn('updateFavicon chiamato senza URL');
+      return;
+    }
+
+    try {
+      // Rimuovi tutti i favicon esistenti in modo sicuro
+      const existingFavicons = document.querySelectorAll('link[rel*="icon"]');
+      existingFavicons.forEach(link => {
+        try {
+          if (link && link.parentNode) {
+            link.parentNode.removeChild(link);
+          }
+        } catch (error) {
+          console.warn('Errore nella rimozione del favicon esistente:', error);
+        }
+      });
+      
+      // Aggiungi il nuovo favicon con cache busting
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/x-icon';
+      link.href = `${faviconUrl}?v=${Date.now()}`;
+      
+      // Verifica che head esista prima di aggiungere
+      if (document.head) {
+        document.head.appendChild(link);
+        console.log(`🎯 Favicon aggiornato: ${faviconUrl}`);
+      } else {
+        console.warn('Document head non disponibile per aggiungere il favicon');
+      }
+    } catch (error) {
+      console.error('Errore nell\'aggiornamento del favicon:', error);
+    }
   };
 
   const checkForFaviconUpdates = async () => {
@@ -37,6 +55,7 @@ export default function FaviconManager({ initialFavicon }: FaviconManagerProps) 
         const newUrl = siteContent.favicon;
         
         if (!currentFavicon || currentUrl !== newUrl) {
+          console.log(`🔄 Favicon change detected: ${currentUrl} -> ${newUrl}`);
           updateFavicon(siteContent.favicon);
         }
       }
@@ -46,57 +65,57 @@ export default function FaviconManager({ initialFavicon }: FaviconManagerProps) 
   };
 
   useEffect(() => {
+    let isMounted = true;
+    let intervalId: NodeJS.Timeout | null = null;
+
     // Imposta il favicon iniziale se disponibile
-    if (initialFavicon) {
+    if (initialFavicon && isMounted) {
       updateFavicon(initialFavicon);
     }
 
-    // Controlla aggiornamenti ogni 5 secondi quando la pagina è attiva
-    let intervalId: NodeJS.Timeout;
-    
-    const startPolling = () => {
-      intervalId = setInterval(checkForFaviconUpdates, 5000);
-    };
-    
-    const stopPolling = () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-
-    // Avvia il polling quando la pagina diventa visibile
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        checkForFaviconUpdates(); // Check immediato
-        startPolling();
-      } else {
-        stopPolling();
-      }
-    };
-
-    // Controlla subito al mount
-    checkForFaviconUpdates();
-    
-    // Avvia il polling se la pagina è visibile
-    if (document.visibilityState === 'visible') {
-      startPolling();
-    }
-
-    // Ascolta i cambi di visibilità
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     // Ascolta eventi custom per aggiornamenti immediati
     const handleFaviconUpdate = (event: CustomEvent) => {
-      if (event.detail?.favicon) {
+      if (isMounted && event.detail?.favicon) {
+        console.log(`📡 Evento favicon ricevuto: ${event.detail.favicon}`);
         updateFavicon(event.detail.favicon);
       }
     };
 
+    // Controlla aggiornamenti periodicamente (solo per backup)
+    const startPolling = () => {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = setInterval(() => {
+        if (isMounted) {
+          checkForFaviconUpdates();
+        }
+      }, 10000); // Ridotto a 10 secondi per essere meno aggressivo
+    };
+
+    // Setup iniziale
+    const setupFavicon = async () => {
+      if (isMounted) {
+        console.log('🔧 Setup FaviconManager: controllo aggiornamenti...');
+        await checkForFaviconUpdates();
+        console.log('🔧 Setup FaviconManager: avvio polling...');
+        startPolling();
+      }
+    };
+
+    // Aggiungi event listener
     window.addEventListener('faviconUpdated', handleFaviconUpdate as EventListener);
+    
+    // Setup iniziale ritardato per evitare race conditions
+    setTimeout(() => {
+      if (isMounted) {
+        setupFavicon();
+      }
+    }, 100);
 
     return () => {
-      stopPolling();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      isMounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
       window.removeEventListener('faviconUpdated', handleFaviconUpdate as EventListener);
     };
   }, [initialFavicon]);
