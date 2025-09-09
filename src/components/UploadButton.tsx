@@ -8,13 +8,15 @@ interface UploadButtonProps {
   onUploaded: (url: string) => void;
   accept?: string;
   maxSize?: number; // in MB
+  children?: React.ReactNode; // Testo personalizzato del pulsante
 }
 
 export function UploadButton({ 
   folder, 
   onUploaded, 
   accept = ".pdf,.doc,.docx,.jpg,.jpeg,.png", 
-  maxSize = 10 
+  maxSize = 10,
+  children
 }: UploadButtonProps) {
   const [uploading, setUploading] = useState(false);
   // Generate a unique ID per component instance so multiple upload buttons can coexist
@@ -93,7 +95,7 @@ export function UploadButton({
         className="cursor-pointer"
         onClick={() => !uploading && inputRef.current?.click()}
       >
-        {uploading ? "⏳ Caricamento..." : "📁 Carica File"}
+        {uploading ? "⏳ Caricamento..." : (children || "📁 Carica File")}
       </Button>
       <span className="text-xs text-foreground/60">
         Max {maxSize}MB

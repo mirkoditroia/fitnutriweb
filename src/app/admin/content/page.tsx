@@ -2273,8 +2273,9 @@ export default function AdminContentPage() {
                     }
                   })}
                   folder="meta"
-                  label="📤 Carica Immagine"
-                />
+                >
+                  📤 Carica Immagine
+                </UploadButton>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Dimensioni consigliate: 1200x630px. Se vuoto, usa l'immagine di sfondo della sezione Hero
