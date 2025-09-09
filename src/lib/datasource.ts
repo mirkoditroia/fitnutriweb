@@ -530,7 +530,6 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
   console.log("[upsertSiteContent] ⭐ Reviews config being saved:", content.googleReviews);
   console.log("[upsertSiteContent] ⚖️ LegalInfo config being saved:", content.legalInfo);
   console.log("[upsertSiteContent] 🎯 FAVICON being saved:", content.favicon || "NESSUN FAVICON");
-  console.log("[upsertSiteContent] 📄 CONTENT COMPLETO:", JSON.stringify(content, null, 2));
   
   if (mode === "firebase") {
     console.log("[upsertSiteContent] Using Firebase");

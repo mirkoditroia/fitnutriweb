@@ -656,7 +656,6 @@ export default function AdminContentPage() {
                   
                   console.log("🔍 [ADMIN] Favicon URL ricevuto:", url);
                   console.log("🔍 [ADMIN] Content aggiornato con favicon:", updatedContent.favicon);
-                  console.log("🔍 [ADMIN] Oggetto content completo:", updatedContent);
                   
                   // Auto-salva dopo l'upload del favicon
                   try {

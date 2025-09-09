@@ -1193,6 +1193,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
           packageUrl: "free-consultation"
         },
         colorPalette: "gz-default" as const,
+        favicon: undefined, // ✅ AGGIUNTO: Favicon di default (undefined)
         notificationEmail: "mirkoditroia@gmail.com", // Default notification email
         businessName: "GZ Nutrition", // Default business name
         recaptchaEnabled: false, // CAPTCHA disabilitato di default per sviluppo
@@ -1309,6 +1310,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         serviceAccountEmail: data.googleCalendar?.serviceAccountEmail || "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
       },
       colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
+      favicon: data.favicon || undefined, // ✅ AGGIUNTO: Mapping del favicon da Firebase
       notificationEmail: data.notificationEmail || "mirkoditroia@gmail.com",
       businessName: data.businessName || "GZ Nutrition",
       recaptchaEnabled: data.recaptchaEnabled === true, // Default false, esplicito true per abilitare
@@ -1426,6 +1428,8 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     console.log("🔍 getSiteContent: Reviews mappate finale:", siteContent.googleReviews);
     console.log("🔍 getSiteContent: LegalInfo raw da DB:", data.legalInfo);
     console.log("🔍 getSiteContent: LegalInfo mappato finale:", siteContent.legalInfo);
+    console.log("🎯 getSiteContent: FAVICON raw da DB:", data.favicon);
+    console.log("🎯 getSiteContent: FAVICON mappato finale:", siteContent.favicon);
     return siteContent;
   } catch (error) {
     console.error("getSiteContent: Errore nel caricamento da Firebase:", error);
@@ -1441,6 +1445,7 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
   console.log("🔥 [Firebase] BMI config:", content.bmiCalculator);
   console.log("🔥 [Firebase] Reviews config:", content.googleReviews);
   console.log("🔥 [Firebase] LegalInfo config:", content.legalInfo);
+  console.log("🎯 [Firebase] FAVICON config:", content.favicon || "NESSUN FAVICON");
   
   // Firestore non accetta valori undefined: rimuoviamoli in modo sicuro
   const sanitized = JSON.parse(JSON.stringify(content));

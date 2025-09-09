@@ -90,7 +90,6 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     console.log("[API siteContent] Ricevuti dati per salvataggio:", Object.keys(data));
     console.log("[API siteContent] Favicon nel payload:", data.favicon || "NESSUN FAVICON");
-    console.log("[API siteContent] DATI COMPLETI:", JSON.stringify(data, null, 2));
     
     writeFileSync(filePath, JSON.stringify(data, null, 2));
     console.log("[API siteContent] File salvato con successo:", filePath);
