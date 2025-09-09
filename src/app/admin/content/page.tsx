@@ -650,11 +650,37 @@ export default function AdminContentPage() {
                 folder="favicon"
                 accept=".ico,.png,.jpg,.jpeg,.svg"
                 maxSize={1}
-                onUploaded={(url) => setContent({ ...content, favicon: url })}
+                onUploaded={async (url) => {
+                  const updatedContent = { ...content, favicon: url };
+                  setContent(updatedContent);
+                  
+                  // Auto-salva dopo l'upload del favicon
+                  try {
+                    await upsertSiteContent(updatedContent);
+                    toast.success("🎉 Favicon caricato e salvato con successo! Ricarica la pagina per vederlo applicato.");
+                    
+                    // Force refresh del favicon aggiungendo un timestamp per bypassare la cache
+                    const existingFavicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+                    if (existingFavicon) {
+                      existingFavicon.href = `${url}?t=${Date.now()}`;
+                    } else {
+                      // Crea un nuovo link per il favicon se non esiste
+                      const link = document.createElement('link');
+                      link.rel = 'icon';
+                      link.href = `${url}?t=${Date.now()}`;
+                      document.head.appendChild(link);
+                    }
+                  } catch (error) {
+                    console.error("Errore nel salvare il favicon:", error);
+                    toast.error("❌ Favicon caricato ma errore nel salvataggio. Clicca 'Salva Contenuti' manualmente.");
+                  }
+                }}
               />
             </div>
             <p className="text-xs text-gray-500">
               Carica un'immagine per il favicon del sito. Formato consigliato: 32x32px o 16x16px. Supportati: .ico, .png, .jpg, .svg
+              <br />
+              <span className="text-blue-600 font-medium">Il favicon verrà salvato automaticamente dopo l'upload.</span>
             </p>
           </div>
           
