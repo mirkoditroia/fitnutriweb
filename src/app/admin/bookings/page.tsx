@@ -154,41 +154,14 @@ export default function AdminBookingsPage() {
     if (!booking.id || confirmingBookingId) return; // Evita click multipli
     
     setConfirmingBookingId(booking.id);
-    
     try {
-      // ✅ OTTIMIZZAZIONE: Aggiorna immediatamente l'UI locale per feedback istantaneo
-      const confirmedBooking = { ...booking, status: "confirmed" as const };
-      setItems(prevItems => 
-        prevItems.map(item => 
-          item.id === booking.id ? confirmedBooking : item
-        )
-      );
-      
-      // ✅ FEEDBACK IMMEDIATO: Mostra il toast subito
-      toast.success("Prenotazione confermata! Elaborazione in corso...");
-      
-      // ✅ OPERAZIONI VELOCI: Mantieni il feedback immediato ma con operazioni più semplici
-      await updateBooking(confirmedBooking);
-      
-      // ✅ Creazione cliente se necessario
-      try {
-        await createClientFromPendingBooking(booking);
-      } catch (error) {
-        console.warn("Client creation failed (might already exist):", error);
-      }
-      
-      // ✅ RELOAD VELOCE: Ricarica i dati subito senza delay
-      await loadData();
-      
-      toast.success("Prenotazione confermata e cliente creato/aggiornato!", {
-        duration: 2000
-      });
-      
+      await updateBooking({ ...booking, status: "confirmed" });
+      await loadData(); // Reload to get fresh data
+      toast.success("Prenotazione confermata e cliente creato/aggiornato automaticamente!");
     } catch (error) {
       console.error("Error confirming booking:", error);
       toast.error("Errore nella conferma della prenotazione");
     } finally {
-      // ✅ RILASCIO IMMEDIATO: Non aspettiamo le operazioni in background
       setConfirmingBookingId(null);
     }
   };
@@ -201,29 +174,9 @@ export default function AdminBookingsPage() {
     if (!confirmed) return;
 
     try {
-      // ✅ OTTIMIZZAZIONE: Rimuovi immediatamente dalla UI per feedback veloce
-      setItems(prevItems => prevItems.filter(item => item.id !== booking.id));
-      toast.success("Prenotazione rifiutata! Elaborazione in corso...");
-      
-      // ✅ OPERAZIONI IN BACKGROUND
-      deleteBooking(booking.id!).then(() => {
-        console.log("✅ Prenotazione eliminata con successo");
-        
-        // Sincronizza dopo un breve delay
-        setTimeout(() => {
-          loadData().catch(err => console.warn("Warning: Sincronizzazione dati fallita:", err));
-        }, 1000);
-        
-      }).catch(error => {
-        console.error("Errore nell'elaborazione background:", error);
-        
-        // ⚠️ ROLLBACK: Ripristina la prenotazione in caso di errore
-        setItems(prevItems => [...prevItems, booking].sort((a, b) => 
-          new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
-        ));
-        toast.error("Errore nell'eliminazione della prenotazione - ripristinata");
-      });
-      
+      await deleteBooking(booking.id!);
+      await loadData(); // Reload to get fresh data
+      toast.success("Prenotazione rifiutata ed eliminata. Cliente creato/aggiornato con status inattivo.");
     } catch (error) {
       console.error("Error deleting booking:", error);
       toast.error("Errore nell'eliminazione della prenotazione");
