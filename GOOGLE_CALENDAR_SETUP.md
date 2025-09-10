@@ -3,6 +3,8 @@
 ## Panoramica
 Questo manuale ti guiderà attraverso la configurazione completa dell'integrazione Google Calendar per il sistema GZnutrition. L'integrazione permette di sincronizzare automaticamente le prenotazioni confermate con Google Calendar.
 
+⚠️ **IMPORTANTE - Firebase Functions v2**: Questo sistema è ora configurato per Firebase Functions v2. **NON utilizzare più** `firebase functions:config:set` per le credenziali. **USA SEMPRE Firebase Secrets** per evitare errori di deploy.
+
 ## 🎯 Funzionalità
 - ✅ Creazione automatica eventi per prenotazioni confermate
 - ✅ Aggiornamento eventi quando le prenotazioni vengono modificate
@@ -110,13 +112,31 @@ GCAL_ENABLED=true
    - `GCAL_TIMEZONE`
    - `GCAL_ENABLED`
 
-#### **Per Firebase Functions**
+#### **Per Firebase Functions v2 (Produzione Firebase)**
+
+⚠️ **IMPORTANTE**: Firebase Functions v2 NON supporta più `functions.config()`. Usa **Firebase Secrets**:
+
+**1. Configurazione Firebase Secrets (OBBLIGATORIO)**
 ```bash
-firebase functions:config:set google.client_email="nome@progetto.iam.gserviceaccount.com"
-firebase functions:config:set google.private_key="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+# Configura le credenziali sensibili come secrets
+firebase functions:secrets:set GOOGLE_CLIENT_EMAIL
+# Inserisci: nome@progetto.iam.gserviceaccount.com
+
+firebase functions:secrets:set GOOGLE_PRIVATE_KEY
+# Inserisci la chiave privata completa in formato PEM
+```
+
+**2. Variabili d'ambiente standard**
+```bash
+# Configura le variabili non sensibili
 firebase functions:config:set gcal.calendar_id="xxxxxxxxxxxxxxxx@group.calendar.google.com"
 firebase functions:config:set gcal.timezone="Europe/Rome"
 firebase functions:config:set gcal.enabled="true"
+```
+
+**3. Deploy dopo configurazione**
+```bash
+firebase deploy --only functions
 ```
 
 ---
@@ -135,11 +155,51 @@ MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC...
 - ❌ **Errore DECODER**: La chiave non è nel formato corretto
 - ❌ **Chiave non valida**: Mancano le righe BEGIN/END
 - ❌ **Permessi insufficienti**: Service account non ha accesso al calendario
+- ❌ **Firebase Functions v2**: `functions.config() is no longer available`
+- ❌ **Environment variables**: Credenziali non accessibili in Firebase Hosting
 
 ### **Soluzioni**
 1. **Verifica formato**: Assicurati che la chiave inizi e finisca correttamente
 2. **Escape caratteri**: In alcuni sistemi potresti dover usare `\n` per le nuove righe
 3. **Base64 encoding**: Se necessario, codifica la chiave in Base64
+4. **Firebase Functions v2**: USA SEMPRE Firebase Secrets per credenziali sensibili
+5. **Environment variables**: Le credenziali DEVONO essere in Firebase Functions, non Next.js
+
+---
+
+## ⚡ Problemi Comuni Firebase Functions v2
+
+### **🚨 ERRORE CRITICO: "functions.config() is no longer available"**
+**Causa**: Il codice usa il vecchio sistema `functions.config()` non supportato in v2.
+
+**✅ SOLUZIONE IMMEDIATA**:
+```bash
+# 1. Configura Firebase Secrets (OBBLIGATORIO)
+firebase functions:secrets:set GOOGLE_CLIENT_EMAIL
+firebase functions:secrets:set GOOGLE_PRIVATE_KEY
+
+# 2. Deploy aggiornato
+firebase deploy --only functions
+```
+
+### **🚨 ERRORE: "Error: error:1E08010C:DECODER routines::unsupported"**
+**Causa**: Formato chiave privata non corretto o hardcoded nel codice.
+
+**✅ SOLUZIONE**: Le credenziali DEVONO essere in Firebase Secrets, non hardcoded.
+
+### **🚨 ERRORE: "Forbidden" nelle Functions**
+**Causa**: Functions non pubblicamente accessibili.
+
+**✅ SOLUZIONE**: Il sistema è già configurato con:
+- `invoker: 'public'`
+- `cors: { origin: true }`
+
+### **🚨 ERRORE: Environment variables non accessibili**
+**Causa**: Next.js su Firebase Hosting non può accedere a credenziali sensibili.
+
+**✅ SOLUZIONE**: Il sistema usa un proxy architetturale:
+- Next.js → Firebase Functions (proxy)
+- Firebase Functions → Google Calendar (credenziali sicure)
 
 ---
 
@@ -170,18 +230,32 @@ Gli eventi su Google Calendar includono:
 
 ### **Errore 500 - Server Error**
 - Verifica le variabili d'ambiente
-- Controlla i log del server
+- Controlla i log del server: `firebase functions:log`
 - Verifica i permessi del service account
+- **Firebase**: Controlla che Firebase Secrets sia configurato
+
+### **Errore "functions.config() is no longer available"**
+⚠️ **CRITICO per Firebase Functions v2**:
+1. **NON usare** `firebase functions:config:set` per credenziali
+2. **USA SEMPRE** `firebase functions:secrets:set` per GOOGLE_CLIENT_EMAIL e GOOGLE_PRIVATE_KEY
+3. Deploy dopo configurazione: `firebase deploy --only functions`
 
 ### **Eventi non sincronizzati**
 - Controlla che `GCAL_ENABLED=true`
 - Verifica il Calendar ID
 - Controlla i permessi di condivisione
+- **Firebase**: Verifica che le Functions siano pubblicamente accessibili
 
 ### **Errori di autenticazione**
 - Verifica l'email del service account
-- Controlla la chiave privata
+- Controlla la chiave privata nel formato PEM corretto
 - Assicurati che l'API sia abilitata
+- **Firebase**: Verifica che i secrets siano configurati correttamente
+
+### **Errore "Forbidden" o "Access Denied"**
+- Aggiungi `invoker: 'public'` nelle Functions
+- Configura CORS: `cors: { origin: true }`
+- Verifica i permessi del calendario condiviso
 
 ### **Problemi di timezone**
 - Verifica il formato timezone (es: `Europe/Rome`)
@@ -215,6 +289,9 @@ Gli eventi su Google Calendar includono:
 - ✅ Usa calendari dedicati per l'integrazione
 - ✅ Limita i permessi del service account
 - ✅ Monitora regolarmente l'accesso
+- ✅ **PER OGNI NUOVO CLIENTE**: USA SEMPRE Firebase Secrets per credenziali
+- ✅ **DEPLOY**: Testa sempre `firebase functions:log` dopo il deploy
+- ✅ **NEVER**: Non hardcodare mai credenziali nel codice
 
 ### **Rotazione Chiavi**
 - Cambia periodicamente le chiavi private
@@ -240,19 +317,29 @@ Per problemi tecnici o supporto:
 
 ## ✅ Checklist Configurazione
 
+### **Setup Google Cloud**
 - [ ] Progetto Google Cloud creato
 - [ ] Google Calendar API abilitata
 - [ ] Service Account creato
-- [ ] Chiave privata generata
+- [ ] Chiave privata generata (formato JSON)
 - [ ] Calendario condiviso con service account
-- [ ] Variabili d'ambiente configurate
+
+### **Configurazione Sistema**
+- [ ] Variabili d'ambiente configurate (sviluppo locale)
+- [ ] **Firebase Secrets configurati** (GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY)
+- [ ] Environment variables non sensibili configurate
+- [ ] Functions deployate: `firebase deploy --only functions`
 - [ ] Integrazione abilitata nel sistema
-- [ ] Test connessione riuscito
+
+### **Test e Verifica**
+- [ ] Test connessione riuscito (`firebase functions:log` senza errori)
 - [ ] Test sincronizzazione completato
 - [ ] Accesso diretto funzionante
+- [ ] **Functions pubblicamente accessibili** (nessun errore Forbidden)
+- [ ] **Verifica assenza errori** `functions.config() is no longer available`
 
 ---
 
-**Ultimo aggiornamento**: Agosto 2024  
-**Versione**: 1.0  
+**Ultimo aggiornamento**: Gennaio 2025  
+**Versione**: 2.0 - Firebase Functions v2 Support  
 **Sistema**: GZnutrition Admin Panel

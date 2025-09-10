@@ -19,6 +19,10 @@ const nodemailer = require('nodemailer');
 const smtpPassword = defineSecret('SMTP_PASSWORD');
 const recaptchaSecretKey = defineSecret('RECAPTCHA_SECRET_KEY');
 
+// Define secrets for Google Calendar configuration
+const googleClientEmail = defineSecret('GOOGLE_CLIENT_EMAIL');
+const googlePrivateKey = defineSecret('GOOGLE_PRIVATE_KEY');
+
 // Palette configurations for dynamic email styling
 const PALETTES = {
   'gz-default': {
@@ -124,23 +128,28 @@ function handleCors(req, res) {
   return false;
 }
 
-// Google Calendar configuration
+// Google Calendar configuration - Firebase Functions v2 with Secrets
 function getCalendarConfig() {
-  const config = functions.config();
-  
-  if (!config.gcal || !config.gcal.enabled) {
+  // Enable Google Calendar by default for Firebase
+  const enabled = process.env.GCAL_ENABLED !== 'false';
+  if (!enabled) {
     throw new Error('Google Calendar integration is disabled');
   }
   
-  if (!config.google || !config.google.client_email || !config.google.private_key) {
-    throw new Error('Missing Google Service Account credentials');
+  // Get credentials from Firebase Secrets
+  const serviceAccountEmail = googleClientEmail.value();
+  const privateKey = googlePrivateKey.value();
+  
+  // Check for required credentials
+  if (!serviceAccountEmail || !privateKey) {
+    throw new Error('Missing Google Service Account credentials from Firebase Secrets');
   }
 
   return {
-    calendarId: config.gcal.calendar_id,
-    timezone: config.gcal.timezone,
-    serviceAccountEmail: config.google.client_email,
-    privateKey: config.google.private_key
+    calendarId: process.env.GCAL_CALENDAR_ID || 'dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com',
+    timezone: process.env.GCAL_TIMEZONE || 'Europe/Rome',
+    serviceAccountEmail: serviceAccountEmail,
+    privateKey: privateKey
   };
 }
 
@@ -187,7 +196,11 @@ function getCalendarClient() {
 }
 
 // Test Google Calendar connection
-exports.testCalendarConnection = onRequest(async (req, res) => {
+exports.testCalendarConnection = onRequest({ 
+  cors: { origin: true },
+  invoker: 'public',
+  secrets: [googleClientEmail, googlePrivateKey]
+}, async (req, res) => {
   // Handle CORS
   if (handleCors(req, res)) return;
   
@@ -244,7 +257,11 @@ exports.testCalendarConnection = onRequest(async (req, res) => {
 });
 
 // Google Calendar operations (create, update, delete)
-exports.calendarOperations = onRequest(async (req, res) => {
+exports.calendarOperations = onRequest({ 
+  cors: { origin: true },
+  invoker: 'public',
+  secrets: [googleClientEmail, googlePrivateKey]
+}, async (req, res) => {
   // Handle CORS
   if (handleCors(req, res)) return;
   

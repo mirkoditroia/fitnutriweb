@@ -189,7 +189,7 @@ export async function testCalendarConnection(): Promise<{ success: boolean; mess
 export function getCalendarConfig() {
   return {
     enabled: process.env.NEXT_PUBLIC_GCAL_ENABLED === 'true',
-    calendarId: process.env.NEXT_PUBLIC_GCAL_CALENDAR_ID || '9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com',
+    calendarId: process.env.NEXT_PUBLIC_GCAL_CALENDAR_ID || 'dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com',
     timezone: process.env.NEXT_PUBLIC_GCAL_TIMEZONE || 'Europe/Rome',
     serviceAccountEmail: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_EMAIL || 'zambo-489@gznutrition-d5d13.iam.gserviceaccount.com'
   };
