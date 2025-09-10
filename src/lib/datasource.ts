@@ -5,6 +5,7 @@ import {
   type ClientProgress,
   type SiteContent,
   type Availability,
+  type FreeConsultationSlot,
   getPackages as fb_getPackages,
   upsertPackage as fb_upsertPackage,
   listBookings as fb_listBookings,
@@ -581,7 +582,9 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
         inStudioSlots: dateData.inStudioSlots ?? [],
         studioSlots: dateData.studioSlots ?? {},
         slots: dateData.slots, 
-        freeConsultationSlots: dateData.freeConsultationSlots ?? [] 
+        freeConsultationSlots: (dateData.freeConsultationSlots ?? []).map(slot => 
+          typeof slot === 'string' ? { time: slot, duration: 10 } : slot
+        )
       };
       debugLogSync("✅ [SITO PUBBLICO] Risultato locale processato:", result);
       return result;
@@ -594,14 +597,23 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
   }
 }
 
-export async function upsertAvailabilityForDate(date: string, onlineSlots: string[], freeConsultationSlots?: string[], inStudioSlots?: string[], studioSlots?: Record<string, string[]>): Promise<void> {
+export async function upsertAvailabilityForDate(date: string, onlineSlots: string[], freeConsultationSlots?: FreeConsultationSlot[] | string[], inStudioSlots?: string[], studioSlots?: Record<string, string[]>): Promise<void> {
   const mode = getDataMode();
   if (mode === "firebase") return fb_upsertAvailabilityForDate(date, onlineSlots, freeConsultationSlots, inStudioSlots, studioSlots);
   if (mode === "demo") throw new Error("Preprod demo read-only");
   try {
     const res = await fetch("/api/localdb/availability", { cache: "no-store" });
     const all = res.ok ? ((await res.json()) as Record<string, { slots?: string[]; freeConsultationSlots?: string[]; onlineSlots?: string[]; inStudioSlots?: string[]; studioSlots?: Record<string, string[]> }>) : {};
-    all[date] = { onlineSlots, inStudioSlots: inStudioSlots || [], freeConsultationSlots: freeConsultationSlots || [], studioSlots: studioSlots ?? all[date]?.studioSlots ?? {} };
+    all[date] = { 
+      onlineSlots, 
+      inStudioSlots: inStudioSlots || [], 
+      freeConsultationSlots: Array.isArray(freeConsultationSlots) 
+        ? (freeConsultationSlots as (string | FreeConsultationSlot)[]).map(slot => 
+            typeof slot === 'string' ? slot : slot.time
+          )
+        : [], 
+      studioSlots: studioSlots ?? all[date]?.studioSlots ?? {} 
+    };
     await fetch("/api/localdb/availability", { method: "POST", body: JSON.stringify(all) });
   } catch {}
 }

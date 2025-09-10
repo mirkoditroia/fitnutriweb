@@ -261,21 +261,26 @@ export default function AdminSettingsPage() {
 
             {content.googleCalendar?.isEnabled && (
               <div className="pl-7 space-y-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-amber-600 text-sm">⚠️</span>
+                    <div className="text-sm text-amber-800">
+                      <p className="font-medium">Modifica Calendar ID</p>
+                      <p>Per cambiare l'ID del calendario, contattare il gestore del sito. La modifica richiede un deploy delle funzioni.</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
-                    Calendar ID
+                    Calendar ID (sola lettura)
                   </label>
                   <Input
                     value={content.googleCalendar?.calendarId || ""}
-                    onChange={(e) => setContent({
-                      ...content,
-                      googleCalendar: {
-                        ...content.googleCalendar,
-                        calendarId: e.target.value
-                      }
-                    })}
+                    readOnly
+                    disabled
                     placeholder="calendario@group.calendar.google.com"
-                    className="max-w-md"
+                    className="max-w-md bg-gray-100"
                   />
                   <p className="text-xs text-black/60 mt-1">
                     ID del calendario Google dove creare gli eventi

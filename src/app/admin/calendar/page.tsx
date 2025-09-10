@@ -150,18 +150,24 @@ export default function AdminCalendarPage() {
 
           {content.googleCalendar?.isEnabled && (
             <div className="space-y-4 p-4 border border-border rounded-lg bg-background/50">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <span className="text-amber-600 text-sm">⚠️</span>
+                  <div className="text-sm text-amber-800">
+                    <p className="font-medium">Modifica Calendar ID</p>
+                    <p>Per cambiare l'ID del calendario, contattare il gestore del sito. La modifica richiede un deploy delle funzioni.</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
-                  label="Calendar ID"
+                  label="Calendar ID (sola lettura)"
                   value={content.googleCalendar?.calendarId ?? ""}
-                  onChange={(e) => setContent({
-                    ...content,
-                    googleCalendar: {
-                      ...content.googleCalendar,
-                      calendarId: e.target.value
-                    }
-                  })}
+                  readOnly
+                  disabled
                   placeholder="ID del calendario Google"
+                  className="bg-gray-100"
                 />
                 
                 <Input

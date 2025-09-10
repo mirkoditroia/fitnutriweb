@@ -166,7 +166,8 @@ export type Booking = {
   priority?: boolean;
   status: "pending" | "confirmed" | "cancelled";
   createdAt?: string;
-  isFreeConsultation?: boolean; // Flag per i 10 minuti consultivi
+  isFreeConsultation?: boolean; // Flag per consultazioni gratuite
+  consultationDuration?: number; // Durata della consultazione in minuti (per consultazioni gratuite)
   notes?: string; // Note del cliente (sezione "Parlami di te")
   googleCalendarEventId?: string; // ID dell'evento Google Calendar
 };
@@ -353,6 +354,12 @@ export interface SiteContent {
   debugLogsEnabled?: boolean; // Abilita/disabilita i log di debug in console (default: true)
 }
 
+// Tipo per slot di consultazione gratuita con durata specifica
+export type FreeConsultationSlot = {
+  time: string; // formato "HH:MM"
+  duration: number; // durata in minuti
+};
+
 export type Availability = {
   date: string;
   // Slot separati per sede
@@ -361,8 +368,10 @@ export type Availability = {
   studioSlots?: Record<string, string[]>; // mappa sede -> slot specifici
   // Retrocompatibilità: slots aggregati (preferire i campi sopra)
   slots?: string[];
-  // Slot dedicati ai 10 minuti consultivi (sempre online per default)
-  freeConsultationSlots?: string[];
+  // Slot dedicati alle consultazioni gratuite con durata specifica
+  freeConsultationSlots?: FreeConsultationSlot[];
+  // Retrocompatibilità: slot semplici (deprecato)
+  legacyFreeConsultationSlots?: string[];
 };
 
 // Helpers (lazy & typed)
@@ -549,11 +558,28 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   const location: "online" | "studio" = b.isFreeConsultation ? "online" : (b.location || "online");
   
   let pool: string[] = [];
+  let consultationDuration: number | undefined;
+  
   if (b.isFreeConsultation) {
     // ✅ CORRETO: Per consulenze gratuite, usa SOLO slot promozionali dedicati
-    pool = availability?.freeConsultationSlots ?? [];
+    const freeSlots = availability?.freeConsultationSlots ?? [];
+    
+    // Supporta sia il nuovo formato con durata che il vecchio formato per retrocompatibilità
+    if (freeSlots.length > 0 && typeof freeSlots[0] === 'object') {
+      // Nuovo formato con durata
+      pool = (freeSlots as FreeConsultationSlot[]).map(slot => slot.time);
+      // Trova la durata specifica per questo slot
+      const selectedSlot = (freeSlots as FreeConsultationSlot[]).find(slot => slot.time === b.slot);
+      consultationDuration = selectedSlot?.duration;
+    } else {
+      // Vecchio formato per retrocompatibilità - gestisce mix di tipi
+      pool = (freeSlots as (string | FreeConsultationSlot)[])
+        .map(slot => typeof slot === 'string' ? slot : slot.time);
+    }
+    
     debugLogSync("🔍 Consulenza gratuita - Slot promozionali disponibili:", pool.length, "slot");
     debugLogSync("📅 Slot richiesto:", b.slot);
+    debugLogSync("⏱️ Durata consultazione:", consultationDuration, "minuti");
     
     if (pool.length === 0) {
       throw new Error("❌ Nessun slot per consulenze gratuite disponibile per questa data");
@@ -582,7 +608,8 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   
   // ✅ CORREZIONE: Gestisci le consulenze gratuite
   if (b.isFreeConsultation) {
-    packageTitle = "Consultazione Gratuita (10 minuti)";
+    const duration = consultationDuration || 10; // Default 10 minuti se non specificato
+    packageTitle = `Consultazione Gratuita (${duration} minuti)`;
   } else if (b.packageId) {
     try {
       const packageDoc = await getDoc(doc(db as Firestore, "packages", b.packageId));
@@ -609,6 +636,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     priority: !!b.priority,
     channelPreference: b.channelPreference ?? null,
     isFreeConsultation: !!b.isFreeConsultation, // ✅ AGGIUNTO: Salva flag consulenza gratuita
+    consultationDuration: consultationDuration ?? null, // ✅ AGGIUNTO: Salva durata consultazione gratuita
     notes: b.notes ?? null, // ✅ AGGIUNTO: Salva note del cliente
     createdAt: serverTimestamp(),
   });
@@ -618,7 +646,19 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   // Rimuovi lo slot occupato dalla disponibilità (blocca anche in pending)
   if (b.isFreeConsultation) {
     // ✅ CORRETTO: Per consulenze gratuite, rimuovi SOLO da slot promozionali
-    const nextFreeSlots = (availability?.freeConsultationSlots ?? []).filter((slot) => slot !== b.slot);
+    const freeSlots = availability?.freeConsultationSlots ?? [];
+    let nextFreeSlots: FreeConsultationSlot[] | string[];
+    
+    if (freeSlots.length > 0 && typeof freeSlots[0] === 'object') {
+      // Nuovo formato con durata - filtra per tempo
+      nextFreeSlots = (freeSlots as FreeConsultationSlot[]).filter((slot) => slot.time !== b.slot);
+    } else {
+      // Vecchio formato per retrocompatibilità - gestisce mix di tipi
+      nextFreeSlots = (freeSlots as (string | FreeConsultationSlot)[])
+        .filter((slot) => typeof slot === 'string' ? slot !== b.slot : slot.time !== b.slot)
+        .map(slot => typeof slot === 'string' ? slot : slot.time);
+    }
+    
     debugLogSync("🗑️ Rimuovendo slot promozionale:", b.slot);
     debugLogSync("📋 Slot promozionali rimanenti:", nextFreeSlots);
     await upsertAvailabilityForDate(
@@ -787,8 +827,14 @@ export async function updateBooking(booking: Booking): Promise<void> {
   await setDoc(doc(db as Firestore, "bookings", id), updateData, { merge: true });
   
   // Update Google Calendar event if it exists
+  console.log("🔧 GOOGLE CALENDAR SYNC - Existing Event ID:", existingBooking.googleCalendarEventId);
+  console.log("🔧 GOOGLE CALENDAR SYNC - Booking Status:", booking.status);
+  console.log("🔧 GOOGLE CALENDAR SYNC - Previous Status:", existingBooking.status);
+  
   if (existingBooking.googleCalendarEventId) {
     try {
+      console.log("📅 Updating existing Google Calendar event...");
+      
       // Get package title for calendar event
       let packageTitle: string | undefined;
       if (booking.packageId) {
@@ -805,6 +851,9 @@ export async function updateBooking(booking: Booking): Promise<void> {
       const success = booking.status === "confirmed"
         ? !!(await ensureCalendarEvent(existingBooking.googleCalendarEventId, booking, packageTitle))
         : await deleteCalendarEvent(existingBooking.googleCalendarEventId);
+      
+      console.log("📅 Google Calendar sync result:", success);
+      
       if (success) {
         debugLogSync(booking.status === "confirmed" ? "Google Calendar event updated:" : "Google Calendar event deleted (booking not confirmed):", existingBooking.googleCalendarEventId);
       } else {
@@ -816,6 +865,7 @@ export async function updateBooking(booking: Booking): Promise<void> {
     }
   } else {
     // If no event was linked yet (e.g., bookings created before calendar fix), create it now
+    console.log("📅 No existing Google Calendar event, checking if we should create one...");
     try {
       let packageTitle: string | undefined;
       if (booking.packageId) {
@@ -829,11 +879,15 @@ export async function updateBooking(booking: Booking): Promise<void> {
         }
       }
       if (booking.status === "confirmed") {
+        console.log("📅 Creating new Google Calendar event for confirmed booking...");
         const newEventId = await ensureCalendarEvent(undefined, booking, packageTitle);
+        console.log("📅 New event creation result:", newEventId ? "SUCCESS" : "FAILED");
         if (newEventId) {
           await setDoc(doc(db as Firestore, "bookings", booking.id), { googleCalendarEventId: newEventId }, { merge: true });
           debugLogSync("Google Calendar event created for existing booking:", newEventId);
         }
+      } else {
+        console.log("📅 Booking not confirmed, skipping calendar event creation");
       }
     } catch (error) {
       console.error("Error creating Google Calendar event on update:", error);
@@ -1332,12 +1386,17 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         ctaText: data.freeConsultationPopup?.ctaText || "Prenota Ora - È Gratis!",
         packageUrl: data.freeConsultationPopup?.packageUrl || "free-consultation"
       },
-      googleCalendar: {
-        isEnabled: data.googleCalendar?.isEnabled || false,
-        calendarId: data.googleCalendar?.calendarId || "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
-        timezone: data.googleCalendar?.timezone || "Europe/Rome",
-        serviceAccountEmail: data.googleCalendar?.serviceAccountEmail || "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
-      },
+      googleCalendar: (() => {
+        const calendarConfig = {
+          isEnabled: data.googleCalendar?.isEnabled || false,
+          calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com", // FORCED: Ignora database, usa sempre questo ID
+          timezone: data.googleCalendar?.timezone || "Europe/Rome",
+          serviceAccountEmail: data.googleCalendar?.serviceAccountEmail || "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+        };
+        console.log("🔍 [CALENDAR CONFIG] ID utilizzato:", calendarConfig.calendarId);
+        console.log("🔍 [CALENDAR CONFIG] Da database:", data.googleCalendar?.calendarId);
+        return calendarConfig;
+      })(),
       colorPalette: (data.colorPalette as 'gz-default' | 'modern-blue' | 'elegant-dark' | 'nature-green' | 'warm-orange' | 'professional-gray') || 'gz-default',
       favicon: data.favicon || undefined, // ✅ AGGIUNTO: Mapping del favicon da Firebase
       // ✅ AGGIUNTO: Mapping dei metaTags da Firebase
@@ -1659,7 +1718,9 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
     inStudioSlots: Array.isArray(data.inStudioSlots) ? data.inStudioSlots : [],
     studioSlots: (data.studioSlots && typeof data.studioSlots === 'object') ? (data.studioSlots as Record<string, string[]>) : {},
     slots: Array.isArray(data.slots) ? data.slots : undefined,
-    freeConsultationSlots: Array.isArray(data.freeConsultationSlots) ? data.freeConsultationSlots : []
+    freeConsultationSlots: Array.isArray(data.freeConsultationSlots) ? data.freeConsultationSlots : [],
+    // Gestione retrocompatibilità per il vecchio formato
+    legacyFreeConsultationSlots: Array.isArray(data.legacyFreeConsultationSlots) ? data.legacyFreeConsultationSlots : undefined
   };
   
   debugLogSync("✅ Availability processata:", result);
@@ -1671,7 +1732,7 @@ export async function getAvailabilityByDate(date: string): Promise<Availability 
 export async function upsertAvailabilityForDate(
   date: string,
   onlineSlots: string[],
-  freeConsultationSlots?: string[],
+  freeConsultationSlots?: FreeConsultationSlot[] | string[],
   inStudioSlots?: string[],
   studioSlots?: Record<string, string[]>
 ): Promise<void> {
@@ -1716,6 +1777,7 @@ function toBooking(id: string, data: DocumentData): Booking {
     priority: !!data.priority,
     channelPreference: data.channelPreference ?? undefined,
     isFreeConsultation: !!data.isFreeConsultation, // ✅ AGGIUNTO: Mapping flag consulenza gratuita
+    consultationDuration: data.consultationDuration ?? undefined, // ✅ AGGIUNTO: Mapping durata consulenza gratuita
     notes: data.notes ?? undefined, // ✅ AGGIUNTO: Mapping note del cliente
     createdAt: tsToIso(data.createdAt),
     googleCalendarEventId: data.googleCalendarEventId ?? undefined,

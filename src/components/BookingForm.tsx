@@ -492,7 +492,9 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           if (shouldUsePromotionalSlots) {
             // Per consultazioni gratuite, mostra solo slot promozionali
             console.log("🎯 CONSULENZA GRATUITA/PROMOZIONALE - Caricando slot promozionali:", availability.freeConsultationSlots);
-            setAvailableSlots(availability.freeConsultationSlots || []);
+            setAvailableSlots((availability.freeConsultationSlots || []).map(slot => 
+              typeof slot === 'string' ? slot : slot.time
+            ));
           } else {
             // Per consulenze normali, mostra slot in base alla sede
             console.log("📋 CONSULENZA NORMALE - Caricando slot normali");

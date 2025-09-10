@@ -41,17 +41,46 @@ function buildEventFromBooking(booking: {
   studioLocation?: string;
   notes?: string;
   isFreeConsultation?: boolean;
+  consultationDuration?: number;
 }, packageTitle?: string) {
   
-  const [startTime, endTime] = booking.slot.split(' - ');
+  if (!booking.slot) {
+    throw new Error(`Missing slot field in booking: ${JSON.stringify(booking)}`);
+  }
+  
+  // Handle both "HH:MM" and "HH:MM - HH:MM" formats
+  let startTime: string, endTime: string;
+  if (booking.slot.includes(' - ')) {
+    // Full range format: "10:00 - 11:00"
+    [startTime, endTime] = booking.slot.split(' - ');
+  } else {
+    // Single time format: "10:00" - calculate end time based on consultation type
+    startTime = booking.slot;
+    
+    // For free consultations or packages with custom duration, use specific logic
+    if (booking.isFreeConsultation) {
+      // Use dynamic duration from booking (salvata quando lo slot è stato creato) o default a 10 minuti
+      const consultationDuration = booking.consultationDuration || 10;
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const totalMinutes = hours * 60 + minutes + consultationDuration;
+      const endHours = Math.floor(totalMinutes / 60);
+      const endMins = totalMinutes % 60;
+      endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+    } else {
+      // Regular consultations - default 1 hour
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const endHour = hours + 1;
+      endTime = `${endHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }
+  }
   const bookingDate = new Date(booking.date);
   
-  // Parse start time
+  // Parse start time - create date in Rome timezone
   const [startHours, startMinutes] = startTime.split(':').map(Number);
   const startDateTime = new Date(bookingDate);
   startDateTime.setHours(startHours, startMinutes, 0, 0);
   
-  // Parse end time  
+  // Parse end time - create date in Rome timezone
   const [endHours, endMinutes] = endTime.split(':').map(Number);
   const endDateTime = new Date(bookingDate);
   endDateTime.setHours(endHours, endMinutes, 0, 0);
@@ -59,9 +88,15 @@ function buildEventFromBooking(booking: {
   const locationText = booking.location === 'online' ? 'Online' : 
                       booking.studioLocation ? `Studio: ${booking.studioLocation}` : 'In Studio';
 
+  // Debug per verificare packageTitle
+  console.log('[DEBUG] buildEventFromBooking - packageTitle:', packageTitle);
+  console.log('[DEBUG] buildEventFromBooking - booking.isFreeConsultation:', booking.isFreeConsultation);
+  
   const eventSummary = booking.isFreeConsultation 
     ? `🆓 Consultazione Gratuita - ${booking.name}`
-    : `📅 Appuntamento - ${booking.name}${packageTitle ? ` (${packageTitle})` : ''}`;
+    : packageTitle 
+      ? `📅 ${packageTitle} - ${booking.name}`
+      : `📅 Appuntamento - ${booking.name}`;
 
   const eventDescription = [
     `Cliente: ${booking.name}`,
@@ -69,21 +104,32 @@ function buildEventFromBooking(booking: {
     booking.phone ? `Telefono: ${booking.phone}` : '',
     `Modalità: ${locationText}`,
     packageTitle ? `Pacchetto: ${packageTitle}` : '',
-    booking.isFreeConsultation ? 'Tipo: Consultazione Gratuita (10 minuti)' : '',
+    booking.isFreeConsultation ? `Tipo: Consultazione Gratuita (${booking.consultationDuration || 10} minuti)` : '',
     booking.notes ? `Note: ${booking.notes}` : '',
     '',
     '--- Gestito automaticamente da GZ Nutrition ---'
   ].filter(Boolean).join('\n');
 
+  // Format dates for Rome timezone (avoid UTC conversion)
+  const formatDateTimeForRome = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  };
+
   return {
     summary: eventSummary,
     description: eventDescription,
     start: {
-      dateTime: startDateTime.toISOString(),
+      dateTime: formatDateTimeForRome(startDateTime),
       timeZone: 'Europe/Rome',
     },
     end: {
-      dateTime: endDateTime.toISOString(),
+      dateTime: formatDateTimeForRome(endDateTime),
       timeZone: 'Europe/Rome',
     },
     extendedProperties: booking.id ? { private: { bookingId: booking.id } } : undefined,

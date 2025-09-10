@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { type Availability } from "@/lib/data";
+import { type Availability, type FreeConsultationSlot } from "@/lib/data";
 
 // Componente Orologio per selezione orario
 function TimePicker({ value, onChange, label }: { value: string; onChange: (time: string) => void; label: string }) {
@@ -171,7 +171,7 @@ export default function AdminAvailabilityPage() {
     if (!selectedDate) return;
     
     const slots: string[] = [];
-    const freeConsultationSlots: string[] = [];
+    const freeConsultationSlots: FreeConsultationSlot[] = [];
     
     if (viewMode === "normal") {
       // Genera slot normali con intervallo personalizzabile (deve essere multiplo di 5)
@@ -208,7 +208,10 @@ export default function AdminAvailabilityPage() {
           const formattedHour = hour.toString().padStart(2, '0');
           const formattedMinute = minute.toString().padStart(2, '0');
           
-          freeConsultationSlots.push(`${formattedHour}:${formattedMinute}`);
+          freeConsultationSlots.push({
+            time: `${formattedHour}:${formattedMinute}`,
+            duration: consultationDuration
+          });
         }
       }
     }
@@ -241,7 +244,7 @@ export default function AdminAvailabilityPage() {
       await upsertAvailabilityForDate(
         date,
         availability.onlineSlots ?? availability.slots ?? [],
-        availability.freeConsultationSlots,
+        availability.freeConsultationSlots as (FreeConsultationSlot[] | string[] | undefined),
         availability.inStudioSlots ?? [],
         availability.studioSlots ?? {}
       );
@@ -252,22 +255,43 @@ export default function AdminAvailabilityPage() {
   const addTimeSlot = (time: string) => {
     if (!availability) return;
     
-    const currentSlots = viewMode === "promotional" 
-      ? (availability.freeConsultationSlots || [])
-      : (location === "online" 
-          ? (availability.onlineSlots ?? availability.slots ?? []) 
-          : (selectedStudio ? (availability.studioSlots?.[selectedStudio] ?? []) : (availability.inStudioSlots ?? []))
-        );
-    
-    if (!currentSlots.includes(time)) {
-      const updatedSlots = [...currentSlots, time].sort();
+    if (viewMode === "promotional") {
+      // Gestione speciale per slot promozionali con durata
+      const currentFreeSlots = availability.freeConsultationSlots || [];
+      const timeExists = Array.isArray(currentFreeSlots) && currentFreeSlots.length > 0 && typeof currentFreeSlots[0] === 'object'
+        ? (currentFreeSlots as FreeConsultationSlot[]).some(slot => slot.time === time)
+        : (currentFreeSlots as (string | FreeConsultationSlot)[]).some(slot => 
+            typeof slot === 'string' ? slot === time : false
+          );
       
-      if (viewMode === "promotional") {
+      if (!timeExists) {
+        // Aggiungi nuovo slot con durata di default
+        const newSlot: FreeConsultationSlot = { time, duration: consultationDuration };
+        
+        // Converti tutti gli slot esistenti al nuovo formato se necessario
+        const existingSlots: FreeConsultationSlot[] = currentFreeSlots.map(slot => 
+          typeof slot === 'object' ? slot : { time: slot, duration: consultationDuration }
+        );
+        
+        const updatedSlots = [...existingSlots, newSlot]
+          .sort((a, b) => a.time.localeCompare(b.time));
+        
         setAvailability({
           ...availability,
           freeConsultationSlots: updatedSlots
         });
+        toast.success(`Slot promozionale ${time} aggiunto`);
       } else {
+        toast.error(`Lo slot promozionale ${time} è già presente`);
+      }
+    } else {
+      // Gestione normale per slot regulari
+      const currentSlots = location === "online" 
+        ? (availability.onlineSlots ?? availability.slots ?? []) 
+        : (selectedStudio ? (availability.studioSlots?.[selectedStudio] ?? []) : (availability.inStudioSlots ?? []));
+      
+      if (!currentSlots.includes(time)) {
+        const updatedSlots = [...currentSlots, time].sort();
         if (location === "online") {
           setAvailability({
             ...availability,
@@ -283,31 +307,42 @@ export default function AdminAvailabilityPage() {
             studioSlots: { ...(availability.studioSlots ?? {}), [selectedStudio]: updatedSlots }
           });
         }
+        toast.success(`Orario ${time} aggiunto`);
+      } else {
+        toast.error(`L'orario ${time} è già presente`);
       }
-      toast.success(`Orario ${time} aggiunto`);
-    } else {
-      toast.error(`L'orario ${time} è già presente`);
     }
   };
 
   const removeTimeSlot = (slot: string) => {
     if (!availability) return;
     
-    const currentSlots = viewMode === "promotional" 
-      ? (availability.freeConsultationSlots || [])
-      : (location === "online" 
-          ? (availability.onlineSlots ?? availability.slots ?? []) 
-          : (selectedStudio ? (availability.studioSlots?.[selectedStudio] ?? []) : (availability.inStudioSlots ?? []))
-        );
-    
-    const updatedSlots = currentSlots.filter(s => s !== slot);
-    
     if (viewMode === "promotional") {
+      // Gestione speciale per slot promozionali con durata
+      const currentFreeSlots = availability.freeConsultationSlots || [];
+      let updatedSlots: FreeConsultationSlot[];
+      
+      if (Array.isArray(currentFreeSlots) && currentFreeSlots.length > 0 && typeof currentFreeSlots[0] === 'object') {
+        // Nuovo formato con durata - filtra per tempo
+        updatedSlots = (currentFreeSlots as FreeConsultationSlot[]).filter(s => s.time !== slot);
+      } else {
+        // Vecchio formato per retrocompatibilità - converti in nuovo formato
+        updatedSlots = (currentFreeSlots as (string | FreeConsultationSlot)[])
+          .filter(s => typeof s === 'string' ? s !== slot : s.time !== slot)
+          .map(s => typeof s === 'string' ? { time: s, duration: consultationDuration } : s);
+      }
+      
       setAvailability({
         ...availability,
         freeConsultationSlots: updatedSlots
       });
     } else {
+      // Gestione normale per slot regulari
+      const currentSlots = location === "online" 
+        ? (availability.onlineSlots ?? availability.slots ?? []) 
+        : (selectedStudio ? (availability.studioSlots?.[selectedStudio] ?? []) : (availability.inStudioSlots ?? []));
+      
+      const updatedSlots = currentSlots.filter(s => s !== slot);
       if (location === "online") {
         setAvailability({
           ...availability,
@@ -629,26 +664,44 @@ export default function AdminAvailabilityPage() {
                 
                 return currentSlots.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {currentSlots.map((slot) => (
-                      <div
-                        key={slot}
-                        className="group relative p-3 border border-border rounded-lg bg-background hover:border-primary/50 transition-all duration-200"
-                      >
-                        <span className="text-sm font-medium text-black">{(() => {
-                          const m = /^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})/.exec(slot);
-                          if (m) return `${m[1]}:${m[2]}`;
-                          return slot;
-                        })()}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeTimeSlot(slot)}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
-                          title="Rimuovi orario"
+                    {currentSlots.map((slot) => {
+                      // Gestisce sia il formato stringa che il formato oggetto per slot promozionali
+                      const isPromotionalSlot = viewMode === "promotional";
+                      const slotTime = isPromotionalSlot && typeof slot === 'object' 
+                        ? (slot as FreeConsultationSlot).time 
+                        : (typeof slot === 'string' ? slot : '');
+                      const slotDuration = isPromotionalSlot && typeof slot === 'object' 
+                        ? (slot as FreeConsultationSlot).duration 
+                        : null;
+                      
+                      return (
+                        <div
+                          key={slotTime}
+                          className="group relative p-3 border border-border rounded-lg bg-background hover:border-primary/50 transition-all duration-200"
                         >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+                          <div className="text-sm font-medium text-black">
+                            {(() => {
+                              const m = /^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})/.exec(slotTime);
+                              if (m) return `${m[1]}:${m[2]}`;
+                              return slotTime;
+                            })()}
+                            {slotDuration && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {slotDuration} min
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeTimeSlot(slotTime)}
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
+                            title="Rimuovi orario"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-black/70">

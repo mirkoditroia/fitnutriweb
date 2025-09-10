@@ -16,6 +16,7 @@ export async function createCalendarEvent(booking: {
   isFreeConsultation?: boolean;
   notes?: string;
 }, packageTitle?: string): Promise<string | null> {
+  console.log('🔧 createCalendarEvent called for booking:', booking.name, 'Status:', booking.status);
   try {
     const response = await fetch('/api/calendar', {
       method: 'POST',
@@ -29,11 +30,17 @@ export async function createCalendarEvent(booking: {
       }),
     });
 
+    console.log('🔧 createCalendarEvent API response status:', response.status);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('🔧 createCalendarEvent API error:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const result = await response.json();
+    console.log('🔧 createCalendarEvent API result:', result);
+    
     if (result.success) {
       console.log('Google Calendar event created:', result.eventId);
       return result.eventId as string;
@@ -115,15 +122,23 @@ export async function ensureCalendarEvent(
   },
   packageTitle?: string
 ): Promise<string | null> {
+  console.log('🔧 ensureCalendarEvent called - existingEventId:', existingEventId, 'booking:', booking.name);
+  
   // If we have an event id, try update first
   if (existingEventId) {
+    console.log('🔧 ensureCalendarEvent - updating existing event:', existingEventId);
     const ok = await updateCalendarEvent(existingEventId, booking, packageTitle);
-    if (ok) return existingEventId;
+    if (ok) {
+      console.log('🔧 ensureCalendarEvent - update successful');
+      return existingEventId;
+    }
     // If update failed (possibly 404), try to recreate a fresh event
+    console.log('🔧 ensureCalendarEvent - update failed, creating new event');
     const created = await createCalendarEvent(booking, packageTitle);
     return created;
   }
   // No event id: create one
+  console.log('🔧 ensureCalendarEvent - no existing event, creating new one');
   return await createCalendarEvent(booking, packageTitle);
 }
 

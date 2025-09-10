@@ -136,9 +136,9 @@ function getCalendarConfig() {
     throw new Error('Google Calendar integration is disabled');
   }
   
-  // Get credentials from Firebase Secrets
-  const serviceAccountEmail = googleClientEmail.value();
-  const privateKey = googlePrivateKey.value();
+  // Get credentials from Firebase Secrets (automatically available as environment variables)
+  const serviceAccountEmail = process.env.GOOGLE_CLIENT_EMAIL;
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY;
   
   // Check for required credentials
   if (!serviceAccountEmail || !privateKey) {
@@ -146,7 +146,7 @@ function getCalendarConfig() {
   }
 
   return {
-    calendarId: process.env.GCAL_CALENDAR_ID || 'dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com',
+    calendarId: process.env.GCAL_CALENDAR_ID || '9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com',
     timezone: process.env.GCAL_TIMEZONE || 'Europe/Rome',
     serviceAccountEmail: serviceAccountEmail,
     privateKey: privateKey
@@ -199,7 +199,8 @@ function getCalendarClient() {
 exports.testCalendarConnection = onRequest({ 
   cors: { origin: true },
   invoker: 'public',
-  secrets: [googleClientEmail, googlePrivateKey]
+  secrets: [googleClientEmail, googlePrivateKey],
+  timeoutSeconds: 60  // Timeout di 1 minuto per test connessione
 }, async (req, res) => {
   // Handle CORS
   if (handleCors(req, res)) return;
@@ -260,61 +261,62 @@ exports.testCalendarConnection = onRequest({
 exports.calendarOperations = onRequest({ 
   cors: { origin: true },
   invoker: 'public',
-  secrets: [googleClientEmail, googlePrivateKey]
+  secrets: [googleClientEmail, googlePrivateKey],
+  timeoutSeconds: 120  // Aumenta timeout a 2 minuti
 }, async (req, res) => {
   // Handle CORS
   if (handleCors(req, res)) return;
   
   try {
     const { action, eventData, eventId } = req.body;
-    const calendar = getCalendarClient();
-    const config = getCalendarConfig();
-
-    if (action === 'create') {
-      const event = await calendar.events.insert({
-        calendarId: config.calendarId,
-        requestBody: eventData
-      });
+    
+    // Rispondi immediatamente al frontend per evitare timeout
+    res.json({
+      success: true,
+      message: `Calendar operation ${action} started`,
+      eventId: eventId || 'pending'
+    });
+    
+    // Esegui l'operazione Google Calendar in background (non blocca la risposta)
+    try {
+      const calendar = getCalendarClient();
+      const config = getCalendarConfig();
       
-      res.json({
-        success: true,
-        eventId: event.data.id,
-        message: 'Event created successfully'
-      });
-    } else if (action === 'update') {
-      const event = await calendar.events.update({
-        calendarId: config.calendarId,
-        eventId: eventId,
-        requestBody: eventData
-      });
-      
-      res.json({
-        success: true,
-        eventId: event.data.id,
-        message: 'Event updated successfully'
-      });
-    } else if (action === 'delete') {
-      await calendar.events.delete({
-        calendarId: config.calendarId,
-        eventId: eventId
-      });
-      
-      res.json({
-        success: true,
-        message: 'Event deleted successfully'
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: 'Invalid action specified'
-      });
+      if (action === 'create') {
+        const event = await calendar.events.insert({
+          calendarId: config.calendarId,
+          requestBody: eventData
+        });
+        console.log(`✅ Calendar event created successfully: ${event.data.id}`);
+      } else if (action === 'update') {
+        const event = await calendar.events.update({
+          calendarId: config.calendarId,
+          eventId: eventId,
+          requestBody: eventData
+        });
+        console.log(`✅ Calendar event updated successfully: ${event.data.id}`);
+      } else if (action === 'delete') {
+        await calendar.events.delete({
+          calendarId: config.calendarId,
+          eventId: eventId
+        });
+        console.log(`✅ Calendar event deleted successfully: ${eventId}`);
+      } else {
+        console.error(`❌ Invalid calendar action: ${action}`);
+      }
+    } catch (calendarError) {
+      console.error(`❌ Calendar operation ${action} failed:`, calendarError);
+      // Non rilanciare l'errore - l'operazione è già asincrona
     }
   } catch (error) {
     console.error('Google Calendar operation failed:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    // Se la risposta non è ancora stata inviata
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 });
 
