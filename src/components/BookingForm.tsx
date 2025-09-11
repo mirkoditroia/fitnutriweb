@@ -713,12 +713,14 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           console.log("📱 iOS - Tentativo createBooking con gestione speciale");
           try {
             // Prova prima con headers specifici iOS
+            setLoadingStep("Inviando prenotazione (iOS)...");
             bookingId = await createBooking(bookingPayload, captchaToken || undefined);
           } catch (iosError) {
             console.error("📱 iOS - Primo tentativo fallito:", iosError);
             
             // ✅ Secondo tentativo con fetch nativo per iOS
             console.log("📱 iOS - Secondo tentativo con API diretta");
+            setLoadingStep("Tentativo alternativo (iOS)...");
             console.log("📱 iOS - Payload da inviare:", JSON.stringify(bookingPayload, null, 2));
             const response = await fetch("/api/localdb/bookings", {
               method: "POST",
@@ -746,10 +748,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             console.log("📱 iOS - Fallback API riuscito:", bookingId);
           }
         } else {
+          setLoadingStep("Inviando prenotazione...");
           bookingId = await createBooking(bookingPayload, captchaToken || undefined);
         }
         
-        setLoadingStep("Completato!");
+        setLoadingStep("Finalizzando...");
         console.log("✅ Prenotazione creata con successo! ID:", bookingId);
         console.log("🔍 Modalità data utilizzata per questa prenotazione:", process.env.NODE_ENV === 'production' ? 'Firebase' : 'Local');
         
@@ -771,7 +774,9 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         if (currentDataMode === "local") {
           setLoadingStep("Tentativo sistema di backup locale...");
           console.log("🔄 Usando fallback locale in modalità dev...");
+          
           // Fallback locale con headers iOS-friendly
+          setLoadingStep("Inviando tramite backup...");
           const response = await fetch("/api/localdb/bookings", {
             method: "POST",
             headers: { 
@@ -782,11 +787,14 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             body: JSON.stringify(bookingData),
             ...(isIOS() && {credentials: 'same-origin'})
           });
+          
+          setLoadingStep("Verificando backup...");
           if (!response.ok) {
             console.error("❌ Fallback locale fallito anche!");
             throw new Error("Prenotazione fallita completamente");
           }
-          setLoadingStep("Backup locale completato!");
+          
+          setLoadingStep("Backup completato!");
           console.log("✅ Fallback locale riuscito");
         } else {
           // In modalità Firebase, rilancia l'errore originale con info iOS
@@ -1459,12 +1467,13 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               className="h-full rounded-full transition-all duration-700 ease-out shadow-sm relative overflow-hidden"
               style={{
                 background: `linear-gradient(to right, ${colors.primary}, rgba(${colors.primaryRgb}, 0.8))`,
-                width: loadingStep.includes("Preparando") ? "25%" :
-                       loadingStep.includes("Verificando") ? "50%" :
-                       loadingStep.includes("Inviando") ? "75%" :
+                width: loadingStep.includes("Preparando") ? "20%" :
+                       loadingStep.includes("Verificando") ? "40%" :
+                       loadingStep.includes("Inviando") ? "60%" :
+                       loadingStep.includes("Tentativo") ? "80%" :
+                       loadingStep.includes("Finalizzando") ? "90%" :
                        loadingStep.includes("Completato") || loadingStep.includes("Backup") ? "100%" :
-                       loadingStep.includes("Tentativo") ? "90%" :
-                       "15%"
+                       "10%"
               }}
             >
               {/* Effetto shimmer */}
@@ -1472,14 +1481,26 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             </div>
           </div>
           
-          {/* Percentuale */}
+          {/* Percentuale e stato dettagliato */}
           <div className="mt-2 text-xs text-gray-500 font-medium">
-            {loadingStep.includes("Preparando") ? "25%" :
-             loadingStep.includes("Verificando") ? "50%" :
-             loadingStep.includes("Inviando") ? "75%" :
+            {loadingStep.includes("Preparando") ? "20%" :
+             loadingStep.includes("Verificando") ? "40%" :
+             loadingStep.includes("Inviando") ? "60%" :
+             loadingStep.includes("Tentativo") ? "80%" :
+             loadingStep.includes("Finalizzando") ? "90%" :
              loadingStep.includes("Completato") || loadingStep.includes("Backup") ? "100%" :
-             loadingStep.includes("Tentativo") ? "90%" :
-             "15%"} completato
+             "10%"} completato
+          </div>
+          
+          {/* Indicatore di tempo stimato */}
+          <div className="mt-1 text-xs text-gray-400">
+            {loadingStep.includes("Preparando") ? "⏱️ Tempo stimato: 2-3 secondi" :
+             loadingStep.includes("Verificando") ? "⏱️ Tempo stimato: 1-2 secondi" :
+             loadingStep.includes("Inviando") ? "⏱️ Tempo stimato: 1-2 secondi" :
+             loadingStep.includes("Tentativo") ? "⏱️ Quasi completato..." :
+             loadingStep.includes("Finalizzando") ? "⏱️ Finalizzazione..." :
+             loadingStep.includes("Completato") || loadingStep.includes("Backup") ? "✅ Completato!" :
+             "⏱️ Inizializzazione..."}
           </div>
         </div>
       </div>

@@ -226,9 +226,11 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
       }
     }
     
-    // ✅ AGGIUNTO: Invio email di notifica anche in modalità local
+    // ✅ OTTIMIZZAZIONE: Invio email in parallelo (non bloccante)
     const bookingWithId = { ...b, id, createdAt };
-    await sendLocalBookingNotification(bookingWithId);
+    sendLocalBookingNotification(bookingWithId).catch(error => {
+      console.error("❌ Errore invio notifica locale:", error);
+    });
     
     return id;
   } catch {
@@ -238,9 +240,11 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     // ✅ RIMOSSO fallback localdb - causava problemi di sincronizzazione
     // In modalità Firebase, la disponibilità è già gestita correttamente dalla funzione principale
     
-    // ✅ AGGIUNTO: Invio email di notifica anche nel fallback
+    // ✅ OTTIMIZZAZIONE: Invio email in parallelo anche nel fallback (non bloccante)
     const bookingWithId = { ...b, id, createdAt };
-    await sendLocalBookingNotification(bookingWithId);
+    sendLocalBookingNotification(bookingWithId).catch(error => {
+      console.error("❌ Errore invio notifica locale (fallback):", error);
+    });
     
     return id;
   }
@@ -469,7 +473,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     colorPalette: "gz-default" as const,
     googleCalendar: {
       isEnabled: false,
-      calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
+      calendarId: "dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com",
       timezone: "Europe/Rome",
       serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
     }
@@ -519,7 +523,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     favicon: undefined, // Aggiunto per completezza del tipo
     googleCalendar: {
       isEnabled: false,
-      calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
+      calendarId: "dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com",
       timezone: "Europe/Rome",
       serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
     }

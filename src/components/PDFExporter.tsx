@@ -40,9 +40,12 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
     
     return `
       <!DOCTYPE html>
-      <html>
+      <html lang="it">
         <head>
           <meta charset="UTF-8">
+          <meta name="description" content="Report progressi cliente ${clientName}">
+          <meta name="author" content="${siteName}">
+          <meta name="keywords" content="nutrizione, progressi, cliente, report">
           <title>Report Progressi - ${clientName}</title>
           <style>
             body {
@@ -170,9 +173,48 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
               color: #6B7280;
               font-size: 14px;
             }
+            .charts-container {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 30px;
+              margin: 20px 0;
+            }
+            .chart-section {
+              background: #F9FAFB;
+              padding: 20px;
+              border-radius: 8px;
+              border: 1px solid #E5E7EB;
+            }
+            .chart-section h3 {
+              margin: 0 0 15px 0;
+              color: #374151;
+              font-size: 16px;
+              text-align: center;
+            }
+            .chart-placeholder {
+              text-align: center;
+              background: white;
+              border-radius: 4px;
+              padding: 10px;
+            }
+            canvas {
+              max-width: 100%;
+              height: auto;
+            }
             @media print {
-              body { margin: 0; }
+              body { 
+                margin: 0; 
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+              }
               .no-print { display: none; }
+              .charts-container {
+                page-break-inside: avoid;
+              }
+              .chart-section {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+              }
             }
           </style>
         </head>
@@ -238,6 +280,9 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
                     <th>Massa Muscolare (kg)</th>
                     <th>Vita (cm)</th>
                     <th>Petto (cm)</th>
+                    <th>Fianchi (cm)</th>
+                    <th>Bicipite (cm)</th>
+                    <th>Coscia (cm)</th>
                     <th>Note</th>
                   </tr>
                 </thead>
@@ -250,6 +295,9 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
                       <td>${entry.muscleMass || '-'}</td>
                       <td>${entry.measurements?.waist || '-'}</td>
                       <td>${entry.measurements?.chest || '-'}</td>
+                      <td>${entry.measurements?.hipCircumference || '-'}</td>
+                      <td>${entry.measurements?.bicepCircumference || '-'}</td>
+                      <td>${entry.measurements?.thighCircumference || '-'}</td>
                       <td>${entry.notes || '-'}</td>
                     </tr>
                   `).join('')}
@@ -259,9 +307,31 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
 
             <div class="progress-section">
               <h2>📊 Grafici Progressi</h2>
-              <div class="chart-placeholder">
-                <p>📈 I grafici visuali sono disponibili nell'applicazione web</p>
-                <p>Utilizza la funzione di stampa per salvare questo report</p>
+              <div class="charts-container">
+                <div class="chart-section">
+                  <h3>📈 Andamento Peso</h3>
+                  <div class="chart-placeholder">
+                    <canvas id="weightChart" width="400" height="200"></canvas>
+                  </div>
+                </div>
+                <div class="chart-section">
+                  <h3>📊 Massa Grassa</h3>
+                  <div class="chart-placeholder">
+                    <canvas id="bodyFatChart" width="400" height="200"></canvas>
+                  </div>
+                </div>
+                <div class="chart-section">
+                  <h3>💪 Massa Muscolare</h3>
+                  <div class="chart-placeholder">
+                    <canvas id="muscleChart" width="400" height="200"></canvas>
+                  </div>
+                </div>
+                <div class="chart-section">
+                  <h3>📏 Misurazioni Corporee</h3>
+                  <div class="chart-placeholder">
+                    <canvas id="measurementsChart" width="400" height="200"></canvas>
+                  </div>
+                </div>
               </div>
             </div>
           ` : `
@@ -276,7 +346,162 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
           <div class="footer">
             <p>Report generato automaticamente da ${siteName}</p>
             <p>Per domande o supporto, contatta il tuo personal trainer</p>
+            <p>Formato: PDF/A-1b (ISO 19005-1:2005)</p>
           </div>
+          
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          <script>
+            // ✅ IMPLEMENTAZIONE GRAFICI CON CHART.JS
+            document.addEventListener('DOMContentLoaded', function() {
+              const data = ${JSON.stringify(data)};
+              
+              if (data.length === 0) return;
+              
+              // Prepara i dati per i grafici
+              const labels = data.map(entry => new Date(entry.date).toLocaleDateString('it-IT'));
+              const weightData = data.map(entry => entry.weight || null);
+              const bodyFatData = data.map(entry => entry.bodyFat || null);
+              const muscleData = data.map(entry => entry.muscleMass || null);
+              
+              // Grafico Peso
+              const weightCtx = document.getElementById('weightChart');
+              if (weightCtx) {
+                new Chart(weightCtx, {
+                  type: 'line',
+                  data: {
+                    labels: labels,
+                    datasets: [{
+                      label: 'Peso (kg)',
+                      data: weightData,
+                      borderColor: '#3B82F6',
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                      tension: 0.4,
+                      fill: true
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false }
+                    },
+                    scales: {
+                      y: { beginAtZero: false }
+                    }
+                  }
+                });
+              }
+              
+              // Grafico Massa Grassa
+              const bodyFatCtx = document.getElementById('bodyFatChart');
+              if (bodyFatCtx) {
+                new Chart(bodyFatCtx, {
+                  type: 'line',
+                  data: {
+                    labels: labels,
+                    datasets: [{
+                      label: 'Massa Grassa (%)',
+                      data: bodyFatData,
+                      borderColor: '#EF4444',
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      tension: 0.4,
+                      fill: true
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false }
+                    },
+                    scales: {
+                      y: { beginAtZero: false }
+                    }
+                  }
+                });
+              }
+              
+              // Grafico Massa Muscolare
+              const muscleCtx = document.getElementById('muscleChart');
+              if (muscleCtx) {
+                new Chart(muscleCtx, {
+                  type: 'line',
+                  data: {
+                    labels: labels,
+                    datasets: [{
+                      label: 'Massa Muscolare (kg)',
+                      data: muscleData,
+                      borderColor: '#10B981',
+                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      tension: 0.4,
+                      fill: true
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false }
+                    },
+                    scales: {
+                      y: { beginAtZero: false }
+                    }
+                  }
+                });
+              }
+              
+              // Grafico Misurazioni Corporee
+              const measurementsCtx = document.getElementById('measurementsChart');
+              if (measurementsCtx) {
+                const waistData = data.map(entry => entry.measurements?.waist || null);
+                const chestData = data.map(entry => entry.measurements?.chest || null);
+                const hipData = data.map(entry => entry.measurements?.hipCircumference || null);
+                
+                new Chart(measurementsCtx, {
+                  type: 'line',
+                  data: {
+                    labels: labels,
+                    datasets: [
+                      {
+                        label: 'Vita (cm)',
+                        data: waistData,
+                        borderColor: '#8B5CF6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        tension: 0.4
+                      },
+                      {
+                        label: 'Petto (cm)',
+                        data: chestData,
+                        borderColor: '#F59E0B',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4
+                      },
+                      {
+                        label: 'Fianchi (cm)',
+                        data: hipData,
+                        borderColor: '#06B6D4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        tension: 0.4
+                      }
+                    ]
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { 
+                        display: true,
+                        position: 'bottom'
+                      }
+                    },
+                    scales: {
+                      y: { beginAtZero: false }
+                    }
+                  }
+                });
+              }
+            });
+          </script>
         </body>
       </html>
     `;

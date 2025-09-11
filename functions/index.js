@@ -146,7 +146,7 @@ function getCalendarConfig() {
   }
 
   return {
-    calendarId: process.env.GCAL_CALENDAR_ID || '9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com',
+    calendarId: process.env.GCAL_CALENDAR_ID || 'dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com',
     timezone: process.env.GCAL_TIMEZONE || 'Europe/Rome',
     serviceAccountEmail: serviceAccountEmail,
     privateKey: privateKey

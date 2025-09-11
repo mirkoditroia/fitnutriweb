@@ -145,6 +145,9 @@ export default function AdminClientsPage() {
                     <th>Massa Muscolare (kg)</th>
                     <th>Vita (cm)</th>
                     <th>Petto (cm)</th>
+                    <th>Fianchi (cm)</th>
+                    <th>Bicipite (cm)</th>
+                    <th>Coscia (cm)</th>
                     <th>Note</th>
                   </tr>
                 </thead>
@@ -157,6 +160,9 @@ export default function AdminClientsPage() {
                       <td>${entry.muscleMass || '-'}</td>
                       <td>${entry.measurements?.waist || '-'}</td>
                       <td>${entry.measurements?.chest || '-'}</td>
+                      <td>${entry.measurements?.hipCircumference || '-'}</td>
+                      <td>${entry.measurements?.bicepCircumference || '-'}</td>
+                      <td>${entry.measurements?.thighCircumference || '-'}</td>
                       <td>${entry.notes || '-'}</td>
                     </tr>
                   `).join('')}
@@ -371,38 +377,170 @@ export default function AdminClientsPage() {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={() => {
-                setViewMode("list");
-                setSelectedClient(null);
-              }}
-              variant="outline"
-              size="sm"
-            >
-              ← Torna alla Lista
-            </Button>
-            <h1 className="text-2xl font-bold">
-              {isNew ? "Nuovo Cliente" : `Dettaglio Cliente`}
-            </h1>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => handleSaveClient(client)}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              💾 Salva Modifiche
-            </Button>
-            {!isNew && (
+        {/* ✅ HEADER MIGLIORATO CON INDICATORI VISIVI */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
               <Button
-                onClick={() => handleDeleteClient(client.id!)}
-                className="bg-red-600 hover:bg-red-700"
+                onClick={() => {
+                  setViewMode("list");
+                  setSelectedClient(null);
+                }}
+                variant="outline"
+                size="sm"
+                className="hover:bg-white"
               >
-                🗑️ Elimina Cliente
+                ← Torna alla Lista
               </Button>
-            )}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {isNew ? "➕ Nuovo Cliente" : `👤 Dettaglio Cliente`}
+                </h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  {isNew 
+                    ? "Compila i campi obbligatori per aggiungere un nuovo cliente" 
+                    : "Gestisci le informazioni e i progressi del cliente"
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleSaveClient(client)}
+                className="bg-green-600 hover:bg-green-700 shadow-lg"
+              >
+                💾 Salva {isNew ? 'Cliente' : 'Modifiche'}
+              </Button>
+              {!isNew && (
+                <Button
+                  onClick={() => handleDeleteClient(client.id!)}
+                  className="bg-red-600 hover:bg-red-700 shadow-lg"
+                >
+                  🗑️ Elimina
+                </Button>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* ✅ FORM PRINCIPALE MIGLIORATO */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              📋 Informazioni Base
+            </h2>
+            <p className="text-sm text-gray-600">
+              I campi contrassegnati con * sono obbligatori
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Nome Completo */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Nome Completo *
+              </label>
+              <Input
+                value={client.name}
+                onChange={(e) => setSelectedClient({ ...client, name: e.target.value })}
+                placeholder="es. Mario Rossi"
+                className="w-full"
+                required
+              />
+              {!client.name && isNew && (
+                <p className="text-xs text-red-600">⚠️ Il nome è obbligatorio</p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Email *
+              </label>
+              <Input
+                type="email"
+                value={client.email}
+                onChange={(e) => setSelectedClient({ ...client, email: e.target.value })}
+                placeholder="es. mario.rossi@email.com"
+                className="w-full"
+                required
+              />
+              {!client.email && isNew && (
+                <p className="text-xs text-red-600">⚠️ L'email è obbligatoria</p>
+              )}
+            </div>
+
+            {/* Telefono */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Telefono *
+              </label>
+              <Input
+                type="tel"
+                value={client.phone}
+                onChange={(e) => setSelectedClient({ ...client, phone: e.target.value })}
+                placeholder="es. +39 123 456 7890"
+                className="w-full"
+                required
+              />
+              {!client.phone && isNew && (
+                <p className="text-xs text-red-600">⚠️ Il telefono è obbligatorio</p>
+              )}
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Stato Cliente
+              </label>
+              <select
+                value={client.status || 'active'}
+                onChange={(e) => setSelectedClient({ ...client, status: e.target.value as 'active' | 'inactive' | 'pending' })}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="active">🟢 Attivo</option>
+                <option value="inactive">🔴 Inattivo</option>
+                <option value="pending">🟡 In Attesa</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Note */}
+          <div className="mt-6 space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Note Aggiuntive
+            </label>
+            <textarea
+              value={client.notes || ''}
+              onChange={(e) => setSelectedClient({ ...client, notes: e.target.value })}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={3}
+              placeholder="Note aggiuntive sul cliente, obiettivi, preferenze..."
+            />
+          </div>
+
+          {/* ✅ INDICATORE COMPLETAMENTO FORM */}
+          {isNew && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-medium text-blue-900">Completamento Form:</span>
+                <span className="text-sm text-blue-700">
+                  {[client.name, client.email, client.phone].filter(Boolean).length}/3 campi obbligatori
+                </span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${([client.name, client.email, client.phone].filter(Boolean).length / 3) * 100}%` 
+                  }}
+                ></div>
+              </div>
+              {[client.name, client.email, client.phone].filter(Boolean).length === 3 && (
+                <p className="text-xs text-green-700 mt-2">✅ Form completo! Puoi salvare il cliente.</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Nuova Scheda Cliente Migliorata */}

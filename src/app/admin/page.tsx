@@ -102,7 +102,7 @@ export default function AdminPage() {
             </p>
             <div className="mt-4 flex gap-3">
               <Link 
-                href="https://calendar.google.com/calendar/u/0/r?cid=9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com" 
+                href="https://calendar.google.com/calendar/u/0/r?cid=dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com" 
                 target="_blank"
                 className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium text-base font-semibold"
               >

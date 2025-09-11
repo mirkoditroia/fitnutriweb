@@ -120,7 +120,7 @@ export type ClientCard = {
   medications?: string[];
   // Business information
   source?: "website" | "social_media" | "referral" | "other";
-  status?: "active" | "inactive" | "prospect";
+  status?: "active" | "inactive" | "prospect" | "pending";
   assignedPackage?: string;
   // Documents
   documents?: {
@@ -145,6 +145,10 @@ export type ClientProgress = {
     hips?: number;
     arms?: number;
     thighs?: number;
+    // ✅ NUOVE MISURAZIONI AGGIUNTE
+    hipCircumference?: number; // Circonferenza fianchi
+    bicepCircumference?: number; // Circonferenza bicipite
+    thighCircumference?: number; // Circonferenza coscia
   };
   notes?: string;
   photos?: string[];
@@ -511,18 +515,24 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   
   if (!db) throw new Error("Firestore not configured");
   
-  // Verifica CAPTCHA se abilitato
+  // ✅ OTTIMIZZAZIONE: Verifica CAPTCHA con timeout ridotto
   const siteContent = await getSiteContent();
   if (siteContent?.recaptchaEnabled && captchaToken) {
     try {
       debugLogSync("🔑 Inizio verifica CAPTCHA con token:", captchaToken ? captchaToken.substring(0, 20) + "..." : "null");
       
+      // ✅ Timeout ridotto per CAPTCHA (5 secondi invece di default 30)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       const response = await fetch('https://verifycaptcha-4ks3j6nupa-uc.a.run.app', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: captchaToken })
+        body: JSON.stringify({ token: captchaToken }),
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
       debugLogSync("📡 Risposta Firebase Function status:", response.status);
       
       const result = await response.json();
@@ -536,6 +546,9 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
       debugLogSync("✅ CAPTCHA verificato con successo!");
     } catch (error) {
       console.error("💥 Errore verifica CAPTCHA:", error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error("Verifica CAPTCHA timeout. Riprova.");
+      }
       throw new Error("Errore nella verifica CAPTCHA. Riprova.");
     }
   } else if (siteContent?.recaptchaEnabled && !captchaToken) {
@@ -730,43 +743,61 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     }
   }
   
-  // Create Google Calendar event
-  try {
-    if (b.status === "confirmed") {
-      const calendarEventId = await ensureCalendarEvent(undefined, b, packageTitle);
-      if (calendarEventId) {
-        // Update booking with calendar event ID
-        await updateDoc(doc(db as Firestore, "bookings", added.id), {
-          googleCalendarEventId: calendarEventId
-        });
-        debugLogSync("Google Calendar event created and linked to booking:", calendarEventId);
-      }
-    }
-  } catch (error) {
-    console.error("Error creating Google Calendar event:", error);
-    // Don't fail the booking creation if calendar fails
+  // ✅ OTTIMIZZAZIONE: Operazioni non critiche in parallelo
+  const nonCriticalOperations = [];
+  
+  // Create Google Calendar event (non critico)
+  if (b.status === "confirmed") {
+    nonCriticalOperations.push(
+      (async () => {
+        try {
+          const calendarEventId = await ensureCalendarEvent(undefined, b, packageTitle);
+          if (calendarEventId && calendarEventId !== 'pending') {
+            // Update booking with calendar event ID only if it's a real ID
+            await updateDoc(doc(db as Firestore, "bookings", added.id), {
+              googleCalendarEventId: calendarEventId
+            });
+            debugLogSync("Google Calendar event created and linked to booking:", calendarEventId);
+          } else if (calendarEventId === 'pending') {
+            console.log("⚠️ [BOOKING] Evento calendario creato ma con ID 'pending' - non salvato nel database");
+            console.log("⚠️ [BOOKING] L'evento esiste nel calendario ma non può essere tracciato per la cancellazione");
+          }
+        } catch (error) {
+          console.error("Error creating Google Calendar event:", error);
+          // Don't fail the booking creation if calendar fails
+        }
+      })()
+    );
   }
 
-  // Invia notifica email al nutrizionista per nuova prenotazione
-  try {
-    debugLogSync("📧 Preparando invio email notifica...");
-    const bookingWithId = { ...b, id: added.id };
-    
-    // Ottieni l'email di notifica, nome business e palette dalle impostazioni
-    const siteContent = await getSiteContent();
-    const notificationEmail = siteContent?.notificationEmail || "mirkoditroia@gmail.com";
-    const businessName = siteContent?.businessName || "GZ Nutrition";
-    const colorPalette = siteContent?.colorPalette || "gz-default";
-    
-    debugLogSync("📬 Inviando email a:", notificationEmail, "per", packageTitle);
-    await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName, colorPalette);
-    debugLogSync("✅ Email al dottore inviata con successo!");
-    
-    // Email al nutrizionista completata - sistema funzionante
-    
-  } catch (error) {
-    console.error("❌ Errore invio email:", error);
-    // Don't fail the booking creation if notification fails
+  // Invia notifica email al nutrizionista (non critico)
+  nonCriticalOperations.push(
+    (async () => {
+      try {
+        debugLogSync("📧 Preparando invio email notifica...");
+        const bookingWithId = { ...b, id: added.id };
+        
+        // Ottieni l'email di notifica, nome business e palette dalle impostazioni
+        const siteContent = await getSiteContent();
+        const notificationEmail = siteContent?.notificationEmail || "mirkoditroia@gmail.com";
+        const businessName = siteContent?.businessName || "GZ Nutrition";
+        const colorPalette = siteContent?.colorPalette || "gz-default";
+        
+        debugLogSync("📬 Inviando email a:", notificationEmail, "per", packageTitle);
+        await sendBookingNotification(bookingWithId, packageTitle, notificationEmail, businessName, colorPalette);
+        debugLogSync("✅ Email al dottore inviata con successo!");
+      } catch (error) {
+        console.error("❌ Errore invio email:", error);
+        // Don't fail the booking creation if notification fails
+      }
+    })()
+  );
+
+  // ✅ Esegui operazioni non critiche in parallelo (non bloccanti)
+  if (nonCriticalOperations.length > 0) {
+    Promise.all(nonCriticalOperations).catch(error => {
+      console.error("❌ Errore in operazioni non critiche:", error);
+    });
   }
 
   return added.id;
@@ -882,9 +913,11 @@ export async function updateBooking(booking: Booking): Promise<void> {
         console.log("📅 Creating new Google Calendar event for confirmed booking...");
         const newEventId = await ensureCalendarEvent(undefined, booking, packageTitle);
         console.log("📅 New event creation result:", newEventId ? "SUCCESS" : "FAILED");
-        if (newEventId) {
+        if (newEventId && newEventId !== 'pending') {
           await setDoc(doc(db as Firestore, "bookings", booking.id), { googleCalendarEventId: newEventId }, { merge: true });
           debugLogSync("Google Calendar event created for existing booking:", newEventId);
+        } else if (newEventId === 'pending') {
+          console.log("⚠️ [BOOKING] Evento calendario creato ma con ID 'pending' - non salvato nel database");
         }
       } else {
         console.log("📅 Booking not confirmed, skipping calendar event creation");
@@ -1034,16 +1067,88 @@ export async function deleteBooking(bookingId: string): Promise<void> {
       // Delete Google Calendar event if it exists
       if (bookingData.googleCalendarEventId) {
         try {
-          const success = await deleteCalendarEvent(bookingData.googleCalendarEventId);
-          if (success) {
-            debugLogSync("Google Calendar event deleted:", bookingData.googleCalendarEventId);
+          console.log("🗑️ [BOOKING] Tentativo cancellazione evento calendario:", bookingData.googleCalendarEventId);
+          
+          // Special handling for 'pending' eventId
+          if (bookingData.googleCalendarEventId === 'pending') {
+            console.log("⚠️ [BOOKING] EventId è 'pending' - tentativo cancellazione per nome e data");
+            console.log("🔍 [BOOKING] Cercando evento nel calendario per:", {
+              name: bookingData.name,
+              date: bookingData.date,
+              slot: bookingData.slot
+            });
+            
+            // Try to delete by searching for the event by name and date
+            const success = await deleteCalendarEvent(bookingData.googleCalendarEventId, {
+              name: bookingData.name,
+              date: bookingData.date,
+              slot: bookingData.slot || ''
+            });
+            
+            if (success) {
+              console.log("✅ [BOOKING] Evento calendario cancellato tramite ricerca");
+            } else {
+              console.log("⚠️ [BOOKING] L'evento potrebbe essere presente nel calendario ma non tracciabile");
+              console.log("⚠️ [BOOKING] Controlla manualmente il calendario Google per eventi non cancellati");
+              
+              // Show warning to user
+              if (typeof window !== 'undefined') {
+                // Import toast dynamically to avoid SSR issues
+                import('react-hot-toast').then(({ toast }) => {
+                  toast.error(
+                    "⚠️ Controlla il calendario Google: l'evento potrebbe non essere stato cancellato automaticamente",
+                    { duration: 8000 }
+                  );
+                });
+              }
+            }
           } else {
-            console.error("Failed to delete Google Calendar event:", bookingData.googleCalendarEventId);
+            const success = await deleteCalendarEvent(bookingData.googleCalendarEventId, {
+              name: bookingData.name,
+              date: bookingData.date,
+              slot: bookingData.slot || ''
+            });
+            if (success) {
+              debugLogSync("✅ [BOOKING] Google Calendar event deleted successfully:", bookingData.googleCalendarEventId);
+            } else {
+              console.error("❌ [BOOKING] Failed to delete Google Calendar event:", bookingData.googleCalendarEventId);
+              // Log the failure but don't fail the booking deletion
+              console.warn("⚠️ [BOOKING] La prenotazione è stata eliminata dal database ma l'evento calendario potrebbe essere ancora presente");
+              
+              // Show warning to user
+              if (typeof window !== 'undefined') {
+                // Import toast dynamically to avoid SSR issues
+                import('react-hot-toast').then(({ toast }) => {
+                  toast.error(
+                    "⚠️ Controlla il calendario Google: l'evento potrebbe non essere stato cancellato automaticamente",
+                    { duration: 8000 }
+                  );
+                });
+              }
+            }
           }
         } catch (error) {
-          console.error("Error deleting Google Calendar event:", error);
+          console.error("❌ [BOOKING] Error deleting Google Calendar event:", {
+            error: error,
+            eventId: bookingData.googleCalendarEventId,
+            bookingId: bookingId
+          });
           // Don't fail the booking deletion if calendar fails
+          console.warn("⚠️ [BOOKING] La prenotazione è stata eliminata dal database ma l'evento calendario potrebbe essere ancora presente");
+          
+          // Show warning to user
+          if (typeof window !== 'undefined') {
+            // Import toast dynamically to avoid SSR issues
+            import('react-hot-toast').then(({ toast }) => {
+              toast.error(
+                "⚠️ Controlla il calendario Google: l'evento potrebbe non essere stato cancellato automaticamente",
+                { duration: 8000 }
+              );
+            });
+          }
         }
+      } else {
+        console.log("ℹ️ [BOOKING] Nessun evento calendario da cancellare per questa prenotazione");
       }
       
       // Create inactive client from rejected booking
@@ -1389,7 +1494,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       googleCalendar: (() => {
         const calendarConfig = {
           isEnabled: data.googleCalendar?.isEnabled || false,
-          calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com", // FORCED: Ignora database, usa sempre questo ID
+          calendarId: "dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com", // FORCED: Ignora database, usa sempre questo ID
           timezone: data.googleCalendar?.timezone || "Europe/Rome",
           serviceAccountEmail: data.googleCalendar?.serviceAccountEmail || "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
         };

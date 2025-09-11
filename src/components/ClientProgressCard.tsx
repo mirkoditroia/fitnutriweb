@@ -17,6 +17,10 @@ interface ProgressEntry {
     hips?: number;
     arms?: number;
     thighs?: number;
+    // ✅ NUOVE MISURAZIONI AGGIUNTE
+    hipCircumference?: number; // Circonferenza fianchi
+    bicepCircumference?: number; // Circonferenza bicipite
+    thighCircumference?: number; // Circonferenza coscia
   };
   notes?: string;
   photos?: string[];
@@ -222,6 +226,58 @@ export function ClientProgressCard({ client, progressData = [], onSave, onExport
                   }))}
                 />
               </div>
+              
+              {/* ✅ NUOVE MISURAZIONI AGGIUNTE */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Circonferenza Fianchi (cm)</label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="es. 95.0"
+                  value={newProgress.measurements?.hipCircumference || ''}
+                  onChange={(e) => setNewProgress(prev => ({ 
+                    ...prev, 
+                    measurements: { 
+                      ...prev.measurements, 
+                      hipCircumference: e.target.value ? parseFloat(e.target.value) : undefined 
+                    } 
+                  }))}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Circonferenza Bicipite (cm)</label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="es. 35.0"
+                  value={newProgress.measurements?.bicepCircumference || ''}
+                  onChange={(e) => setNewProgress(prev => ({ 
+                    ...prev, 
+                    measurements: { 
+                      ...prev.measurements, 
+                      bicepCircumference: e.target.value ? parseFloat(e.target.value) : undefined 
+                    } 
+                  }))}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Circonferenza Coscia (cm)</label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="es. 60.0"
+                  value={newProgress.measurements?.thighCircumference || ''}
+                  onChange={(e) => setNewProgress(prev => ({ 
+                    ...prev, 
+                    measurements: { 
+                      ...prev.measurements, 
+                      thighCircumference: e.target.value ? parseFloat(e.target.value) : undefined 
+                    } 
+                  }))}
+                />
+              </div>
             </div>
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
@@ -257,7 +313,7 @@ export function ClientProgressCard({ client, progressData = [], onSave, onExport
                     {format(new Date(entry.date), 'dd MMM yyyy', { locale: it })}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
                   {entry.weight && (
                     <div>
                       <span className="text-gray-600">Peso:</span>
@@ -280,6 +336,30 @@ export function ClientProgressCard({ client, progressData = [], onSave, onExport
                     <div>
                       <span className="text-gray-600">Vita:</span>
                       <span className="ml-1 font-medium">{entry.measurements.waist} cm</span>
+                    </div>
+                  )}
+                  {entry.measurements?.chest && (
+                    <div>
+                      <span className="text-gray-600">Petto:</span>
+                      <span className="ml-1 font-medium">{entry.measurements.chest} cm</span>
+                    </div>
+                  )}
+                  {entry.measurements?.hipCircumference && (
+                    <div>
+                      <span className="text-gray-600">Fianchi:</span>
+                      <span className="ml-1 font-medium">{entry.measurements.hipCircumference} cm</span>
+                    </div>
+                  )}
+                  {entry.measurements?.bicepCircumference && (
+                    <div>
+                      <span className="text-gray-600">Bicipite:</span>
+                      <span className="ml-1 font-medium">{entry.measurements.bicepCircumference} cm</span>
+                    </div>
+                  )}
+                  {entry.measurements?.thighCircumference && (
+                    <div>
+                      <span className="text-gray-600">Coscia:</span>
+                      <span className="ml-1 font-medium">{entry.measurements.thighCircumference} cm</span>
                     </div>
                   )}
                 </div>
