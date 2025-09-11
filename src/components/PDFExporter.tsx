@@ -22,7 +22,8 @@ export function PDFExporter({ clientName, progressData, onExport, isLoading = fa
     const loadChart = async () => {
       if (typeof window !== 'undefined') {
         try {
-          const ChartJS = await import('chart.js');
+          // Importa Chart.js con tutti i componenti necessari
+          const ChartJS = await import('chart.js/auto');
           setChart(() => ChartJS.Chart);
         } catch (error) {
           console.error('Errore caricamento Chart.js:', error);
