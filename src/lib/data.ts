@@ -18,7 +18,7 @@ import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCa
 import { debugLog, debugError, debugLogSync } from "./debugUtils";
 
 // Funzione per inviare notifica email per nuova prenotazione al dottore
-async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string, colorPalette?: string) {
+export async function sendBookingNotification(booking: Booking, packageTitle?: string, notificationEmail?: string, businessName?: string, colorPalette?: string) {
   try {
     debugLogSync("📤 sendBookingNotification chiamata con:", { 
       bookingId: booking.id, 
@@ -178,6 +178,7 @@ export type Booking = {
 
 export interface SiteContent {
   siteName?: string; // Nome del sito (default: "GZnutrition")
+  siteUrl?: string; // URL principale del sito per CORS (es. "https://www.gznutrition.it")
   favicon?: string; // URL del favicon personalizzato
   heroTitle: string;
   heroSubtitle: string;
@@ -504,7 +505,11 @@ export async function listBookings(): Promise<Booking[]> {
   return snap.docs.map((d) => toBooking(d.id, d.data()));
 }
 
-export async function createBooking(b: Booking, captchaToken?: string): Promise<string> {
+export async function createBooking(
+  b: Booking,
+  captchaToken?: string,
+  options?: { awaitSideEffects?: boolean }
+): Promise<string> {
   debugLogSync("🔥 createBooking Firebase iniziato:", { 
     isFreeConsultation: b.isFreeConsultation, 
     slot: b.slot, 
@@ -793,11 +798,15 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     })()
   );
 
-  // ✅ Esegui operazioni non critiche in parallelo (non bloccanti)
+  // ✅ Esegui operazioni non critiche
   if (nonCriticalOperations.length > 0) {
-    Promise.all(nonCriticalOperations).catch(error => {
+    const promise = Promise.all(nonCriticalOperations).catch(error => {
       console.error("❌ Errore in operazioni non critiche:", error);
     });
+    // In contesti server (API) attendi per garantire invio email e sync calendario
+    if (options?.awaitSideEffects) {
+      await promise;
+    }
   }
 
   return added.id;
@@ -1191,8 +1200,8 @@ export async function deleteBooking(bookingId: string): Promise<void> {
   
   await deleteDoc(doc(db as Firestore, "bookings", bookingId));
   
-  // Se la prenotazione aveva uno slot confermato, ripristinalo nella disponibilità
-  if (bookingData && bookingData.status === "confirmed" && bookingData.slot && bookingData.date) {
+  // ✅ CORRETTO: Ripristina slot per qualsiasi prenotazione che occupava uno slot, non solo quelle confermate
+  if (bookingData && bookingData.slot && bookingData.date) {
     try {
       const dateStr = bookingData.date.split('T')[0];
       const availDoc = col.availability(db as Firestore, dateStr);

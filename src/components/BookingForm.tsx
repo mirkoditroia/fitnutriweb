@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getAvailabilityByDate, getSiteContent } from "@/lib/datasource";
+import { getAvailabilityByDate, getSiteContent, createBooking, getDataMode } from "@/lib/datasource";
 import { debugLog, debugLogSync } from "@/lib/debugUtils";
 import { format, addDays, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isToday } from "date-fns";
 import { it } from "date-fns/locale";
@@ -528,6 +528,19 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   };
 
+  // ✅ Funzione per rilevare Android
+  const isAndroid = () => {
+    if (typeof window === 'undefined') return false;
+    return /Android/.test(navigator.userAgent);
+  };
+
+  // ✅ Funzione per rilevare dispositivi mobili in generale
+  const isMobile = () => {
+    if (typeof window === 'undefined') return false;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  };
+
   // ✅ Funzione per rilevare modalità incognito (migliorata)
   const isIncognito = () => {
     if (typeof window === 'undefined') return false;
@@ -592,13 +605,6 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       return; // STOP - Non continuare
     }
     
-    // ✅ iOS debugging
-    if (isIOS()) {
-      console.log("📱 iOS DETECTED - Form submission attempt");
-      console.log("📱 Form data:", data);
-      console.log("📱 CAPTCHA token:", captchaToken ? "presente" : "assente");
-      console.log("📱 User agent:", navigator.userAgent);
-    }
     
     // Consenti esplicitamente l'invio anche senza pacchetto in Admin
     if (requirePackage && !selectedPackage && !adminMode) {
@@ -620,14 +626,13 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
 
     // Verifica CAPTCHA se abilitato (skip per admin e modalità incognito)
     if (!adminMode && siteContent?.recaptchaEnabled && !captchaToken && !incognitoDetected) {
-      // ✅ iOS: Prova a re-renderizzare il reCAPTCHA se fallisce
-      if (isIOS() && recaptchaRef.current) {
-        console.log("📱 iOS - Tentativo re-render reCAPTCHA");
+      // ✅ Mobile: Prova a re-renderizzare il reCAPTCHA se fallisce
+      if (isMobile() && recaptchaRef.current) {
         try {
           recaptchaRef.current.reset();
           await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
-          console.error("📱 iOS - Errore re-render reCAPTCHA:", error);
+          console.error("Errore re-render reCAPTCHA:", error);
         }
       }
       
@@ -663,29 +668,21 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       // ✅ DEBUGGING: Verifica modalità data e importa funzioni
       console.log("🚀 Tentativo prenotazione consulenza gratuita:", { isFreeConsultation, selectedPackage });
       
-      // ✅ iOS: Aggiungi delay specifico per iOS per gestire problemi di timing
-      if (isIOS()) {
-        console.log("📱 iOS - Aggiunto delay specifico per stabilità");
+      // ✅ Mobile: Aggiungi delay specifico per dispositivi mobili per gestire problemi di timing
+      if (isMobile()) {
         await new Promise(resolve => setTimeout(resolve, 300));
       }
       
       try {
         setLoadingStep("Inviando prenotazione...");
         const { createBooking, getDataMode } = await import("@/lib/datasource");
-        const currentDataMode = getDataMode();
-        console.log("🔍 MODALITÀ DATA ATTIVA:", currentDataMode);
-        console.log("🌐 NODE_ENV:", process.env.NODE_ENV);
-        console.log("🔥 Firebase Config Present:", !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+        let currentDataMode = getDataMode();
         
-        // ✅ iOS debugging aggiuntivo
+        // ✅ iOS: Log modalità dati per debugging
         if (isIOS()) {
-          console.log("📱 iOS - Payload pre-invio:", {
-            name: bookingData.name,
-            email: bookingData.email,
-            captchaPresent: !!captchaToken,
-            dataMode: currentDataMode
-          });
+          console.log("📱 iOS - Modalità dati corrente:", currentDataMode);
         }
+        
         const bookingStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
         
         const bookingPayload = {
@@ -702,104 +699,95 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           isFreeConsultation,
         };
         
-        console.log("📤 Payload prenotazione:", bookingPayload);
-        console.log("🔑 CAPTCHA token:", captchaToken ? "presente" : "assente");
-        console.log("🎯 VERIFICA FLAG: isFreeConsultation nel payload =", bookingPayload.isFreeConsultation);
-        console.log("🎯 VERIFICA FLAG: variabile locale isFreeConsultation =", isFreeConsultation);
         
-        // ✅ iOS: Gestione speciale per problemi di fetch
+        // ✅ Gestione speciale per iOS - chiamata diretta Firebase Functions
         let bookingId;
-        if (isIOS()) {
-          console.log("📱 iOS - Tentativo createBooking con gestione speciale");
+        
+        if (isMobile()) {
+          // ✅ Logica unificata per iOS e Android - server first
+          const deviceType = isIOS() ? 'iOS' : isAndroid() ? 'Android' : 'Mobile';
+          setLoadingStep(`Inviando prenotazione (${deviceType})...`);
+          
           try {
-            // Prova prima con headers specifici iOS
-            setLoadingStep("Inviando prenotazione (iOS)...");
-            bookingId = await createBooking(bookingPayload, captchaToken || undefined);
-          } catch (iosError) {
-            console.error("📱 iOS - Primo tentativo fallito:", iosError);
-            
-            // ✅ Secondo tentativo con fetch nativo per iOS
-            console.log("📱 iOS - Secondo tentativo con API diretta");
-            setLoadingStep("Tentativo alternativo (iOS)...");
-            console.log("📱 iOS - Payload da inviare:", JSON.stringify(bookingPayload, null, 2));
-            const response = await fetch("/api/localdb/bookings", {
+            // ✅ Primo tentativo: endpoint server-side (bypassa problemi Safari)
+            const resp = await fetch("/api/bookings/create", {
               method: "POST",
-              headers: { 
+              headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "Cache-Control": "no-cache"
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache"
               },
-              body: JSON.stringify(bookingPayload), // ✅ Rimosso captchaToken dal payload
-              credentials: 'same-origin'
+              credentials: "include",
+              body: JSON.stringify({ ...bookingPayload, captchaToken: captchaToken || undefined })
             });
-            
-            console.log("📱 iOS - Response status:", response.status);
-            console.log("📱 iOS - Response headers:", Object.fromEntries(response.headers.entries()));
-            
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error("📱 iOS - Response error text:", errorText);
-              throw new Error(`iOS API fallback failed: ${response.status} - ${errorText}`);
+            if (!resp.ok) {
+              const text = await resp.text();
+              throw new Error(`${deviceType} server create failed: ${resp.status} - ${text}`);
             }
-            
-            const result = await response.json();
-            console.log("📱 iOS - Response result:", result);
-            bookingId = result.id || result.bookingId || "ios-fallback-success";
-            console.log("📱 iOS - Fallback API riuscito:", bookingId);
+            const json = await resp.json();
+            bookingId = json.id || json.bookingId;
+          } catch (mobileError) {
+            // ✅ Fallback: usa createBooking standard
+            setLoadingStep(`Tentativo alternativo (${deviceType})...`);
+            bookingId = await createBooking(bookingPayload, captchaToken || undefined);
           }
         } else {
+          // Desktop: gestione normale
           setLoadingStep("Inviando prenotazione...");
           bookingId = await createBooking(bookingPayload, captchaToken || undefined);
         }
         
         setLoadingStep("Finalizzando...");
-        console.log("✅ Prenotazione creata con successo! ID:", bookingId);
-        console.log("🔍 Modalità data utilizzata per questa prenotazione:", process.env.NODE_ENV === 'production' ? 'Firebase' : 'Local');
+        
         
         // ✅ RIMOSSA simulazione falsa - ora gestiamo la vera risposta
         if (!bookingId) throw new Error("Prenotazione fallita - nessun ID ricevuto");
       } catch (e) {
-        console.error("❌ Errore createBooking principale:", e);
-        console.error("❌ Dettaglio errore:", (e as Error).message);
-        
-        // ✅ iOS: Gestione errori specifica
-        if (isIOS()) {
-          console.error("📱 iOS - Errore specifico:", e);
-          console.error("📱 iOS - User agent:", navigator.userAgent);
-          console.error("📱 iOS - Network status:", navigator.onLine);
-        }
+        console.error("❌ Errore createBooking:", e);
         
         // ✅ Solo usare fallback se siamo in modalità locale, non Firebase
-        const currentDataMode = (await import("@/lib/datasource")).getDataMode();
+        const currentDataMode = getDataMode();
         if (currentDataMode === "local") {
-          setLoadingStep("Tentativo sistema di backup locale...");
-          console.log("🔄 Usando fallback locale in modalità dev...");
+          setLoadingStep("Tentativo sistema di backup lato server...");
           
-          // Fallback locale con headers iOS-friendly
-          setLoadingStep("Inviando tramite backup...");
-          const response = await fetch("/api/localdb/bookings", {
+          // Fallback server-side per evitare problemi di storage/cookie
+          setLoadingStep("Inviando tramite endpoint server...");
+          const fallbackStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
+          const fallbackPayload = {
+            name: bookingData.name,
+            email: bookingData.email,
+            phone: bookingData.phone || undefined,
+            packageId: selectedPackage?.id,
+            date: bookingData.date,
+            slot: bookingData.slot,
+            location: (isFreeConsultation || selectedPackage?.isPromotional === true) ? "online" : (location as "online" | "studio"),
+            studioLocation: location === "studio" ? (studioLocation || undefined) : undefined,
+            status: fallbackStatus,
+            notes: bookingData.notes,
+            isFreeConsultation,
+          };
+          const response = await fetch("/api/bookings/create", {
             method: "POST",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
               "Accept": "application/json",
-              ...(isIOS() && {"Cache-Control": "no-cache"})
+              "Cache-Control": "no-cache",
+              "Pragma": "no-cache"
             },
-            body: JSON.stringify(bookingData),
-            ...(isIOS() && {credentials: 'same-origin'})
+            credentials: "include",
+            body: JSON.stringify({ ...fallbackPayload, captchaToken: captchaToken || undefined })
           });
-          
-          setLoadingStep("Verificando backup...");
+          setLoadingStep("Verificando risposta server...");
           if (!response.ok) {
-            console.error("❌ Fallback locale fallito anche!");
-            throw new Error("Prenotazione fallita completamente");
+            const errorText = await response.text();
+            throw new Error(`Backup server fallito: ${response.status} - ${errorText}`);
           }
-          
-          setLoadingStep("Backup completato!");
-          console.log("✅ Fallback locale riuscito");
         } else {
-          // In modalità Firebase, rilancia l'errore originale con info iOS
-          const errorMessage = isIOS() 
-            ? `Prenotazione fallita in modalità ${currentDataMode} su iOS: ${(e as Error).message}`
+          // In modalità Firebase, rilancia l'errore originale con info mobile
+          const deviceType = isIOS() ? 'iOS' : isAndroid() ? 'Android' : 'Mobile';
+          const errorMessage = isMobile() 
+            ? `Prenotazione fallita in modalità ${currentDataMode} su ${deviceType}: ${(e as Error).message}`
             : `Prenotazione fallita in modalità ${currentDataMode}: ${(e as Error).message}`;
           throw new Error(errorMessage);
         }
@@ -852,21 +840,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     } catch (error) {
       console.error("Errore:", error);
       
-      // ✅ iOS: Log errore dettagliato
-      if (isIOS()) {
-        console.error("📱 iOS - Errore finale:", {
-          error: error,
-          message: (error as Error).message,
-          userAgent: navigator.userAgent,
-          network: navigator.onLine,
-          captchaToken: captchaToken ? "presente" : "assente"
-        });
-      }
-      
-      // ✅ Toast elegante per errori con messaggio specifico iOS
-      const errorMessage = isIOS() 
-        ? "Errore su iOS. Prova a ricaricare la pagina e ripetere l'operazione."
-        : "Errore nell'invio della prenotazione. Riprova.";
+      // ✅ Toast elegante per errori
+      const errorMessage = "Errore nell'invio della prenotazione. Riprova.";
         
       toast.error(errorMessage, {
         duration: isIOS() ? 6000 : 4000,
@@ -885,15 +860,9 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       setIsSubmitting(false);
       setLoadingStep("");
       
-      // ✅ iOS: Reset CAPTCHA con delay specifico
+      // ✅ Reset CAPTCHA
       if (recaptchaRef.current) {
-        if (isIOS()) {
-          setTimeout(() => {
-            recaptchaRef.current?.reset();
-          }, 300);
-        } else {
-          recaptchaRef.current.reset();
-        }
+        recaptchaRef.current.reset();
       }
     }
   };
@@ -1056,6 +1025,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             label="Nome completo *"
             {...register("name")}
             placeholder="Il tuo nome"
+            // ✅ Android: Migliora la compatibilità input
+            {...(isAndroid() && {
+              autoComplete: "name",
+              inputMode: "text"
+            })}
           />
           {errors.name && (
             <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
@@ -1069,6 +1043,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             type="email"
             {...register("email")}
             placeholder="la-tua-email@esempio.com"
+            // ✅ Android: Migliora la compatibilità input email
+            {...(isAndroid() && {
+              autoComplete: "email",
+              inputMode: "email"
+            })}
           />
           {errors.email && (
             <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
@@ -1081,6 +1060,11 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             label="Telefono *"
             {...register("phone")}
             placeholder="+39 123 456 7890"
+            // ✅ Android: Migliora la compatibilità input telefono
+            {...(isAndroid() && {
+              autoComplete: "tel",
+              inputMode: "tel"
+            })}
           />
           {errors.phone && (
             <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>
@@ -1308,31 +1292,17 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
               ref={recaptchaRef}
               sitekey={siteContent.recaptchaSiteKey}
               onChange={(token) => {
-                console.log("🔑 CAPTCHA onChange:", token ? "token ricevuto" : "token null");
-                if (isIOS()) {
-                  console.log("📱 iOS - CAPTCHA token ricevuto");
-                }
                 setCaptchaToken(token);
               }}
               onExpired={() => {
-                console.log("⏰ CAPTCHA expired");
-                if (isIOS()) {
-                  console.log("📱 iOS - CAPTCHA scaduto");
-                }
                 setCaptchaToken(null);
               }}
               onError={(error) => {
                 console.error("❌ CAPTCHA error:", error);
-                if (isIOS()) {
-                  console.error("📱 iOS - CAPTCHA errore:", error);
-                }
                 setCaptchaToken(null);
               }}
               onLoad={() => {
                 console.log("✅ CAPTCHA loaded");
-                if (isIOS()) {
-                  console.log("📱 iOS - CAPTCHA caricato");
-                }
               }}
             />
           </div>
@@ -1343,6 +1313,14 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           type="submit"
           disabled={isSubmitting || (!adminMode && siteContent?.recaptchaEnabled && !captchaToken) || isIncognito()}
           className="w-full relative transition-all duration-300"
+          // ✅ Android: Aggiungi attributi per migliorare la compatibilità
+          {...(isAndroid() && {
+            style: {
+              WebkitAppearance: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation'
+            }
+          })}
           style={{
             background: isSubmitting 
               ? `linear-gradient(to right, rgba(${colors.primaryRgb}, 0.8), rgba(${colors.primaryRgb}, 0.9))`

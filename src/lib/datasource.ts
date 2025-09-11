@@ -171,7 +171,17 @@ export async function listBookings(): Promise<Booking[]> {
   if (mode === "firebase") return fb_listBookings();
   if (mode === "demo") return fetchDemo<Booking[]>("/demo/bookings.json", []);
   try {
-    const res = await fetch("/api/localdb/bookings", { cache: "no-store" });
+    const res = await fetch("/api/localdb/bookings", { 
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      }
+    });
+    if (!res.ok) throw new Error(`Failed to fetch bookings: ${res.status}`);
     if (res.ok) return (await res.json()) as Booking[];
   } catch {}
   return [];
@@ -200,10 +210,31 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
   const id = cryptoRandomId();
   const createdAt = new Date().toISOString();
   try {
-    const res = await fetch("/api/localdb/bookings", { cache: "no-store" });
+    const res = await fetch("/api/localdb/bookings", { 
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      }
+    });
+    if (!res.ok) throw new Error(`Failed to fetch bookings: ${res.status}`);
     const current = res.ok ? ((await res.json()) as Booking[]) : [];
     const next = [{ ...b, id, createdAt }, ...current];
-    await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify(next) });
+    const saveRes = await fetch("/api/localdb/bookings", { 
+      method: "POST", 
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      },
+      body: JSON.stringify(next) 
+    });
+    if (!saveRes.ok) throw new Error(`Failed to save booking: ${saveRes.status}`);
     
     // Rimuovi lo slot occupato dalla disponibilità
     if (location === "online") {
@@ -235,7 +266,18 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     return id;
   } catch {
     // fallback write new list
-    await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify([{ ...b, id, createdAt }]) });
+    const fallbackRes = await fetch("/api/localdb/bookings", { 
+      method: "POST", 
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      },
+      body: JSON.stringify([{ ...b, id, createdAt }]) 
+    });
+    if (!fallbackRes.ok) throw new Error(`Failed to save booking (fallback): ${fallbackRes.status}`);
     
     // ✅ RIMOSSO fallback localdb - causava problemi di sincronizzazione
     // In modalità Firebase, la disponibilità è già gestita correttamente dalla funzione principale
@@ -316,9 +358,41 @@ export async function deleteBooking(bookingId: string): Promise<void> {
     const filteredItems = current.filter(item => item.id !== bookingId);
     await fetch("/api/localdb/bookings", { method: "POST", body: JSON.stringify(filteredItems) });
     
-    // ✅ RIMOSSA logica ripristino availability locale - causava problemi di sincronizzazione
-    // Firebase gestisce automaticamente la disponibilità quando una prenotazione viene cancellata
-    debugLogSync("📋 Prenotazione cancellata:", bookingToDelete?.id, "- availability gestita dal sistema principale");
+    // ✅ Ripristina slot per prenotazioni in locale se necessario
+    if (bookingToDelete && bookingToDelete.slot && bookingToDelete.date) {
+      try {
+        const dateStr = bookingToDelete.date.split('T')[0];
+        const availRes = await fetch(`/api/localdb/availability?date=${dateStr}`, { cache: "no-store" });
+        if (availRes.ok) {
+          const availability = await availRes.json();
+          const location: "online" | "studio" = bookingToDelete.isFreeConsultation ? "online" : (bookingToDelete.location || "online");
+          
+          if (location === "online") {
+            const slots = availability.onlineSlots || availability.slots || [];
+            if (!slots.includes(bookingToDelete.slot)) {
+              availability.onlineSlots = [...slots, bookingToDelete.slot].sort();
+              await fetch(`/api/localdb/availability`, { 
+                method: "POST", 
+                body: JSON.stringify({ date: dateStr, ...availability })
+              });
+            }
+          } else {
+            const slots = availability.inStudioSlots || [];
+            if (!slots.includes(bookingToDelete.slot)) {
+              availability.inStudioSlots = [...slots, bookingToDelete.slot].sort();
+              await fetch(`/api/localdb/availability`, { 
+                method: "POST", 
+                body: JSON.stringify({ date: dateStr, ...availability })
+              });
+            }
+          }
+        }
+      } catch (availError) {
+        console.error("Error restoring slot availability:", availError);
+        // Non fallire l'eliminazione se il ripristino slot fallisce
+      }
+    }
+    debugLogSync("📋 Prenotazione cancellata:", bookingToDelete?.id, "- slot ripristinato se necessario");
   } catch (error) {
     console.error("Error deleting booking:", error);
     throw error;

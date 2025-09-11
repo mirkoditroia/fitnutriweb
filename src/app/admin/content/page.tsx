@@ -27,6 +27,8 @@ export default function AdminContentPage() {
             // ✅ FALLBACK MIGLIORATO: se contenuto esiste ma mancano le nuove feature, le aggiungiamo
             const finalContent = c ? {
               ...c,
+              // Aggiungi URL del sito se non esiste
+              siteUrl: c.siteUrl || "https://www.gznutrition.it",
               // Aggiungi BMI se non esiste
               bmiCalculator: c.bmiCalculator ?? {
                 enabled: false,
@@ -103,6 +105,7 @@ export default function AdminContentPage() {
               heroCta: "Prenota ora", 
               heroBackgroundImage: "", 
               images: [],
+              siteUrl: "https://www.gznutrition.it",
               colorPalette: "gz-default" as const,
               // ✅ Meta Tags di default
               metaTags: {
@@ -675,6 +678,19 @@ export default function AdminContentPage() {
           <section className="space-y-4">
             <h2 className="font-semibold text-black">Hero</h2>
           <Input label="Nome del sito" value={content.siteName || "GZnutrition"} onChange={(e) => setContent({ ...content, siteName: e.target.value })} placeholder="GZnutrition" />
+          
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-black">URL del Sito</label>
+            <Input 
+              value={content.siteUrl || ""} 
+              onChange={(e) => setContent({ ...content, siteUrl: e.target.value })} 
+              placeholder="https://www.gznutrition.it" 
+              className={fieldCls}
+            />
+            <p className="text-xs text-gray-600">
+              🛡️ Dominio principale per sicurezza CORS e compatibilità mobile (Safari iOS)
+            </p>
+          </div>
           
           {/* Favicon Upload */}
           <div className="space-y-2">

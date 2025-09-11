@@ -63,6 +63,81 @@ async function sendBookingNotification(booking: any): Promise<void> {
   }
 }
 
+// ✅ Helper per aggiungere header CORS e cache control per Safari iOS
+async function addCorsHeaders(response: NextResponse, request?: NextRequest) {
+  response.headers.set("Access-Control-Allow-Credentials", "true");
+
+  // ✅ Origin della richiesta (può essere null su same-origin)
+  const requestOrigin = request?.headers.get("origin") || "";
+
+  // ✅ Usa dominio dinamico da admin settings o fallback
+  let primaryOrigin = "https://www.gznutrition.it";
+  try {
+    const siteContent = await getSiteContent();
+    if (siteContent?.siteUrl) {
+      primaryOrigin = siteContent.siteUrl.startsWith("http")
+        ? siteContent.siteUrl.replace(/\/$/, "")
+        : `https://${siteContent.siteUrl.replace(/\/$/, "")}`;
+    }
+  } catch {
+    // fallback
+  }
+
+  // ✅ Genera varianti www/non-www per maggiore tolleranza
+  const variants = new Set<string>();
+  const addVariant = (urlStr: string) => {
+    try {
+      const u = new URL(urlStr);
+      const host = u.host.replace(/\.$/, "");
+      const noWww = host.replace(/^www\./, "");
+      const withWww = host.startsWith("www.") ? host : `www.${host}`;
+      variants.add(`${u.protocol}//${host}`);
+      variants.add(`${u.protocol}//${noWww}`);
+      variants.add(`${u.protocol}//${withWww}`);
+    } catch {
+      // ignore malformed
+    }
+  };
+
+  addVariant(primaryOrigin);
+  // ✅ Consenti anche dominio Firebase hosting (preview/hosting)
+  addVariant("https://gznutrition-d5d13.web.app");
+
+  // ✅ Se l'Origin della richiesta è nella whitelist, fai echo di quello specifico
+  let allowOrigin = primaryOrigin;
+  if (requestOrigin) {
+    try {
+      const o = new URL(requestOrigin);
+      const candidate = `${o.protocol}//${o.host}`;
+      if (variants.has(candidate)) {
+        allowOrigin = candidate;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  response.headers.set("Access-Control-Allow-Origin", allowOrigin);
+  response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Origin, Content-Type, Authorization, Accept, Cache-Control, Pragma, X-Requested-With"
+  );
+  response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
+  response.headers.set("Access-Control-Expose-Headers", "Content-Type, Content-Length, ETag, Date");
+  // ✅ Evita cache proxy/CDN differenziando per Origin
+  response.headers.append("Vary", "Origin");
+  return response;
+}
+
+// ✅ Handler per preflight OPTIONS (necessario per Safari iOS)
+export async function OPTIONS(request: NextRequest) {
+  const response = new NextResponse(null, { status: 200 });
+  return await addCorsHeaders(response, request);
+}
+
 // Ensure data directory exists
 if (!existsSync(dataDir)) {
   mkdirSync(dataDir, { recursive: true });
@@ -106,13 +181,15 @@ if (!existsSync(filePath)) {
   writeFileSync(filePath, JSON.stringify(demoData, null, 2));
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const data = readFileSync(filePath, "utf8");
-    return NextResponse.json(JSON.parse(data));
+    const response = NextResponse.json(JSON.parse(data));
+    return await addCorsHeaders(response, request);
   } catch (error) {
     console.error("Error reading bookings:", error);
-    return NextResponse.json([], { status: 500 });
+    const response = NextResponse.json([], { status: 500 });
+    return await addCorsHeaders(response, request);
   }
 }
 
@@ -128,17 +205,31 @@ export async function POST(request: NextRequest) {
     // Se è un array, salva direttamente (per aggiornamenti bulk)
     if (Array.isArray(data)) {
       writeFileSync(filePath, JSON.stringify(data, null, 2));
-      return NextResponse.json({ success: true });
+      const response = NextResponse.json({ success: true });
+      return await addCorsHeaders(response, request);
     }
     
-    // Se è un singolo booking, lo aggiunge alla lista esistente
+    // ✅ Pulisci il payload da campi non-booking (come captchaToken)
+    const { captchaToken, forceFirebase, deviceType, ...bookingData } = data;
+    console.log("🧹 Payload pulito:", JSON.stringify(bookingData, null, 2));
+
+    // ✅ In produzione: salva sempre su Firebase per massima affidabilità (bypass locale/Safari)
+    if (process.env.NODE_ENV === "production") {
+      try {
+        const { createBooking: fbCreateBooking } = await import("@/lib/data");
+        const firebaseId = await fbCreateBooking(bookingData as any, captchaToken);
+        const response = NextResponse.json({ success: true, id: firebaseId, source: "firebase" });
+        return await addCorsHeaders(response, request);
+      } catch (prodErr) {
+        console.error("❌ Firebase save failed in production, falling back to local file:", prodErr);
+        // Continua con salvataggio locale come fallback estremo
+      }
+    }
+
+    // Se è un singolo booking, lo aggiunge alla lista esistente (ambiente locale)
     const existingBookings = existsSync(filePath) 
       ? JSON.parse(readFileSync(filePath, "utf8"))
       : [];
-    
-    // ✅ Pulisci il payload da campi non-booking (come captchaToken)
-    const { captchaToken, ...bookingData } = data;
-    console.log("🧹 Payload pulito (senza captchaToken):", JSON.stringify(bookingData, null, 2));
     
     const newBooking = {
       ...bookingData,
@@ -161,10 +252,12 @@ export async function POST(request: NextRequest) {
       // Non fallire la prenotazione se l'email fallisce
     }
     
-    return NextResponse.json({ success: true, id: newBooking.id });
+    const response = NextResponse.json({ success: true, id: newBooking.id });
+    return await addCorsHeaders(response, request);
   } catch (error) {
     console.error("Error writing bookings:", error);
-    return NextResponse.json({ error: "Failed to save bookings" }, { status: 500 });
+    const response = NextResponse.json({ error: "Failed to save bookings" }, { status: 500 });
+    return await addCorsHeaders(response, request);
   }
 }
 
@@ -180,10 +273,12 @@ export async function PUT(request: NextRequest) {
     );
     
     writeFileSync(filePath, JSON.stringify(updatedBookings, null, 2));
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    return await addCorsHeaders(response, request);
   } catch (error) {
     console.error("Error updating booking:", error);
-    return NextResponse.json({ error: "Failed to update booking" }, { status: 500 });
+    const response = NextResponse.json({ error: "Failed to update booking" }, { status: 500 });
+    return await addCorsHeaders(response, request);
   }
 }
 
@@ -193,7 +288,8 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id');
     
     if (!id) {
-      return NextResponse.json({ error: "Booking ID required" }, { status: 400 });
+      const response = NextResponse.json({ error: "Booking ID required" }, { status: 400 });
+      return await addCorsHeaders(response, request);
     }
     
     const existingBookings = existsSync(filePath) 
@@ -203,9 +299,11 @@ export async function DELETE(request: NextRequest) {
     const updatedBookings = existingBookings.filter((booking: { id: string; [key: string]: unknown }) => booking.id !== id);
     writeFileSync(filePath, JSON.stringify(updatedBookings, null, 2));
     
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    return await addCorsHeaders(response, request);
   } catch (error) {
     console.error("Error deleting booking:", error);
-    return NextResponse.json({ error: "Failed to delete booking" }, { status: 500 });
+    const response = NextResponse.json({ error: "Failed to delete booking" }, { status: 500 });
+    return await addCorsHeaders(response, request);
   }
 }
