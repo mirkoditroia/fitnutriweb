@@ -728,9 +728,26 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             const json = await resp.json();
             bookingId = json.id || json.bookingId;
           } catch (mobileError) {
-            // ✅ Fallback: usa createBooking standard
+            // ✅ Evita fallback client quando c'è CAPTCHA o Safari iOS: ritenta via server
             setLoadingStep("Ritento invio...");
-            bookingId = await createBooking(bookingPayload, captchaToken || undefined);
+            await new Promise(r => setTimeout(r, 400));
+            const retry = await fetch("/api/bookings/create", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache"
+              },
+              credentials: "include",
+              body: JSON.stringify({ ...bookingPayload, captchaToken: captchaToken || undefined })
+            });
+            if (!retry.ok) {
+              const text = await retry.text();
+              throw new Error(`${deviceType} server retry failed: ${retry.status} - ${text}`);
+            }
+            const json2 = await retry.json();
+            bookingId = json2.id || json2.bookingId;
           }
         } else {
           // Desktop: gestione normale

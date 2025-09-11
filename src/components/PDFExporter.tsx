@@ -1,5 +1,8 @@
 "use client";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface PDFExporterProps {
   clientName: string;
@@ -10,510 +13,434 @@ interface PDFExporterProps {
 }
 
 export function PDFExporter({ clientName, progressData, onExport, isLoading = false, siteName = "GZnutrition" }: PDFExporterProps) {
-  const handleExport = async () => {
-    try {
-      // Create a new window for PDF generation
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) return;
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloadingCharts, setIsDownloadingCharts] = useState(false);
+  const [Chart, setChart] = useState<any>(null);
+  
+  // Carica Chart.js dinamicamente
+  useEffect(() => {
+    const loadChart = async () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const ChartJS = await import('chart.js');
+          setChart(() => ChartJS.Chart);
+        } catch (error) {
+          console.error('Errore caricamento Chart.js:', error);
+        }
+      }
+    };
+    loadChart();
+  }, []);
 
-      // Generate HTML content for PDF
-      const htmlContent = generatePDFContent(clientName, progressData);
+  const generateChartImage = async (chartConfig: any, width: number = 800, height: number = 400): Promise<string> => {
+    if (!Chart) throw new Error('Chart.js non caricato');
+    
+    // Crea canvas temporaneo
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.backgroundColor = '#ffffff';
+    
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    
+    // Crea il grafico
+    const chart = new Chart(ctx, {
+      ...chartConfig,
+      options: {
+        ...chartConfig.options,
+        responsive: false,
+        animation: false,
+        plugins: {
+          ...chartConfig.options?.plugins,
+          legend: {
+            ...chartConfig.options?.plugins?.legend,
+            display: chartConfig.options?.plugins?.legend?.display !== false
+          }
+        }
+      }
+    });
+    
+    // Attendi il rendering
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Estrai come JPEG con sfondo bianco
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    
+    // Cleanup
+    chart.destroy();
+    
+    return imageData;
+  };
+
+  const downloadChartImages = async () => {
+    if (!Chart) {
+      alert('Chart.js non ancora caricato, riprova tra qualche secondo');
+      return;
+    }
+    
+    setIsDownloadingCharts(true);
+    try {
+      // Prepara dati per i grafici
+      const labels = progressData.map(entry => new Date(entry.date).toLocaleDateString('it-IT'));
+      const weightData = progressData.map(entry => entry.weight || null);
+      const bodyFatData = progressData.map(entry => entry.bodyFat || null);
+      const muscleData = progressData.map(entry => entry.muscleMass || null);
+      const waistData = progressData.map(entry => entry.measurements?.waist || null);
+      const chestData = progressData.map(entry => entry.measurements?.chest || null);
+      const hipData = progressData.map(entry => entry.measurements?.hipCircumference || null);
+
+      const chartConfigs = [
+        {
+          name: 'andamento-peso',
+          title: 'Andamento Peso',
+          config: {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Peso (kg)',
+                data: weightData,
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.2,
+                fill: true,
+                pointRadius: 4,
+                borderWidth: 3
+              }]
+            },
+            options: {
+              plugins: { 
+                legend: { display: false },
+                title: {
+                  display: true,
+                  text: `Andamento Peso - ${clientName}`,
+                  font: { size: 16, weight: 'bold' }
+                }
+              },
+              scales: { 
+                y: { beginAtZero: false },
+                x: { 
+                  ticks: { maxTicksLimit: 8 },
+                  grid: { display: true }
+                }
+              }
+            }
+          }
+        },
+        {
+          name: 'massa-grassa',
+          title: 'Massa Grassa',
+          config: {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Massa Grassa (%)',
+                data: bodyFatData,
+                borderColor: '#EF4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.2,
+                fill: true,
+                pointRadius: 4,
+                borderWidth: 3
+              }]
+            },
+            options: {
+              plugins: { 
+                legend: { display: false },
+                title: {
+                  display: true,
+                  text: `Massa Grassa - ${clientName}`,
+                  font: { size: 16, weight: 'bold' }
+                }
+              },
+              scales: { 
+                y: { beginAtZero: false },
+                x: { 
+                  ticks: { maxTicksLimit: 8 },
+                  grid: { display: true }
+                }
+              }
+            }
+          }
+        },
+        {
+          name: 'massa-muscolare',
+          title: 'Massa Muscolare',
+          config: {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Massa Muscolare (kg)',
+                data: muscleData,
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.2,
+                fill: true,
+                pointRadius: 4,
+                borderWidth: 3
+              }]
+            },
+            options: {
+              plugins: { 
+                legend: { display: false },
+                title: {
+                  display: true,
+                  text: `Massa Muscolare - ${clientName}`,
+                  font: { size: 16, weight: 'bold' }
+                }
+              },
+              scales: { 
+                y: { beginAtZero: false },
+                x: { 
+                  ticks: { maxTicksLimit: 8 },
+                  grid: { display: true }
+                }
+              }
+            }
+          }
+        },
+        {
+          name: 'misurazioni-corporee',
+          title: 'Misurazioni Corporee',
+          config: {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: 'Vita (cm)',
+                  data: waistData,
+                  borderColor: '#8B5CF6',
+                  backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                  tension: 0.2,
+                  pointRadius: 4,
+                  borderWidth: 3
+                },
+                {
+                  label: 'Petto (cm)',
+                  data: chestData,
+                  borderColor: '#F59E0B',
+                  backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                  tension: 0.2,
+                  pointRadius: 4,
+                  borderWidth: 3
+                },
+                {
+                  label: 'Fianchi (cm)',
+                  data: hipData,
+                  borderColor: '#06B6D4',
+                  backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                  tension: 0.2,
+                  pointRadius: 4,
+                  borderWidth: 3
+                }
+              ]
+            },
+            options: {
+              plugins: { 
+                legend: { 
+                  display: true, 
+                  position: 'bottom',
+                  labels: { padding: 20, font: { size: 12 } }
+                },
+                title: {
+                  display: true,
+                  text: `Misurazioni Corporee - ${clientName}`,
+                  font: { size: 16, weight: 'bold' }
+                }
+              },
+              scales: { 
+                y: { beginAtZero: false },
+                x: { 
+                  ticks: { maxTicksLimit: 8 },
+                  grid: { display: true }
+                }
+              }
+            }
+          }
+        }
+      ];
+
+      // Genera e scarica ogni grafico
+      for (const chartConfig of chartConfigs) {
+        const imageData = await generateChartImage(chartConfig.config, 1200, 600);
+        
+        // Crea link di download
+        const link = document.createElement('a');
+        link.download = `grafico-${chartConfig.name}-${clientName.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+        link.href = imageData;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Piccola pausa tra i download
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
       
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
+      setIsDownloadingCharts(false);
+    } catch (error) {
+      console.error('Errore download grafici:', error);
+      setIsDownloadingCharts(false);
+    }
+  };
+  
+  const handleExport = async () => {
+    setIsGenerating(true);
+    try {
+      // PDF semplificato per massima compatibilità
+      const pdf = new jsPDF({ 
+        orientation: 'portrait', 
+        unit: 'mm', 
+        format: 'a4',
+        compress: true 
+      });
       
-      // Wait for content to load then print
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 500);
-      };
+      // Metadati PDF per compatibilità
+      pdf.setProperties({
+        title: `Report Progressi - ${clientName}`,
+        subject: 'Report progressi cliente',
+        author: siteName,
+        creator: 'PDF Generator',
+        keywords: 'nutrition, progress, report'
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const usableWidth = pageWidth - (margin * 2);
+      let currentY = margin;
+
+      // Header semplice
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Report Progressi Cliente', pageWidth / 2, currentY, { align: 'center' });
+      currentY += 15;
       
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generato il ${new Date().toLocaleDateString('it-IT')} - ${siteName}`, pageWidth / 2, currentY, { align: 'center' });
+      currentY += 20;
+
+      // Linea separatrice
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 15;
+
+      // Info cliente
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Informazioni Cliente', margin, currentY);
+      currentY += 10;
+
+      pdf.setFontSize(11);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`Nome: ${clientName}`, margin, currentY);
+      currentY += 7;
+      pdf.text(`Data Report: ${new Date().toLocaleDateString('it-IT')}`, margin, currentY);
+      currentY += 7;
+      pdf.text(`Progressi Registrati: ${progressData.length}`, margin, currentY);
+      currentY += 15;
+
+      // Tabella dati semplificata
+      if (progressData.length > 0) {
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Storico Progressi', margin, currentY);
+        currentY += 10;
+
+        // Header tabella
+        pdf.setFontSize(9);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Data', margin, currentY);
+        pdf.text('Peso (kg)', margin + 25, currentY);
+        pdf.text('Massa Grassa (%)', margin + 50, currentY);
+        pdf.text('Massa Muscolare (kg)', margin + 80, currentY);
+        pdf.text('Vita (cm)', margin + 115, currentY);
+        currentY += 8;
+
+        // Linea sotto header
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.2);
+        pdf.line(margin, currentY, pageWidth - margin, currentY);
+        currentY += 5;
+
+        // Righe dati (max 12 per evitare overflow)
+        const maxRows = Math.min(12, progressData.length);
+        for (let i = 0; i < maxRows; i++) {
+          const entry = progressData[i];
+          pdf.setFontSize(8);
+          pdf.setTextColor(0, 0, 0);
+          
+          // Gestisce overflow di testo
+          const dateStr = new Date(entry.date).toLocaleDateString('it-IT');
+          const weightStr = entry.weight?.toString() || '-';
+          const fatStr = entry.bodyFat?.toString() || '-';
+          const muscleStr = entry.muscleMass?.toString() || '-';
+          const waistStr = entry.measurements?.waist?.toString() || '-';
+          
+          pdf.text(dateStr, margin, currentY);
+          pdf.text(weightStr, margin + 25, currentY);
+          pdf.text(fatStr, margin + 50, currentY);
+          pdf.text(muscleStr, margin + 80, currentY);
+          pdf.text(waistStr, margin + 115, currentY);
+          currentY += 6;
+        }
+        currentY += 10;
+      }
+
+      // Nota sui grafici
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Grafici Progressi', margin, currentY);
+      currentY += 8;
+      
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('I grafici sono disponibili come immagini JPEG separate.', margin, currentY);
+      currentY += 5;
+      pdf.text('Utilizza il pulsante "Scarica Grafici" per ottenerli.', margin, currentY);
+      currentY += 15;
+
+      // Footer
+      pdf.setFontSize(8);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text(`Report generato automaticamente da ${siteName}`, pageWidth / 2, pageHeight - 15, { align: 'center' });
+      pdf.text('Formato PDF/A per massima compatibilità', pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+      // Salva PDF
+      pdf.save(`report-progressi-${clientName.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+      
+      setIsGenerating(false);
+      onExport?.();
     } catch (error) {
       console.error('Error generating PDF:', error);
+      setIsGenerating(false);
     }
   };
 
-  const generatePDFContent = (clientName: string, data: any[]) => {
-    const currentDate = new Date().toLocaleDateString('it-IT');
-    
-    return `
-      <!DOCTYPE html>
-      <html lang="it">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="description" content="Report progressi cliente ${clientName}">
-          <meta name="author" content="${siteName}">
-          <meta name="keywords" content="nutrizione, progressi, cliente, report">
-          <title>Report Progressi - ${clientName}</title>
-          <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              margin: 0;
-              padding: 20px;
-              background: white;
-              color: #333;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 30px;
-              border-bottom: 3px solid #3B82F6;
-              padding-bottom: 20px;
-            }
-            .header h1 {
-              color: #1F2937;
-              margin: 0;
-              font-size: 28px;
-            }
-            .header p {
-              color: #6B7280;
-              margin: 5px 0 0 0;
-              font-size: 14px;
-            }
-            .client-info {
-              background: #F9FAFB;
-              padding: 20px;
-              border-radius: 8px;
-              margin-bottom: 30px;
-            }
-            .client-info h2 {
-              color: #374151;
-              margin: 0 0 15px 0;
-              font-size: 20px;
-            }
-            .info-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 15px;
-            }
-            .info-item {
-              display: flex;
-              justify-content: space-between;
-              padding: 8px 0;
-              border-bottom: 1px solid #E5E7EB;
-            }
-            .info-label {
-              font-weight: 600;
-              color: #4B5563;
-            }
-            .info-value {
-              color: #1F2937;
-            }
-            .progress-section {
-              margin-bottom: 30px;
-            }
-            .progress-section h2 {
-              color: #374151;
-              margin: 0 0 20px 0;
-              font-size: 20px;
-              border-left: 4px solid #3B82F6;
-              padding-left: 15px;
-            }
-            .progress-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 20px;
-            }
-            .progress-table th,
-            .progress-table td {
-              border: 1px solid #D1D5DB;
-              padding: 12px;
-              text-align: left;
-            }
-            .progress-table th {
-              background: #F3F4F6;
-              font-weight: 600;
-              color: #374151;
-            }
-            .progress-table tr:nth-child(even) {
-              background: #F9FAFB;
-            }
-            .chart-placeholder {
-              background: #F3F4F6;
-              border: 2px dashed #D1D5DB;
-              padding: 40px;
-              text-align: center;
-              border-radius: 8px;
-              margin: 20px 0;
-            }
-            .chart-placeholder p {
-              color: #6B7280;
-              margin: 0;
-              font-size: 16px;
-            }
-            .footer {
-              margin-top: 40px;
-              padding-top: 20px;
-              border-top: 1px solid #E5E7EB;
-              text-align: center;
-              color: #6B7280;
-              font-size: 12px;
-            }
-            .stats-grid {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-              gap: 20px;
-              margin: 20px 0;
-            }
-            .stat-card {
-              background: #F9FAFB;
-              padding: 20px;
-              border-radius: 8px;
-              text-align: center;
-              border: 1px solid #E5E7EB;
-            }
-            .stat-value {
-              font-size: 24px;
-              font-weight: bold;
-              color: #3B82F6;
-              margin-bottom: 5px;
-            }
-            .stat-label {
-              color: #6B7280;
-              font-size: 14px;
-            }
-            .charts-container {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 30px;
-              margin: 20px 0;
-            }
-            .chart-section {
-              background: #F9FAFB;
-              padding: 20px;
-              border-radius: 8px;
-              border: 1px solid #E5E7EB;
-            }
-            .chart-section h3 {
-              margin: 0 0 15px 0;
-              color: #374151;
-              font-size: 16px;
-              text-align: center;
-            }
-            .chart-placeholder {
-              text-align: center;
-              background: white;
-              border-radius: 4px;
-              padding: 10px;
-            }
-            canvas {
-              max-width: 100%;
-              height: auto;
-            }
-            @media print {
-              body { 
-                margin: 0; 
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-              }
-              .no-print { display: none; }
-              .charts-container {
-                page-break-inside: avoid;
-              }
-              .chart-section {
-                page-break-inside: avoid;
-                margin-bottom: 20px;
-              }
-            }
-          </style>
-        </head>
-        <body>
-            <div class="header">
-              <h1>📊 Report Progressi Cliente</h1>
-              <p>Generato il ${currentDate} - ${siteName}</p>
-            </div>
-
-          <div class="client-info">
-            <h2>👤 Informazioni Cliente</h2>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Nome:</span>
-                <span class="info-value">${clientName}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Data Report:</span>
-                <span class="info-value">${currentDate}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Progressi Registrati:</span>
-                <span class="info-value">${data.length}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Periodo:</span>
-                <span class="info-value">${data.length > 0 ? 
-                  `${new Date(data[0].date).toLocaleDateString('it-IT')} - ${new Date(data[data.length - 1].date).toLocaleDateString('it-IT')}` : 
-                  'Nessun dato'
-                }</span>
-              </div>
-            </div>
-          </div>
-
-          ${data.length > 0 ? `
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-value">${data.length}</div>
-                <div class="stat-label">Progressi Registrati</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-value">${data.filter(d => d.weight).length}</div>
-                <div class="stat-label">Misurazioni Peso</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-value">${data.filter(d => d.bodyFat).length}</div>
-                <div class="stat-label">Analisi Massa Grassa</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-value">${data.filter(d => d.muscleMass).length}</div>
-                <div class="stat-label">Massa Muscolare</div>
-              </div>
-            </div>
-
-            <div class="progress-section">
-              <h2>📈 Storico Progressi</h2>
-              <table class="progress-table">
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Peso (kg)</th>
-                    <th>Massa Grassa (%)</th>
-                    <th>Massa Muscolare (kg)</th>
-                    <th>Vita (cm)</th>
-                    <th>Petto (cm)</th>
-                    <th>Fianchi (cm)</th>
-                    <th>Bicipite (cm)</th>
-                    <th>Coscia (cm)</th>
-                    <th>Note</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${data.map(entry => `
-                    <tr>
-                      <td>${new Date(entry.date).toLocaleDateString('it-IT')}</td>
-                      <td>${entry.weight || '-'}</td>
-                      <td>${entry.bodyFat || '-'}</td>
-                      <td>${entry.muscleMass || '-'}</td>
-                      <td>${entry.measurements?.waist || '-'}</td>
-                      <td>${entry.measurements?.chest || '-'}</td>
-                      <td>${entry.measurements?.hipCircumference || '-'}</td>
-                      <td>${entry.measurements?.bicepCircumference || '-'}</td>
-                      <td>${entry.measurements?.thighCircumference || '-'}</td>
-                      <td>${entry.notes || '-'}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="progress-section">
-              <h2>📊 Grafici Progressi</h2>
-              <div class="charts-container">
-                <div class="chart-section">
-                  <h3>📈 Andamento Peso</h3>
-                  <div class="chart-placeholder">
-                    <canvas id="weightChart" width="400" height="200"></canvas>
-                  </div>
-                </div>
-                <div class="chart-section">
-                  <h3>📊 Massa Grassa</h3>
-                  <div class="chart-placeholder">
-                    <canvas id="bodyFatChart" width="400" height="200"></canvas>
-                  </div>
-                </div>
-                <div class="chart-section">
-                  <h3>💪 Massa Muscolare</h3>
-                  <div class="chart-placeholder">
-                    <canvas id="muscleChart" width="400" height="200"></canvas>
-                  </div>
-                </div>
-                <div class="chart-section">
-                  <h3>📏 Misurazioni Corporee</h3>
-                  <div class="chart-placeholder">
-                    <canvas id="measurementsChart" width="400" height="200"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ` : `
-            <div class="progress-section">
-              <h2>📊 Nessun Progresso Registrato</h2>
-              <div class="chart-placeholder">
-                <p>📝 Inizia a registrare i progressi del cliente per generare report dettagliati</p>
-              </div>
-            </div>
-          `}
-
-          <div class="footer">
-            <p>Report generato automaticamente da ${siteName}</p>
-            <p>Per domande o supporto, contatta il tuo personal trainer</p>
-            <p>Formato: PDF/A-1b (ISO 19005-1:2005)</p>
-          </div>
-          
-          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-          <script>
-            // ✅ IMPLEMENTAZIONE GRAFICI CON CHART.JS
-            document.addEventListener('DOMContentLoaded', function() {
-              const data = ${JSON.stringify(data)};
-              
-              if (data.length === 0) return;
-              
-              // Prepara i dati per i grafici
-              const labels = data.map(entry => new Date(entry.date).toLocaleDateString('it-IT'));
-              const weightData = data.map(entry => entry.weight || null);
-              const bodyFatData = data.map(entry => entry.bodyFat || null);
-              const muscleData = data.map(entry => entry.muscleMass || null);
-              
-              // Grafico Peso
-              const weightCtx = document.getElementById('weightChart');
-              if (weightCtx) {
-                new Chart(weightCtx, {
-                  type: 'line',
-                  data: {
-                    labels: labels,
-                    datasets: [{
-                      label: 'Peso (kg)',
-                      data: weightData,
-                      borderColor: '#3B82F6',
-                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                      tension: 0.4,
-                      fill: true
-                    }]
-                  },
-                  options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false }
-                    },
-                    scales: {
-                      y: { beginAtZero: false }
-                    }
-                  }
-                });
-              }
-              
-              // Grafico Massa Grassa
-              const bodyFatCtx = document.getElementById('bodyFatChart');
-              if (bodyFatCtx) {
-                new Chart(bodyFatCtx, {
-                  type: 'line',
-                  data: {
-                    labels: labels,
-                    datasets: [{
-                      label: 'Massa Grassa (%)',
-                      data: bodyFatData,
-                      borderColor: '#EF4444',
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                      tension: 0.4,
-                      fill: true
-                    }]
-                  },
-                  options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false }
-                    },
-                    scales: {
-                      y: { beginAtZero: false }
-                    }
-                  }
-                });
-              }
-              
-              // Grafico Massa Muscolare
-              const muscleCtx = document.getElementById('muscleChart');
-              if (muscleCtx) {
-                new Chart(muscleCtx, {
-                  type: 'line',
-                  data: {
-                    labels: labels,
-                    datasets: [{
-                      label: 'Massa Muscolare (kg)',
-                      data: muscleData,
-                      borderColor: '#10B981',
-                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                      tension: 0.4,
-                      fill: true
-                    }]
-                  },
-                  options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false }
-                    },
-                    scales: {
-                      y: { beginAtZero: false }
-                    }
-                  }
-                });
-              }
-              
-              // Grafico Misurazioni Corporee
-              const measurementsCtx = document.getElementById('measurementsChart');
-              if (measurementsCtx) {
-                const waistData = data.map(entry => entry.measurements?.waist || null);
-                const chestData = data.map(entry => entry.measurements?.chest || null);
-                const hipData = data.map(entry => entry.measurements?.hipCircumference || null);
-                
-                new Chart(measurementsCtx, {
-                  type: 'line',
-                  data: {
-                    labels: labels,
-                    datasets: [
-                      {
-                        label: 'Vita (cm)',
-                        data: waistData,
-                        borderColor: '#8B5CF6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        tension: 0.4
-                      },
-                      {
-                        label: 'Petto (cm)',
-                        data: chestData,
-                        borderColor: '#F59E0B',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        tension: 0.4
-                      },
-                      {
-                        label: 'Fianchi (cm)',
-                        data: hipData,
-                        borderColor: '#06B6D4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        tension: 0.4
-                      }
-                    ]
-                  },
-                  options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { 
-                        display: true,
-                        position: 'bottom'
-                      }
-                    },
-                    scales: {
-                      y: { beginAtZero: false }
-                    }
-                  }
-                });
-              }
-            });
-          </script>
-        </body>
-      </html>
-    `;
-  };
 
   return (
-    <Button
-      onClick={handleExport}
-      disabled={isLoading}
-      className="bg-red-600 hover:bg-red-700 text-white"
-    >
-      {isLoading ? '⏳ Generando...' : '📄 Export PDF'}
-    </Button>
+    <div className="flex gap-2 flex-wrap">
+      <Button
+        onClick={handleExport}
+        disabled={isLoading || isGenerating}
+        className="bg-red-600 hover:bg-red-700 text-white"
+      >
+        {isGenerating ? '⏳ Generando PDF...' : '📄 Export PDF'}
+      </Button>
+      
+      <Button
+        onClick={downloadChartImages}
+        disabled={isLoading || isDownloadingCharts || !Chart}
+        className="bg-blue-600 hover:bg-blue-700 text-white"
+      >
+        {isDownloadingCharts ? '⏳ Scaricando Grafici...' : '📊 Scarica Grafici'}
+      </Button>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { PDFExporter } from "@/components/PDFExporter";
 
 interface ProgressEntry {
   id: string;
@@ -107,14 +108,11 @@ export function ClientProgressCard({ client, progressData = [], onSave, onExport
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>
             {getStatusText(client.status)}
           </span>
-          <Button
-            onClick={() => onExportPDF(client.id)}
-            variant="outline"
-            size="sm"
-            className="text-blue-600 border-blue-600 hover:bg-blue-50"
-          >
-            📊 Export PDF
-          </Button>
+          <PDFExporter
+            clientName={client.name}
+            progressData={progressData}
+            onExport={() => onExportPDF(client.id)}
+          />
         </div>
       </div>
 
