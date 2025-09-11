@@ -1567,29 +1567,28 @@ export default function AdminContentPage() {
                     />
                   </div>
                   
-                  {/* ✅ OPZIONE SEMPLICE: Place ID per link diretto */}
+                  {/* 🔗 Link Google Reviews */}
                   <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
                     <h4 className="font-medium text-black mb-3">🔗 Link Google Reviews</h4>
-                    
-                    <div>
+                    <div className="mb-4">
                       <label className="block text-sm font-medium mb-2 text-black">
-                        Google Place ID (per link "Vedi tutte le recensioni")
+                        URL Profilo Google (preferito)
                       </label>
                       <input
-                        type="text"
-                        value={content.googleReviews?.placeId ?? ""}
+                        type="url"
+                        value={content.googleReviews?.profileUrl ?? ""}
                         onChange={(e) => setContent({
                           ...content,
                           googleReviews: {
                             ...content.googleReviews,
-                            placeId: e.target.value
+                            profileUrl: e.target.value
                           }
                         })}
-                        placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
+                        placeholder="https://www.google.com/maps/place/..."
                         className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        <strong>Come trovarlo:</strong> Google Maps → Cerca la tua attività → Condividi → Copia link → Cerca "place_id="
+                        Incolla l'URL pubblico della tua scheda Google Business (aprirà direttamente il profilo/recensioni).
                       </p>
                     </div>
                   </div>

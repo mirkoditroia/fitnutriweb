@@ -203,7 +203,7 @@ export default async function Home() {
         title={c.googleReviews?.title}
         subtitle={c.googleReviews?.subtitle}
         businessName={c.googleReviews?.businessName}
-        placeId={c.googleReviews?.placeId}
+        profileUrl={c.googleReviews?.profileUrl}
         fallbackReviews={c.googleReviews?.fallbackReviews}
         colorPalette={c.colorPalette}
         enabled={c.googleReviews?.enabled}

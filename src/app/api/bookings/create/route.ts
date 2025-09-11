@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createBooking } from "@/lib/data";
+// Note: If Firestore client rules block Safari, this API can be extended
+// to use Admin SDK (see src/server/firebaseAdmin.ts) to bypass client rules.
 
 function addNoCache(resp: NextResponse, req: NextRequest) {
   const origin = req.headers.get("origin");

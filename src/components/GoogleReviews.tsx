@@ -7,7 +7,7 @@ interface GoogleReviewsProps {
   title?: string;
   subtitle?: string;
   businessName?: string;
-  placeId?: string;
+  profileUrl?: string;
   fallbackReviews?: GoogleReview[];
   colorPalette?: string;
   enabled?: boolean;
@@ -40,7 +40,7 @@ export default function GoogleReviews({
   title = "⭐ Recensioni Google",
   subtitle = "Cosa dicono i nostri clienti",
   businessName = "GZ Nutrition",
-  placeId,
+  profileUrl,
   fallbackReviews = [],
   colorPalette = "gz-default",
   enabled = true
@@ -70,9 +70,9 @@ export default function GoogleReviews({
     setCurrentReviews(fallbackReviews);
   }, [fallbackReviews]);
 
-  // URL per aprire Google Reviews
-  const googleReviewsUrl = placeId 
-    ? `https://www.google.com/maps/place/?q=place_id:${placeId}`
+  // URL per aprire Google Reviews: priorità a profileUrl, poi placeId, poi ricerca
+  const googleReviewsUrl = profileUrl && profileUrl.trim() !== ""
+    ? profileUrl
     : `https://www.google.com/search?q=${encodeURIComponent(businessName + " recensioni")}`;
 
   return (
@@ -99,8 +99,8 @@ export default function GoogleReviews({
             </p>
           )}
           
-          {/* Google Badge e CTA - Solo se c'è collegamento Google */}
-          {placeId && (
+          {/* Google Badge e CTA - mostrali se abbiamo un link diretto (profileUrl o placeId) */}
+          {profileUrl && (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               {/* Google Rating Badge */}
               <div 

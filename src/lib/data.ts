@@ -301,7 +301,7 @@ export interface SiteContent {
     title?: string; // Titolo sezione (default: "⭐ Recensioni Google")
     subtitle?: string; // Sottotitolo
     businessName?: string; // Nome business per link Google
-    placeId?: string; // Google Place ID per link diretto alle recensioni
+    profileUrl?: string; // URL del profilo Google (usato per i link)
     fallbackReviews?: GoogleReview[]; // Recensioni manuali gestite da admin
   };
   
@@ -1563,7 +1563,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         title: data.googleReviews.title || "⭐ Recensioni Google",
         subtitle: data.googleReviews.subtitle || "Cosa dicono i nostri clienti",
         businessName: data.googleReviews.businessName || "GZ Nutrition",
-        placeId: data.googleReviews.placeId || undefined,
+        profileUrl: data.googleReviews.profileUrl || undefined,
         fallbackReviews: Array.isArray(data.googleReviews.fallbackReviews) 
           ? data.googleReviews.fallbackReviews.map((review: any) => ({
               ...review,

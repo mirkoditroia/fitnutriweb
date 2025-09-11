@@ -706,7 +706,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         if (isMobile()) {
           // ✅ Logica unificata per iOS e Android - server first
           const deviceType = isIOS() ? 'iOS' : isAndroid() ? 'Android' : 'Mobile';
-          setLoadingStep(`Inviando prenotazione (${deviceType})...`);
+          setLoadingStep("Invio prenotazione...");
           
           try {
             // ✅ Primo tentativo: endpoint server-side (bypassa problemi Safari)
@@ -729,7 +729,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             bookingId = json.id || json.bookingId;
           } catch (mobileError) {
             // ✅ Fallback: usa createBooking standard
-            setLoadingStep(`Tentativo alternativo (${deviceType})...`);
+            setLoadingStep("Ritento invio...");
             bookingId = await createBooking(bookingPayload, captchaToken || undefined);
           }
         } else {
@@ -749,10 +749,10 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         // ✅ Solo usare fallback se siamo in modalità locale, non Firebase
         const currentDataMode = getDataMode();
         if (currentDataMode === "local") {
-          setLoadingStep("Tentativo sistema di backup lato server...");
+          setLoadingStep("Tentativo server...");
           
           // Fallback server-side per evitare problemi di storage/cookie
-          setLoadingStep("Inviando tramite endpoint server...");
+          setLoadingStep("Invio tramite server...");
           const fallbackStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
           const fallbackPayload = {
             name: bookingData.name,
@@ -778,7 +778,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             credentials: "include",
             body: JSON.stringify({ ...fallbackPayload, captchaToken: captchaToken || undefined })
           });
-          setLoadingStep("Verificando risposta server...");
+          setLoadingStep("Verifica risposta...");
           if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Backup server fallito: ${response.status} - ${errorText}`);

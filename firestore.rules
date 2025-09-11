@@ -39,6 +39,15 @@ service cloud.firestore {
       allow create, update, delete: if request.auth != null;
     }
     
+    // Regole per i progressi dei clienti
+    match /clientProgress/{progressId} {
+      // Lettura libera (se vuoi limitarla, metti request.auth != null)
+      allow read: if true;
+      
+      // Scrittura consentita solo agli utenti autenticati (Admin Panel)
+      allow create, update, delete: if request.auth != null;
+    }
+    
     // Regole per le immagini caricate
     match /uploads/{allPaths=**} {
       // Chiunque può leggere le immagini (per visualizzazione pubblica)

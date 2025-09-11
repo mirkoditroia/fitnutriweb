@@ -404,7 +404,7 @@ export default function LandingClient() {
           title={effectiveContent.googleReviews?.title}
           subtitle={effectiveContent.googleReviews?.subtitle}
           businessName={effectiveContent.googleReviews?.businessName}
-          placeId={effectiveContent.googleReviews?.placeId}
+          profileUrl={effectiveContent.googleReviews?.profileUrl}
           fallbackReviews={effectiveContent.googleReviews?.fallbackReviews}
           colorPalette={effectiveContent.colorPalette}
           enabled={effectiveContent.googleReviews?.enabled}
