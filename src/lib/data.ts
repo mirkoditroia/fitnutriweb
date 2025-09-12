@@ -12,6 +12,7 @@ import {
   Timestamp,
   where,
   type DocumentData,
+  type DocumentReference,
   updateDoc,
 } from "firebase/firestore";
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, ensureCalendarEvent } from "./googleCalendar";
@@ -640,6 +641,8 @@ export async function createBooking(
   }
 
   debugLogSync("💾 Salvando prenotazione nel database...");
+  
+  
   const added = await addDoc(col.bookings(db as Firestore), {
     clientId: b.clientId ?? null,
     name: b.name,
@@ -1206,31 +1209,35 @@ export async function deleteBooking(bookingId: string): Promise<void> {
       const dateStr = bookingData.date.split('T')[0];
       const availDoc = col.availability(db as Firestore, dateStr);
       const availSnap = await getDoc(availDoc);
-      if (availSnap.exists()) {
-        const data = availSnap.data();
-        const location: "online" | "studio" = bookingData.isFreeConsultation ? "online" : (bookingData.location || "online");
-        if (location === "online") {
-          const online = (data.onlineSlots || data.slots || []) as string[];
-          if (!online.includes(bookingData.slot)) {
-            const updated = [...online, bookingData.slot].sort();
-            await setDoc(availDoc, { date: dateStr, onlineSlots: updated }, { merge: true });
-          }
-        } else {
-          if (bookingData.studioLocation) {
-            const studioMap = (data.studioSlots || {}) as Record<string, string[]>;
-            const studio = studioMap[bookingData.studioLocation] || [];
-            if (!studio.includes(bookingData.slot)) {
-              studioMap[bookingData.studioLocation] = [...studio, bookingData.slot].sort();
-              await setDoc(availDoc, { date: dateStr, studioSlots: studioMap }, { merge: true });
-            }
-          } else {
-            const inStudio = (data.inStudioSlots || []) as string[];
-            if (!inStudio.includes(bookingData.slot)) {
-              const updated = [...inStudio, bookingData.slot].sort();
-              await setDoc(availDoc, { date: dateStr, inStudioSlots: updated }, { merge: true });
-            }
-          }
+      
+      // Se il documento non esiste, crealo con dati di base
+      if (!availSnap.exists()) {
+        await setDoc(availDoc, { 
+          date: dateStr, 
+          onlineSlots: [], 
+          freeConsultationSlots: [], 
+          inStudioSlots: [], 
+          studioSlots: {} 
+        });
+        // Rileggi il documento appena creato
+        const newAvailSnap = await getDoc(availDoc);
+        if (newAvailSnap.exists()) {
+          const data = newAvailSnap.data();
+          // ✅ FALLBACK: Rileva consulenze gratuite anche tramite packageId se isFreeConsultation non è settato
+          const isFreeConsultation = bookingData.isFreeConsultation || bookingData.packageId === "free-consultation";
+          const location: "online" | "studio" = isFreeConsultation ? "online" : (bookingData.location || "online");
+          
+          // Processa il ripristino slot
+          await processSlotRestoration(availDoc, data, bookingData, isFreeConsultation, location, dateStr);
         }
+      } else {
+        const data = availSnap.data();
+        // ✅ FALLBACK: Rileva consulenze gratuite anche tramite packageId se isFreeConsultation non è settato
+        const isFreeConsultation = bookingData.isFreeConsultation || bookingData.packageId === "free-consultation";
+        const location: "online" | "studio" = isFreeConsultation ? "online" : (bookingData.location || "online");
+        
+        // Processa il ripristino slot
+        await processSlotRestoration(availDoc, data, bookingData, isFreeConsultation, location, dateStr);
       }
     } catch (error) {
       console.error("Error restoring availability after booking deletion in Firebase:", error);
@@ -1863,6 +1870,75 @@ export async function upsertAvailabilityForDate(
     payload.studioSlots = studioSlots;
   }
   await setDoc(col.availability(db as Firestore, date), payload, { merge: true });
+}
+
+// Helper function per processare il ripristino slot
+async function processSlotRestoration(
+  availDoc: DocumentReference, 
+  data: DocumentData, 
+  bookingData: Booking, 
+  isFreeConsultation: boolean, 
+  location: "online" | "studio", 
+  dateStr: string
+): Promise<void> {
+  if (location === "online") {
+    // ✅ CORREZIONE: Per consulenze gratuite, ripristina nei freeConsultationSlots
+    if (isFreeConsultation) {
+      const freeSlots = (data.freeConsultationSlots || []) as (string | FreeConsultationSlot)[];
+      const slotExists = freeSlots.some(slot => {
+        const slotTime = typeof slot === 'string' ? slot : slot.time;
+        return slotTime === bookingData.slot;
+      });
+      
+      if (!slotExists) {
+        // Aggiungi lo slot come oggetto con durata dal booking o default
+        const newSlot: FreeConsultationSlot = {
+          time: bookingData.slot,
+          duration: bookingData.consultationDuration || 10 // Usa durata dal booking o default
+        };
+        const updated = [...freeSlots, newSlot].sort((a, b) => {
+          const timeA = typeof a === 'string' ? a : a.time;
+          const timeB = typeof b === 'string' ? b : b.time;
+          return timeA.localeCompare(timeB);
+        });
+        
+        // Aggiorna solo freeConsultationSlots mantenendo gli altri dati
+        await setDoc(availDoc, { 
+          ...data,
+          date: dateStr, 
+          freeConsultationSlots: updated 
+        });
+      }
+    } else {
+      // Per consulenze normali, ripristina negli onlineSlots
+      const online = (data.onlineSlots || data.slots || []) as string[];
+      if (!online.includes(bookingData.slot)) {
+        const updated = [...online, bookingData.slot].sort();
+        
+        // Aggiorna solo onlineSlots mantenendo gli altri dati
+        await setDoc(availDoc, { 
+          ...data,
+          date: dateStr, 
+          onlineSlots: updated 
+        });
+      }
+    }
+  } else {
+    if (bookingData.studioLocation) {
+      const studioMap = (data.studioSlots || {}) as Record<string, string[]>;
+      const studio = studioMap[bookingData.studioLocation] || [];
+      if (!studio.includes(bookingData.slot)) {
+        studioMap[bookingData.studioLocation] = [...studio, bookingData.slot].sort();
+        await setDoc(availDoc, { ...data, date: dateStr, studioSlots: studioMap });
+      }
+    } else {
+      const inStudio = (data.inStudioSlots || []) as string[];
+      if (!inStudio.includes(bookingData.slot)) {
+        const updated = [...inStudio, bookingData.slot].sort();
+        await setDoc(availDoc, { ...data, date: dateStr, inStudioSlots: updated });
+      }
+    }
+  }
 }
 
 // Serialization helpers

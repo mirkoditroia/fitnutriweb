@@ -225,6 +225,49 @@ function DateCalendar({
 export function BookingForm({ adminMode = false, requirePackage = false, hidePackageSelect = false }: { adminMode?: boolean; requirePackage?: boolean; hidePackageSelect?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingStep, setLoadingStep] = useState<string>("");
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  const [loadingStage, setLoadingStage] = useState<string>("");
+  const [lastProgressUpdate, setLastProgressUpdate] = useState<number>(Date.now());
+  
+  // ✅ Funzione helper per gestire il loading in modo dinamico
+  const updateLoading = (stage: string, step: string, progress: number) => {
+    setLoadingStage(stage);
+    setLoadingStep(step);
+    setLoadingProgress(progress);
+    setLastProgressUpdate(Date.now());
+  };
+  
+  // ✅ Funzione per animare il progresso gradualmente
+  const animateProgress = (targetProgress: number, duration: number = 500) => {
+    const startProgress = loadingProgress;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const currentProgress = startProgress + (targetProgress - startProgress) * progress;
+      
+      setLoadingProgress(Math.round(currentProgress));
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  };
+  
+  // ✅ Heartbeat per iOS - mantiene l'animazione attiva
+  useEffect(() => {
+    if (isSubmitting && loadingProgress > 0 && loadingProgress < 100) {
+      const heartbeat = setInterval(() => {
+        // Piccola variazione per mantenere l'animazione attiva su iOS
+        setLoadingProgress(prev => prev);
+      }, 100);
+      
+      return () => clearInterval(heartbeat);
+    }
+  }, [isSubmitting, loadingProgress]);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
@@ -653,7 +696,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     }
 
     setIsSubmitting(true);
-    setLoadingStep("Preparando prenotazione...");
+    updateLoading("init", "Preparando prenotazione...", 0);
+    animateProgress(15);
     
     try {
       // Aggiungi il flag per la consultazione gratuita
@@ -663,7 +707,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         status: "pending" as const,
       };
 
-      setLoadingStep("Verificando disponibilità...");
+      updateLoading("validation", "Verificando disponibilità...", 15);
+      animateProgress(30);
       
       // ✅ DEBUGGING: Verifica modalità data e importa funzioni
       console.log("🚀 Tentativo prenotazione consulenza gratuita:", { isFreeConsultation, selectedPackage });
@@ -674,7 +719,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
       }
       
       try {
-        setLoadingStep("Inviando prenotazione...");
+        updateLoading("sending", "Inviando prenotazione...", 30);
+        animateProgress(50);
         const { createBooking, getDataMode } = await import("@/lib/datasource");
         let currentDataMode = getDataMode();
         
@@ -706,7 +752,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         if (isMobile()) {
           // ✅ Logica unificata per iOS e Android - server first
           const deviceType = isIOS() ? 'iOS' : isAndroid() ? 'Android' : 'Mobile';
-          setLoadingStep("Invio prenotazione...");
+          updateLoading("mobile-send", "Invio prenotazione...", 50);
+          animateProgress(70);
           
           try {
             // ✅ Primo tentativo: endpoint server-side (bypassa problemi Safari)
@@ -729,7 +776,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             bookingId = json.id || json.bookingId;
           } catch (mobileError) {
             // ✅ Evita fallback client quando c'è CAPTCHA o Safari iOS: ritenta via server
-            setLoadingStep("Ritento invio...");
+            updateLoading("retry", "Ritento invio...", 70);
+            animateProgress(80);
             await new Promise(r => setTimeout(r, 400));
             const retry = await fetch("/api/bookings/create", {
               method: "POST",
@@ -751,11 +799,13 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
           }
         } else {
           // Desktop: gestione normale
-          setLoadingStep("Inviando prenotazione...");
+          updateLoading("desktop-send", "Inviando prenotazione...", 50);
+          animateProgress(70);
           bookingId = await createBooking(bookingPayload, captchaToken || undefined);
         }
         
-        setLoadingStep("Finalizzando...");
+        updateLoading("finalizing", "Finalizzando...", 80);
+        animateProgress(95);
         
         
         // ✅ RIMOSSA simulazione falsa - ora gestiamo la vera risposta
@@ -766,10 +816,12 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         // ✅ Solo usare fallback se siamo in modalità locale, non Firebase
         const currentDataMode = getDataMode();
         if (currentDataMode === "local") {
-          setLoadingStep("Tentativo server...");
+          updateLoading("fallback", "Tentativo server...", 60);
+          animateProgress(75);
           
           // Fallback server-side per evitare problemi di storage/cookie
-          setLoadingStep("Invio tramite server...");
+          updateLoading("fallback-send", "Invio tramite server...", 75);
+          animateProgress(85);
           const fallbackStatus: "pending" | "confirmed" = adminMode ? "confirmed" : "pending";
           const fallbackPayload = {
             name: bookingData.name,
@@ -795,7 +847,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             credentials: "include",
             body: JSON.stringify({ ...fallbackPayload, captchaToken: captchaToken || undefined })
           });
-          setLoadingStep("Verifica risposta...");
+          updateLoading("verify", "Verifica risposta...", 85);
+          animateProgress(90);
           if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Backup server fallito: ${response.status} - ${errorText}`);
@@ -810,7 +863,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
         }
       }
       
-      // ✅ Toast elegante invece di alert browser
+      // ✅ SUCCESSO: Mostra messaggio di conferma
+      updateLoading("success", "Completato!", 100);
       toast.success(
           isFreeConsultation 
             ? "Consulenza gratuita prenotata con successo!" 
@@ -876,6 +930,8 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
     } finally {
       setIsSubmitting(false);
       setLoadingStep("");
+      setLoadingProgress(0);
+      setLoadingStage("");
       
       // ✅ Reset CAPTCHA
       if (recaptchaRef.current) {
@@ -1456,47 +1512,80 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             {loadingStep || "Elaborazione in corso..."}
           </p>
           
-          {/* Barra di progresso elegante */}
-          <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner">
+          {/* Barra di progresso dinamica e fluida */}
+          <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden shadow-inner relative">
             <div 
-              className="h-full rounded-full transition-all duration-700 ease-out shadow-sm relative overflow-hidden"
+              className="h-full rounded-full transition-all duration-300 ease-out shadow-sm relative overflow-hidden"
               style={{
-                background: `linear-gradient(to right, ${colors.primary}, rgba(${colors.primaryRgb}, 0.8))`,
-                width: loadingStep.includes("Preparando") ? "20%" :
-                       loadingStep.includes("Verificando") ? "40%" :
-                       loadingStep.includes("Inviando") ? "60%" :
-                       loadingStep.includes("Tentativo") ? "80%" :
-                       loadingStep.includes("Finalizzando") ? "90%" :
-                       loadingStep.includes("Completato") || loadingStep.includes("Backup") ? "100%" :
-                       "10%"
+                background: `linear-gradient(90deg, ${colors.primary} 0%, rgba(${colors.primaryRgb}, 0.8) 50%, ${colors.primary} 100%)`,
+                width: `${loadingProgress}%`,
+                backgroundSize: '200% 100%',
+                animation: loadingProgress < 100 ? 'shimmer 2s infinite' : 'none'
               }}
             >
-              {/* Effetto shimmer */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+              {/* Effetto shimmer dinamico */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
             </div>
+            
+            {/* Indicatore di pulsazione per iOS - più visibile */}
+            {loadingProgress > 0 && loadingProgress < 100 && (
+              <div 
+                className="absolute top-0 h-full w-2 bg-white/70 rounded-full animate-pulse shadow-lg"
+                style={{ 
+                  right: `${100 - loadingProgress}%`,
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }}
+              ></div>
+            )}
+            
+            {/* Indicatore di movimento per iOS */}
+            {loadingProgress > 0 && loadingProgress < 100 && (
+              <div 
+                className="absolute top-0 h-full w-1 bg-white/90 rounded-full"
+                style={{ 
+                  right: `${100 - loadingProgress}%`,
+                  animation: 'bounce 1s ease-in-out infinite'
+                }}
+              ></div>
+            )}
           </div>
           
           {/* Percentuale e stato dettagliato */}
-          <div className="mt-2 text-xs text-gray-500 font-medium">
-            {loadingStep.includes("Preparando") ? "20%" :
-             loadingStep.includes("Verificando") ? "40%" :
-             loadingStep.includes("Inviando") ? "60%" :
-             loadingStep.includes("Tentativo") ? "80%" :
-             loadingStep.includes("Finalizzando") ? "90%" :
-             loadingStep.includes("Completato") || loadingStep.includes("Backup") ? "100%" :
-             "10%"} completato
+          <div className="mt-3 flex justify-between items-center">
+            <div className="text-sm text-gray-600 font-medium">
+              {loadingProgress}% completato
+            </div>
+            <div className="text-xs text-gray-500">
+              {loadingStage === "init" ? "🚀 Inizializzazione" :
+               loadingStage === "validation" ? "✅ Verifica dati" :
+               loadingStage === "sending" ? "📤 Invio in corso" :
+               loadingStage === "mobile-send" ? "📱 Invio mobile" :
+               loadingStage === "retry" ? "🔄 Ritento" :
+               loadingStage === "desktop-send" ? "💻 Invio desktop" :
+               loadingStage === "finalizing" ? "⚡ Finalizzazione" :
+               loadingStage === "fallback" ? "🛠️ Fallback" :
+               loadingStage === "verify" ? "🔍 Verifica" :
+               loadingStage === "success" ? "🎉 Completato" :
+               "⏳ Elaborazione"}
+            </div>
           </div>
           
-          {/* Indicatore di tempo stimato */}
-          <div className="mt-1 text-xs text-gray-400">
-            {loadingStep.includes("Preparando") ? "⏱️ Tempo stimato: 2-3 secondi" :
-             loadingStep.includes("Verificando") ? "⏱️ Tempo stimato: 1-2 secondi" :
-             loadingStep.includes("Inviando") ? "⏱️ Tempo stimato: 1-2 secondi" :
-             loadingStep.includes("Tentativo") ? "⏱️ Quasi completato..." :
-             loadingStep.includes("Finalizzando") ? "⏱️ Finalizzazione..." :
-             loadingStep.includes("Completato") || loadingStep.includes("Backup") ? "✅ Completato!" :
-             "⏱️ Inizializzazione..."}
+          {/* Indicatore di tempo stimato dinamico */}
+          <div className="mt-2 text-xs text-gray-400 text-center">
+            {loadingProgress < 20 ? "⏱️ Tempo stimato: 3-5 secondi" :
+             loadingProgress < 50 ? "⏱️ Tempo stimato: 2-3 secondi" :
+             loadingProgress < 80 ? "⏱️ Tempo stimato: 1-2 secondi" :
+             loadingProgress < 95 ? "⏱️ Quasi completato..." :
+             loadingProgress < 100 ? "⏱️ Finalizzazione..." :
+             "✅ Completato!"}
           </div>
+          
+          {/* Indicatore di stall per iOS */}
+          {isSubmitting && loadingProgress > 0 && loadingProgress < 100 && (Date.now() - lastProgressUpdate) > 3000 && (
+            <div className="mt-2 text-xs text-orange-500 text-center animate-pulse">
+              🔄 Elaborazione in corso... (iOS)
+            </div>
+          )}
         </div>
       </div>
     )}

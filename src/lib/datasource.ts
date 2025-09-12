@@ -225,7 +225,8 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     const next = [{ ...b, id, createdAt }, ...current];
     const saveRes = await fetch("/api/localdb/bookings", { 
       method: "POST", 
-      credentials: "include",
+      mode: "cors",
+      credentials: "omit",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -238,8 +239,18 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     
     // Rimuovi lo slot occupato dalla disponibilità
     if (location === "online") {
-      const next = (availability.onlineSlots ?? availability.slots ?? []).filter((slot) => slot !== b.slot);
-      await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? [], availability.studioSlots ?? {});
+      // ✅ CORREZIONE: Per consulenze gratuite, rimuovi dai freeConsultationSlots
+      if (b.isFreeConsultation) {
+        const nextFree = (availability.freeConsultationSlots ?? []).filter((slot) => {
+          const slotTime = typeof slot === 'string' ? slot : slot.time;
+          return slotTime !== b.slot;
+        });
+        await upsertAvailabilityForDate(b.date, availability.onlineSlots ?? availability.slots ?? [], nextFree, availability.inStudioSlots ?? [], availability.studioSlots ?? {});
+      } else {
+        // Per consulenze normali, rimuovi dagli onlineSlots
+        const next = (availability.onlineSlots ?? availability.slots ?? []).filter((slot) => slot !== b.slot);
+        await upsertAvailabilityForDate(b.date, next, availability.freeConsultationSlots, availability.inStudioSlots ?? [], availability.studioSlots ?? {});
+      }
     } else {
       if (b.studioLocation) {
         const studioMap = { ...(availability.studioSlots ?? {}) };
@@ -268,6 +279,7 @@ export async function createBooking(b: Booking, captchaToken?: string): Promise<
     // fallback write new list
     const fallbackRes = await fetch("/api/localdb/bookings", { 
       method: "POST", 
+      mode: "cors",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
@@ -365,16 +377,46 @@ export async function deleteBooking(bookingId: string): Promise<void> {
         const availRes = await fetch(`/api/localdb/availability?date=${dateStr}`, { cache: "no-store" });
         if (availRes.ok) {
           const availability = await availRes.json();
-          const location: "online" | "studio" = bookingToDelete.isFreeConsultation ? "online" : (bookingToDelete.location || "online");
+          // ✅ FALLBACK: Rileva consulenze gratuite anche tramite packageId se isFreeConsultation non è settato
+          const isFreeConsultation = bookingToDelete.isFreeConsultation || bookingToDelete.packageId === "free-consultation";
+          const location: "online" | "studio" = isFreeConsultation ? "online" : (bookingToDelete.location || "online");
           
           if (location === "online") {
-            const slots = availability.onlineSlots || availability.slots || [];
-            if (!slots.includes(bookingToDelete.slot)) {
-              availability.onlineSlots = [...slots, bookingToDelete.slot].sort();
-              await fetch(`/api/localdb/availability`, { 
-                method: "POST", 
-                body: JSON.stringify({ date: dateStr, ...availability })
+            // ✅ CORREZIONE: Per consulenze gratuite, ripristina nei freeConsultationSlots
+            if (isFreeConsultation) {
+              const freeSlots = availability.freeConsultationSlots || [];
+              const slotExists = freeSlots.some((slot: string | FreeConsultationSlot) => {
+                const slotTime = typeof slot === 'string' ? slot : slot.time;
+                return slotTime === bookingToDelete.slot;
               });
+              
+              if (!slotExists) {
+                // Aggiungi lo slot come oggetto con durata dal booking o default
+                const newSlot = {
+                  time: bookingToDelete.slot,
+                  duration: bookingToDelete.consultationDuration || 10 // Usa durata dal booking o default
+                };
+                const updated = [...freeSlots, newSlot].sort((a, b) => {
+                  const timeA = typeof a === 'string' ? a : a.time;
+                  const timeB = typeof b === 'string' ? b : b.time;
+                  return timeA.localeCompare(timeB);
+                });
+                availability.freeConsultationSlots = updated;
+                await fetch(`/api/localdb/availability`, { 
+                  method: "POST", 
+                  body: JSON.stringify({ date: dateStr, ...availability })
+                });
+              }
+            } else {
+              // Per consulenze normali, ripristina negli onlineSlots
+              const slots = availability.onlineSlots || availability.slots || [];
+              if (!slots.includes(bookingToDelete.slot)) {
+                availability.onlineSlots = [...slots, bookingToDelete.slot].sort();
+                await fetch(`/api/localdb/availability`, { 
+                  method: "POST", 
+                  body: JSON.stringify({ date: dateStr, ...availability })
+                });
+              }
             }
           } else {
             const slots = availability.inStudioSlots || [];

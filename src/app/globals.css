@@ -48,6 +48,26 @@ input, textarea, select {
   border-radius: 12px;
 }
 
+/* ✅ Animazione shimmer per loading progress */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ✅ Animazione bounce per indicatore iOS */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 .section-surface {
   background: color-mix(in oklab, var(--background) 96%, black 4%);
   border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);

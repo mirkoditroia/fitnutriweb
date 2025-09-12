@@ -1,19 +1,19 @@
-[debug] [2025-09-11T22:20:37.397Z] ----------------------------------------------------------------------
-[debug] [2025-09-11T22:20:37.400Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\okrim\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
-[debug] [2025-09-11T22:20:37.400Z] CLI Version:   14.15.1
-[debug] [2025-09-11T22:20:37.400Z] Platform:      win32
-[debug] [2025-09-11T22:20:37.400Z] Node Version:  v20.14.0
-[debug] [2025-09-11T22:20:37.400Z] Time:          Fri Sep 12 2025 00:20:37 GMT+0200 (Ora legale dell’Europa centrale)
-[debug] [2025-09-11T22:20:37.401Z] ----------------------------------------------------------------------
+[debug] [2025-09-12T12:42:12.217Z] ----------------------------------------------------------------------
+[debug] [2025-09-12T12:42:12.220Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\okrim\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2025-09-12T12:42:12.221Z] CLI Version:   14.15.1
+[debug] [2025-09-12T12:42:12.221Z] Platform:      win32
+[debug] [2025-09-12T12:42:12.221Z] Node Version:  v20.14.0
+[debug] [2025-09-12T12:42:12.221Z] Time:          Fri Sep 12 2025 14:42:12 GMT+0200 (Ora legale dell’Europa centrale)
+[debug] [2025-09-12T12:42:12.221Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2025-09-11T22:20:37.593Z] Object "/hosting" in "firebase.json" has unknown property: {"additionalProperty":"use"}
-[debug] [2025-09-11T22:20:37.594Z] Field "/hosting" in "firebase.json" is possibly invalid: must be array
-[debug] [2025-09-11T22:20:37.594Z] Field "/hosting" in "firebase.json" is possibly invalid: must match a schema in anyOf
-[debug] [2025-09-11T22:20:37.598Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2025-09-11T22:20:37.599Z] > authorizing via signed-in user (mirkod95@gmail.com)
-[debug] [2025-09-11T22:20:37.599Z] [iam] checking project gznutrition-d5d13 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
-[debug] [2025-09-11T22:20:37.600Z] Checked if tokens are valid: false, expires at: 1757629874987
-[debug] [2025-09-11T22:20:37.600Z] Checked if tokens are valid: false, expires at: 1757629874987
-[debug] [2025-09-11T22:20:37.601Z] > refreshing access token with scopes: []
-[debug] [2025-09-11T22:20:37.602Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
-[debug] [2025-09-11T22:20:37.602Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-12T12:42:12.464Z] Object "/hosting" in "firebase.json" has unknown property: {"additionalProperty":"use"}
+[debug] [2025-09-12T12:42:12.465Z] Field "/hosting" in "firebase.json" is possibly invalid: must be array
+[debug] [2025-09-12T12:42:12.465Z] Field "/hosting" in "firebase.json" is possibly invalid: must match a schema in anyOf
+[debug] [2025-09-12T12:42:12.472Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-09-12T12:42:12.473Z] > authorizing via signed-in user (mirkod95@gmail.com)
+[debug] [2025-09-12T12:42:12.473Z] [iam] checking project gznutrition-d5d13 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-09-12T12:42:12.475Z] Checked if tokens are valid: true, expires at: 1757681879638
+[debug] [2025-09-12T12:42:12.476Z] Checked if tokens are valid: true, expires at: 1757681879638
+[debug] [2025-09-12T12:42:12.478Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13:testIamPermissions [none]
+[debug] [2025-09-12T12:42:12.478Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13:testIamPermissions x-goog-quota-user=projects/gznutrition-d5d13
+[debug] [2025-09-12T12:42:12.479Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/gznutrition-d5d13:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
