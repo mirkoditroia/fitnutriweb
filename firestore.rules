@@ -1,69 +1,47 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Regole per le prenotazioni
-    match /bookings/{bookingId} {
-      // Chiunque può leggere le prenotazioni (per visualizzazione pubblica)
-      allow read: if true;
-      
-      // Solo utenti autenticati possono creare/modificare/eliminare prenotazioni
-      allow create, update, delete: if request.auth != null;
+
+    match /bookings/{id} {
+      allow create, update: if
+        request.resource.data.keys().hasAll(["name","email","phone","packageId"]) &&
+        request.resource.data.size() < 10240;
+      allow read, delete: if request.auth.token.isAdmin == true;
     }
-    
-    // Regole per i pacchetti
-    match /packages/{packageId} {
-      // Chiunque può leggere i pacchetti (per visualizzazione pubblica)
-      allow read: if true;
-      
-      // Solo utenti autenticati possono creare/modificare/eliminare pacchetti
-      allow create, update, delete: if request.auth != null;
+
+    match /clients/{id} {
+      allow create, update: if
+        request.resource.data.keys().hasAll(["name","email","phone"]) &&
+        request.resource.data.size() < 10240;
+      allow read, delete: if request.auth.token.isAdmin == true;
     }
-    
-    // Regole per il contenuto del sito
-    match /siteContent/{contentId} {
-      // Chiunque può leggere il contenuto del sito (per visualizzazione pubblica)
+
+    match /packages/{id} {
       allow read: if true;
-      
-      // Solo utenti autenticati possono modificare il contenuto del sito
-      allow create, update, delete: if request.auth != null;
+      allow write: if request.auth.token.isAdmin == true;
     }
-    
-    // Regole per i clienti
-    match /clients/{clientId} {
-      // Chiunque può leggere i dati dei clienti (per visualizzazione pubblica se necessario)
+
+    match /availability/{date} {
       allow read: if true;
-      
-      // Solo utenti autenticati possono creare/modificare/eliminare clienti
-      allow create, update, delete: if request.auth != null;
+      allow write: if
+        request.resource.data.keys().hasOnly([
+          "date","onlineSlots","inStudioSlots","freeConsultationSlots","studioSlots"
+        ]) &&
+        request.resource.data.size() < 10240;
     }
-    
-    // Regole per i progressi dei clienti
+
+    match /content/{doc} {
+      allow read: if true;
+      allow write: if request.auth.token.isAdmin == true;
+    }
+
     match /clientProgress/{progressId} {
-      // Lettura libera (se vuoi limitarla, metti request.auth != null)
-      allow read: if true;
-      
-      // Scrittura consentita solo agli utenti autenticati (Admin Panel)
-      allow create, update, delete: if request.auth != null;
+      allow read, write: if request.auth.token.isAdmin == true;
     }
-    
-    // Regole per le immagini caricate
+
     match /uploads/{allPaths=**} {
-      // Chiunque può leggere le immagini (per visualizzazione pubblica)
       allow read: if true;
-      
-      // Solo utenti autenticati possono caricare/modificare/eliminare immagini
-      allow create, update, delete: if request.auth != null;
-    }
-    
-    // Regole per altre collezioni (fallback)
-    match /{document=**} {
-      // Chiunque può leggere
-      allow read: if true;
-      
-      // Solo utenti autenticati possono scrivere
-      allow create, update, delete: if request.auth != null;
+      allow write: if request.auth.token.isAdmin == true;
     }
   }
 }
