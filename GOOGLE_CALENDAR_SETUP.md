@@ -1,7 +1,7 @@
-# 📅 Manuale Configurazione Google Calendar - GZnutrition
+# 📅 Manuale Configurazione Google Calendar - Demo
 
 ## Panoramica
-Questo manuale ti guiderà attraverso la configurazione completa dell'integrazione Google Calendar per il sistema GZnutrition. L'integrazione permette di sincronizzare automaticamente le prenotazioni confermate con Google Calendar.
+Questo manuale ti guiderà attraverso la configurazione completa dell'integrazione Google Calendar per il sistema Demo. L'integrazione permette di sincronizzare automaticamente le prenotazioni confermate con Google Calendar.
 
 ⚠️ **IMPORTANTE - Firebase Functions v2**: Questo sistema è ora configurato per Firebase Functions v2. **NON utilizzare più** `firebase functions:config:set` per le credenziali. **USA SEMPRE Firebase Secrets** per evitare errori di deploy.
 
@@ -35,8 +35,8 @@ Questo manuale ti guiderà attraverso la configurazione completa dell'integrazio
 1. Vai su **"API e servizi" > "Credenziali"**
 2. Clicca **"+ Crea credenziali" > "Account di servizio"**
 3. Compila i campi:
-   - **Nome**: `gznutrition-calendar-service`
-   - **ID**: `gznutrition-calendar-service`
+   - **Nome**: `demo-calendar-service`
+   - **ID**: `demo-calendar-service`
    - **Descrizione**: `Service account per integrazione Google Calendar`
 4. Clicca **"Crea e continua"**
 5. **Salta** i passaggi di autorizzazione e clicca **"Fatto"**
@@ -54,13 +54,13 @@ Questo manuale ti guiderà attraverso la configurazione completa dell'integrazio
 3. Clicca sui **3 punti** accanto al calendario
 4. Seleziona **"Impostazioni e condivisione"**
 5. Scorri fino a **"Condividi con persone specifiche"**
-6. Aggiungi l'email del service account (es: `gznutrition-calendar-service@progetto.iam.gserviceaccount.com`)
+6. Aggiungi l'email del service account (es: `demo-calendar-service@progetto.iam.gserviceaccount.com`)
 7. Imposta i permessi su **"Modifica eventi e gestisci la condivisione"**
 8. Clicca **"Invia"**
 
 ---
 
-## ⚙️ Configurazione Sistema GZnutrition
+## ⚙️ Configurazione Sistema Demo
 
 ### 1. Accesso Admin Panel
 1. Vai su `/admin` del tuo sito
@@ -342,4 +342,4 @@ Per problemi tecnici o supporto:
 
 **Ultimo aggiornamento**: Gennaio 2025  
 **Versione**: 2.0 - Firebase Functions v2 Support  
-**Sistema**: GZnutrition Admin Panel
+**Sistema**: Demo Admin Panel

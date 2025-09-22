@@ -7,23 +7,23 @@
   "aboutImageUrl": "",
   "images": [],
   "contactPhone": "+39 123 456 7890",
-  "contactEmail": "info@gznutrition.it",
+  "contactEmail": "info@demo.it",
   "contactTitle": "📞 Contattami",
   "contactSubtitle": "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
   "socialChannels": [
     {
       "platform": "Instagram",
-      "url": "https://instagram.com/gznutrition",
+      "url": "https://instagram.com/demo",
       "icon": "📸"
     },
     {
       "platform": "LinkedIn",
-      "url": "https://linkedin.com/in/gznutrition",
+      "url": "https://linkedin.com/in/demo",
       "icon": "💼"
     },
     {
       "platform": "Facebook",
-      "url": "https://facebook.com/gznutrition",
+      "url": "https://facebook.com/demo",
       "icon": "📘"
     }
   ],

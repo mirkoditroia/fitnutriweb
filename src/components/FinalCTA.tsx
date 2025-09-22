@@ -9,7 +9,7 @@ export function FinalCTA() {
         </a>
       </div>
       <div className="text-xs text-foreground/60 mt-6">
-        © {new Date().getFullYear()} GZnutrition • P.IVA 00000000000 • <a className="underline" href="#">Privacy</a>
+        © {new Date().getFullYear()} Demo • P.IVA 00000000000 • <a className="underline" href="#">Privacy</a>
       </div>
     </section>
   );

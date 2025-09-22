@@ -33,7 +33,7 @@ const auth = getAuth();
 
 // UID of the user to assign admin privileges to
 // TODO: Replace this with the actual Firebase user UID
-const UID = 'OTM4WX70GWRjMEBdMFjuKNWUNyd2';
+const UID = '8ozmZdQRcKWax4iXz5HhQpe7wze2';
 
 async function setAdminClaim() {
   try {

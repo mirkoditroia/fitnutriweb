@@ -76,7 +76,7 @@ export default function LandingClient() {
       contactTitle: "📞 Contattami",
       contactSubtitle: "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
       contactPhone: "+39 123 456 7890",
-      contactEmail: "info@gznutrition.it",
+      contactEmail: "info@demo.it",
       contactAddresses: [
         {
           name: "Studio Principale",
@@ -89,7 +89,7 @@ export default function LandingClient() {
       socialChannels: [
         {
           platform: "Instagram",
-          url: "https://instagram.com/gznutrition",
+          url: "https://instagram.com/demo",
           icon: "📸"
         }
       ],
@@ -115,7 +115,7 @@ export default function LandingClient() {
       googleCalendar: {
         calendarId: "dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com",
         timezone: "Europe/Rome",
-        serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+        serviceAccountEmail: "service-account@demo.iam.gserviceaccount.com"
       },
       resultsSection: {
         isEnabled: false,
@@ -150,7 +150,7 @@ export default function LandingClient() {
     contactTitle: "📞 Contattami",
     contactSubtitle: "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
     contactPhone: "+39 123 456 7890",
-    contactEmail: "info@gznutrition.it",
+    contactEmail: "info@demo.it",
     contactAddresses: [
       {
         name: "Studio Principale",
@@ -163,12 +163,12 @@ export default function LandingClient() {
     socialChannels: [
       {
         platform: "Instagram",
-        url: "https://instagram.com/gznutrition",
+        url: "https://instagram.com/demo",
         icon: "📸"
       },
       {
         platform: "LinkedIn",
-        url: "https://linkedin.com/in/gznutrition",
+        url: "https://linkedin.com/in/demo",
         icon: "💼"
       }
     ],
@@ -186,7 +186,7 @@ export default function LandingClient() {
     googleCalendar: {
       calendarId: "9765caa0fca592efb3eac96010b3f8f770050fad09fe7b379f16aacdc89fa689@group.calendar.google.com",
       timezone: "Europe/Rome",
-      serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+      serviceAccountEmail: "service-account@demo.iam.gserviceaccount.com"
     },
     resultsSection: {
       isEnabled: false,
@@ -377,7 +377,7 @@ export default function LandingClient() {
             title: effectiveContent.contactSectionTitle || "📞 Contattami",
             subtitle: effectiveContent.contactSectionSubtitle || "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
             phone: effectiveContent.contactPhone || "+39 123 456 7890",
-            email: effectiveContent.contactEmail || "info@gznutrition.it",
+            email: effectiveContent.contactEmail || "info@demo.it",
             addresses: Array.isArray(effectiveContent.contactAddresses) && effectiveContent.contactAddresses.length > 0
               ? effectiveContent.contactAddresses
               : [

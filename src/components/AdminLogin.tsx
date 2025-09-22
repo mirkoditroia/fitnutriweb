@@ -84,7 +84,7 @@ export function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1"
-                placeholder="admin@gznutrition.it"
+                placeholder="admin@admin.it"
               />
             </div>
             

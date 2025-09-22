@@ -57,7 +57,7 @@ Per modificare i contenuti è necessario:
 ### Metodo 1: Firebase CLI
 ```bash
 # Assicurati di essere nella directory del progetto
-cd gznutrition
+cd demo
 
 # Deploy delle regole
 firebase deploy --only firestore:rules
@@ -65,7 +65,7 @@ firebase deploy --only firestore:rules
 
 ### Metodo 2: Firebase Console
 1. Vai su [Firebase Console](https://console.firebase.google.com)
-2. Seleziona il progetto `gznutrition-d5d13`
+2. Seleziona il progetto `your-project-id`
 3. Vai su **Firestore Database** → **Regole**
 4. Copia e incolla il contenuto di `firestore.rules`
 5. Clicca **Pubblica**

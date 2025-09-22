@@ -12,7 +12,7 @@ interface PDFExporterProps {
   siteName?: string;
 }
 
-export function PDFExporter({ clientName, progressData, onExport, isLoading = false, siteName = "GZnutrition" }: PDFExporterProps) {
+export function PDFExporter({ clientName, progressData, onExport, isLoading = false, siteName = "Demo" }: PDFExporterProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloadingCharts, setIsDownloadingCharts] = useState(false);
   const [Chart, setChart] = useState<any>(null);

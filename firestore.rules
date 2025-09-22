@@ -1,47 +1,35 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
+    // REGOLE TEMPORANEE - APERTE PER DEBUG
+    // ATTENZIONE: Queste regole permettono accesso a tutti gli utenti autenticati
+    
     match /bookings/{id} {
-      allow create, update: if
-        request.resource.data.keys().hasAll(["name","email","phone","packageId"]) &&
-        request.resource.data.size() < 10240;
-      allow read, delete: if request.auth.token.isAdmin == true;
+      allow read, write: if request.auth != null;
     }
 
     match /clients/{id} {
-      allow create, update: if
-        request.resource.data.keys().hasAll(["name","email","phone"]) &&
-        request.resource.data.size() < 10240;
-      allow read, delete: if request.auth.token.isAdmin == true;
+      allow read, write: if request.auth != null;
     }
 
     match /packages/{id} {
-      allow read: if true;
-      allow write: if request.auth.token.isAdmin == true;
+      allow read, write: if request.auth != null;
     }
 
     match /availability/{date} {
-      allow read: if true;
-      allow write: if
-        request.resource.data.keys().hasOnly([
-          "date","onlineSlots","inStudioSlots","freeConsultationSlots","studioSlots"
-        ]) &&
-        request.resource.data.size() < 10240;
+      allow read, write: if request.auth != null;
     }
 
     match /content/{doc} {
-      allow read: if true;
-      allow write: if request.auth.token.isAdmin == true;
+      allow read, write: if request.auth != null;
     }
 
     match /clientProgress/{progressId} {
-      allow read, write: if request.auth.token.isAdmin == true;
+      allow read, write: if request.auth != null;
     }
 
     match /uploads/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth.token.isAdmin == true;
+      allow read, write: if request.auth != null;
     }
   }
 }

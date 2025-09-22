@@ -28,7 +28,7 @@ const generateICalContent = (bookings: Booking[], startDate: Date, endDate: Date
   const ical = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//GZNutrition//Admin Calendar//IT',
+    'PRODID:-//Demo//Admin Calendar//IT',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH'
   ];
@@ -46,14 +46,14 @@ const generateICalContent = (bookings: Booking[], startDate: Date, endDate: Date
 
     ical.push(
       'BEGIN:VEVENT',
-      `UID:${booking.id || Math.random().toString(36).substr(2, 9)}@gznutrition.com`,
+      `UID:${booking.id || Math.random().toString(36).substr(2, 9)}@demo.com`,
       `DTSTAMP:${formatDate(new Date())}`,
       `DTSTART:${formatDate(startDateTime)}`,
       `DTEND:${formatDate(endDateTime)}`,
       `SUMMARY:${booking.name} - Consulenza Nutrizionale`,
       `DESCRIPTION:Cliente: ${booking.name}\\nEmail: ${booking.email}\\nTelefono: ${booking.phone || 'Non fornito'}\\nPacchetto: ${getPackageNameHelper(booking.packageId, packages)}\\nStatus: ${booking.status === 'confirmed' ? 'Confermata' : booking.status === 'pending' ? 'In attesa' : 'Rifiutata'}`,
       `STATUS:${booking.status === 'confirmed' ? 'CONFIRMED' : 'TENTATIVE'}`,
-      `ORGANIZER;CN=GZNutrition:mailto:admin@gznutrition.com`,
+      `ORGANIZER;CN=Demo:mailto:admin@demo.com`,
       `ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=${booking.name}:mailto:${booking.email}`,
       'END:VEVENT'
     );

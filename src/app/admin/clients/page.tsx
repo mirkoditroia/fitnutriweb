@@ -100,7 +100,7 @@ export default function AdminClientsPage() {
       
       // Ottieni il nome del sito dal contenuto
       const siteContent = await getSiteContent();
-      const siteName = siteContent?.siteName || "GZnutrition";
+      const siteName = siteContent?.siteName || "Demo";
       
       // Crea una nuova finestra per il PDF
       const printWindow = window.open('', '_blank');

@@ -130,8 +130,8 @@ git --version
 ### 1. Inizializzazione Progetto
 ```bash
 # Clona il repository
-git clone https://github.com/[USERNAME]/gznutrition-website.git
-cd gznutrition-website/gznutrition
+git clone https://github.com/[USERNAME]/demo-website.git
+cd demo-website/demo
 
 # Installa dipendenze
 npm install
@@ -239,7 +239,7 @@ firebase deploy --only hosting
 - **Build Command**: `npm run build`
 - **Start Command**: `npm start`
 - **Node Version**: `18.17.0`
-- **Root Directory**: `gznutrition`
+- **Root Directory**: `demo`
 
 ### 3. Environment Variables Render
 ```bash

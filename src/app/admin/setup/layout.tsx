@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Setup Admin | GZnutrition",
+  title: "Setup Admin | Demo",
 };
 
 export default function SetupLayout({

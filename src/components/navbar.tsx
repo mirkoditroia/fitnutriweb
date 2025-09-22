@@ -135,7 +135,7 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
             imageUrl: c?.navbarLogoImageUrl || undefined,
             height: typeof c?.navbarLogoHeight === 'number' ? c?.navbarLogoHeight : 40,
             autoBg: Boolean(c?.navbarLogoAutoRemoveBg),
-            text: c?.navbarLogoText || 'GZnutrition',
+            text: c?.navbarLogoText || 'Demo',
             color: undefined, // Use CSS variable
             weight: typeof c?.navbarLogoTextWeight === 'number' ? c?.navbarLogoTextWeight : 700,
             size: typeof c?.navbarLogoTextSize === 'number' ? c?.navbarLogoTextSize : 20,
@@ -239,7 +239,7 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                         className="absolute inset-0 flex items-center tracking-tight"
                         style={{ fontWeight: brand?.weight || 700, fontSize: brand?.size ? `${brand.size}px` : undefined }}
                       >
-                        {brand?.text || 'GZnutrition'}
+                        {brand?.text || 'Demo'}
                       </span>
                     )}
                   </div>
@@ -248,7 +248,7 @@ export function Navbar({ initialBrand, initialSiteContent }: NavbarProps = {}) {
                     className="tracking-tight"
                     style={{ fontWeight: brand?.weight || 700, fontSize: brand?.size ? `${brand.size}px` : undefined }}
                   >
-                    {brand?.text || 'GZnutrition'}
+                    {brand?.text || 'Demo'}
                   </span>
                 )}
               </Link>

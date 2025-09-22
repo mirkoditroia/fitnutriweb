@@ -7,8 +7,8 @@ Un sistema completo di gestione prenotazioni per nutrizionisti con integrazione 
 ### Sviluppo Locale
 ```bash
 # 1. Clona e installa
-git clone https://github.com/[USERNAME]/gznutrition-website.git
-cd gznutrition-website/gznutrition
+git clone https://github.com/[USERNAME]/demo-website.git
+cd demo-website/demo
 npm install
 
 # 2. Avvia sviluppo
@@ -31,7 +31,7 @@ npm run dev
 ## 📁 Struttura Progetto
 
 ```
-gznutrition/
+demo/
 ├── src/
 │   ├── app/                 # Next.js App Router
 │   │   ├── admin/          # Panel amministrativo

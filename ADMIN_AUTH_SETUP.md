@@ -109,6 +109,26 @@ src/
 - Verifica la connessione internet
 - Controlla le regole Firebase
 
+### Permessi negati in area admin (regole con isAdmin)
+
+Se il login riesce ma Firestore nega le operazioni quando le regole richiedono `request.auth.token.isAdmin == true`, assegna il custom claim `isAdmin` all'utente admin nel progetto corrente usando Google Cloud Shell (senza modificare il codice):
+
+1. Apri Google Cloud Console, seleziona il progetto e clicca su ">_" (Cloud Shell)
+2. Esegui una sola volta:
+
+```bash
+npm init -y >/dev/null 2>&1 && npm i firebase-admin@latest >/dev/null 2>&1 && \
+node -e "const {initializeApp, applicationDefault}=require('firebase-admin/app'); const {getAuth}=require('firebase-admin/auth'); initializeApp({credential: applicationDefault(), projectId:'YOUR_PROJECT_ID'}); getAuth().setCustomUserClaims('UID_UTENTE_ADMIN',{isAdmin:true}).then(()=>console.log('✅ isAdmin assegnato')).catch(console.error)"
+```
+
+3. Fai logout e login di nuovo su `/admin` per aggiornare il token
+
+Suggerimento: puoi verificare i claims con:
+
+```bash
+node -e "const {initializeApp, applicationDefault}=require('firebase-admin/app'); const {getAuth}=require('firebase-admin/auth'); initializeApp({credential: applicationDefault(), projectId:'YOUR_PROJECT_ID'}); getAuth().getUser('UID_UTENTE_ADMIN').then(u=>console.log(u.customClaims)).catch(console.error)"
+```
+
 ### Log e Debug
 - Apri la console del browser per i log dettagliati
 - Controlla il Firebase Console per gli errori di autenticazione

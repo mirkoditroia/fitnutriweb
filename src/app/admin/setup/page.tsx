@@ -118,7 +118,7 @@ export default function AdminSetupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="mt-1"
-            placeholder="admin@gznutrition.it"
+            placeholder="admin@demo.it"
           />
         </div>
         

@@ -1,6 +1,6 @@
 # 🚀 Guida Deploy Firebase
 
-Questa guida contiene le istruzioni complete per il deploy del progetto GZnutrition su Firebase.
+Questa guida contiene le istruzioni complete per il deploy del progetto Demo su Firebase.
 
 ## 📋 Prerequisiti
 
@@ -132,7 +132,7 @@ firebase deploy
 ## 📁 Struttura File
 
 ```
-gznutrition/
+demo/
 ├── firebase.json          # Configurazione Firebase
 ├── firestore.rules        # Regole di sicurezza Firestore
 ├── firestore.indexes.json # Indici Firestore

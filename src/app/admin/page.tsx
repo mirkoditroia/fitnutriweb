@@ -8,7 +8,7 @@ export default function AdminPage() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4 pt-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">⚙️ Admin Panel</h1>
-          <p className="text-lg text-muted-foreground mt-2">Gestione completa del sistema GZnutrition</p>
+          <p className="text-lg text-muted-foreground mt-2">Gestione completa del sistema FitNutriWeb</p>
         </div>
         <div className="flex gap-3">
           <Link 

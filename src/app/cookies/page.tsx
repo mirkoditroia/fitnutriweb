@@ -12,7 +12,7 @@ export default function CookiePolicyPage() {
   }, []);
 
   const legalInfo = siteContent?.legalInfo;
-  const companyName = legalInfo?.companyName || siteContent?.businessName || "GZnutrition";
+  const companyName = legalInfo?.companyName || siteContent?.businessName || "Demo";
   const email = legalInfo?.email || siteContent?.contactEmail;
 
   const cookieContent = siteContent?.legalInfo?.legalPages?.cookiePolicy;

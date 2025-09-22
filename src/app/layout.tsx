@@ -43,15 +43,15 @@ async function generateMetadata(): Promise<Metadata> {
   }
 
   // Fallback defaults
-  const defaultTitle = "GZnutrition — Trasformazione fisica e performance";
+  const defaultTitle = "Demo — Trasformazione fisica e performance";
   const defaultDescription = "Coaching nutrizionale e training per giovani adulti: estetica, performance, risultati misurabili.";
-  const defaultSiteUrl = "https://gznutrition.example";
+  const defaultSiteUrl = "https://demo.example";
   
   // Usa contenuti dinamici se disponibili
   const title = siteContent?.metaTags?.title || siteContent?.heroTitle || defaultTitle;
   const description = siteContent?.metaTags?.description || siteContent?.heroSubtitle || defaultDescription;
   const siteUrl = siteContent?.metaTags?.siteUrl || defaultSiteUrl;
-  const siteName = siteContent?.metaTags?.siteName || siteContent?.siteName || "GZnutrition";
+  const siteName = siteContent?.metaTags?.siteName || siteContent?.siteName || "Demo";
   const ogImage = siteContent?.metaTags?.image || siteContent?.heroBackgroundImage;
   const ogType = siteContent?.metaTags?.ogType || "website";
   const locale = siteContent?.metaTags?.locale || "it_IT";
@@ -109,7 +109,7 @@ export default async function RootLayout({
         imageUrl: siteContent.navbarLogoImageUrl || undefined,
         height: typeof siteContent.navbarLogoHeight === 'number' ? siteContent.navbarLogoHeight : 40,
         autoBg: Boolean(siteContent.navbarLogoAutoRemoveBg),
-        text: siteContent.navbarLogoText || 'GZnutrition',
+        text: siteContent.navbarLogoText || 'Demo',
         weight: typeof siteContent.navbarLogoTextWeight === 'number' ? siteContent.navbarLogoTextWeight : 700,
         size: typeof siteContent.navbarLogoTextSize === 'number' ? siteContent.navbarLogoTextSize : 20,
       };

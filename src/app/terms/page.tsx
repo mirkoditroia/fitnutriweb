@@ -12,7 +12,7 @@ export default function TermsOfServicePage() {
   }, []);
 
   const legalInfo = siteContent?.legalInfo;
-  const companyName = legalInfo?.companyName || siteContent?.businessName || "GZnutrition";
+  const companyName = legalInfo?.companyName || siteContent?.businessName || "Demo";
   const vatNumber = legalInfo?.vatNumber;
   const email = legalInfo?.email || siteContent?.contactEmail;
   const address = legalInfo?.registeredAddress;

@@ -1,0 +1,25 @@
+[
+  {
+    "id": "free-consultation",
+    "title": "🎯 10 Minuti Consultivi Gratuiti",
+    "description": "Primo incontro conoscitivo gratuito per valutare i tuoi obiettivi di benessere e performance",
+    "price": 0,
+    "imageUrl": "",
+    "isActive": true,
+    "featured": true,
+    "badge": "GRATIS",
+    "isPromotional": true
+  },
+  {
+    "id": "basic-package",
+    "title": "Pacchetto Base",
+    "description": "Programma nutrizionale personalizzato con follow-up settimanale",
+    "price": 150,
+    "imageUrl": "",
+    "isActive": true,
+    "featured": false,
+    "badge": null,
+    "isPromotional": false
+  }
+]
+

@@ -173,7 +173,7 @@ export default async function Home() {
             title: c.contactTitle || "📞 Contattami",
             subtitle: c.contactSubtitle || "Siamo qui per aiutarti nel tuo percorso verso una vita più sana. Contattaci per qualsiasi domanda o per prenotare una consulenza.",
             phone: c.contactPhone || "+39 123 456 7890",
-            email: c.contactEmail || "info@gznutrition.it",
+            email: c.contactEmail || "info@demo.it",
             addresses: Array.isArray(c.contactAddresses) && c.contactAddresses.length > 0
               ? c.contactAddresses
               : [
@@ -188,8 +188,8 @@ export default async function Home() {
             socialChannels: Array.isArray(c.socialChannels) && c.socialChannels.length > 0
               ? c.socialChannels
               : [
-                { platform: "Instagram", url: "https://instagram.com/gznutrition", icon: "📸" },
-                { platform: "LinkedIn", url: "https://linkedin.com/in/gznutrition", icon: "💼" },
+                { platform: "Instagram", url: "https://instagram.com/demo", icon: "📸" },
+                { platform: "LinkedIn", url: "https://linkedin.com/in/demo", icon: "💼" },
               ],
             contactTitle: c.contactSectionTitle || "💬 Contatti Diretti",
             contactSubtitle: c.contactSectionSubtitle || "Siamo qui per aiutarti",

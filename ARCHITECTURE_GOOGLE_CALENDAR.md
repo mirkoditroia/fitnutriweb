@@ -1,4 +1,4 @@
-# 🏗️ Architettura Google Calendar - GZnutrition
+# 🏗️ Architettura Google Calendar - Demo
 
 ## 📐 Schema Architetturale
 

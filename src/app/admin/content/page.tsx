@@ -28,7 +28,7 @@ export default function AdminContentPage() {
             const finalContent = c ? {
               ...c,
               // Aggiungi URL del sito se non esiste
-              siteUrl: c.siteUrl || "https://www.gznutrition.it",
+              siteUrl: c.siteUrl || "https://www.demo.it",
               // Aggiungi BMI se non esiste
               bmiCalculator: c.bmiCalculator ?? {
                 enabled: false,
@@ -49,14 +49,14 @@ export default function AdminContentPage() {
                 description: c.metaTags?.description || "",
                 siteUrl: c.metaTags?.siteUrl || "",
                 image: c.metaTags?.image || "",
-                siteName: c.metaTags?.siteName || "GZnutrition",
+                siteName: c.metaTags?.siteName || "Demo",
                 twitterCard: (c.metaTags?.twitterCard as "summary" | "summary_large_image") || "summary_large_image",
                 ogType: c.metaTags?.ogType || "website",
                 locale: c.metaTags?.locale || "it_IT"
               },
               // ✅ Aggiungi Legal Info se non esiste
               legalInfo: c.legalInfo ?? {
-                companyName: "GZnutrition",
+                companyName: "Demo",
                 vatNumber: "",
                 taxCode: "",
                 email: "",
@@ -105,7 +105,7 @@ export default function AdminContentPage() {
               heroCta: "Prenota ora", 
               heroBackgroundImage: "", 
               images: [],
-              siteUrl: "https://www.gznutrition.it",
+              siteUrl: "https://www.demo.it",
               colorPalette: "gz-default" as const,
               // ✅ Meta Tags di default
               metaTags: {
@@ -113,7 +113,7 @@ export default function AdminContentPage() {
                 description: "",
                 siteUrl: "",
                 image: "",
-                siteName: "GZnutrition",
+                siteName: "Demo",
                 twitterCard: "summary_large_image" as "summary" | "summary_large_image",
                 ogType: "website",
                 locale: "it_IT"
@@ -140,7 +140,7 @@ export default function AdminContentPage() {
               },
               // ✅ Legal Info di default
               legalInfo: {
-                companyName: "GZnutrition",
+                companyName: "Demo",
                 showLegalLinks: true,
                 cookieBanner: {
                   enabled: true,
@@ -482,7 +482,7 @@ export default function AdminContentPage() {
           { (content.navbarLogoMode ?? "text") === "text" && (
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div className="sm:col-span-2">
-                <Input label="Testo logo" value={content.navbarLogoText ?? "GZnutrition"} onChange={(e) => setContent({ ...content, navbarLogoText: e.target.value })} />
+                <Input label="Testo logo" value={content.navbarLogoText ?? "Demo"} onChange={(e) => setContent({ ...content, navbarLogoText: e.target.value })} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Colore (hex)</label>
@@ -677,14 +677,14 @@ export default function AdminContentPage() {
           {/* Hero Section */}
           <section className="space-y-4">
             <h2 className="font-semibold text-black">Hero</h2>
-          <Input label="Nome del sito" value={content.siteName || "GZnutrition"} onChange={(e) => setContent({ ...content, siteName: e.target.value })} placeholder="GZnutrition" />
+          <Input label="Nome del sito" value={content.siteName || "Demo"} onChange={(e) => setContent({ ...content, siteName: e.target.value })} placeholder="Demo" />
           
           <div className="space-y-2">
             <label className="block text-sm font-medium text-black">URL del Sito</label>
             <Input 
               value={content.siteUrl || ""} 
               onChange={(e) => setContent({ ...content, siteUrl: e.target.value })} 
-              placeholder="https://www.gznutrition.it" 
+              placeholder="https://www.demo.it" 
               className={fieldCls}
             />
             <p className="text-xs text-gray-600">
@@ -1774,7 +1774,7 @@ export default function AdminContentPage() {
                         companyName: e.target.value
                       }
                     })}
-                    placeholder="GZnutrition"
+                    placeholder="Demo"
                     className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
                   />
                 </div>
@@ -1831,7 +1831,7 @@ export default function AdminContentPage() {
                         email: e.target.value
                       }
                     })}
-                    placeholder="info@gznutrition.com"
+                    placeholder="info@demo.com"
                     className={`w-full px-3 py-2 border border-border rounded-md ${fieldCls}`}
                   />
                 </div>
@@ -2212,7 +2212,7 @@ export default function AdminContentPage() {
                     }
                   });
                 }}
-                placeholder="Es. GZnutrition — Trasformazione fisica"
+                placeholder="Es. Demo — Trasformazione fisica"
                 className={fieldCls}
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -2262,7 +2262,7 @@ export default function AdminContentPage() {
                     siteUrl: e.target.value
                   }
                 })}
-                placeholder="https://gznutrition.it"
+                placeholder="https://demo.it"
                 className={fieldCls}
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -2284,7 +2284,7 @@ export default function AdminContentPage() {
                     siteName: e.target.value
                   }
                 })}
-                placeholder="GZnutrition"
+                placeholder="Demo"
                 className={fieldCls}
               />
               <p className="text-xs text-muted-foreground mt-1">

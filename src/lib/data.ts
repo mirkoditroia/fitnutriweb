@@ -178,8 +178,8 @@ export type Booking = {
 };
 
 export interface SiteContent {
-  siteName?: string; // Nome del sito (default: "GZnutrition")
-  siteUrl?: string; // URL principale del sito per CORS (es. "https://www.gznutrition.it")
+  siteName?: string; // Nome del sito (default: "Demo")
+  siteUrl?: string; // URL principale del sito per CORS (es. "https://www.demo.it")
   favicon?: string; // URL del favicon personalizzato
   heroTitle: string;
   heroSubtitle: string;
@@ -279,12 +279,12 @@ export interface SiteContent {
   metaTags?: {
     title?: string; // Titolo del sito per Open Graph (default: titolo hero)
     description?: string; // Descrizione del sito per Open Graph (default: sottotitolo hero)
-    siteUrl?: string; // URL del sito (es. "https://gznutrition.it")
+    siteUrl?: string; // URL del sito (es. "https://demo.it")
     image?: string; // Immagine per Open Graph (preview sui social)
     twitterCard?: "summary" | "summary_large_image"; // Tipo di card Twitter (default: "summary_large_image")
     ogType?: string; // Tipo Open Graph (default: "website")
     locale?: string; // Lingua del sito (default: "it_IT")
-    siteName?: string; // Nome del sito per Open Graph (default: "GZnutrition")
+    siteName?: string; // Nome del sito per Open Graph (default: "Demo")
   };
   
   // Email cliente rimossa - troppo complessa
@@ -309,7 +309,7 @@ export interface SiteContent {
   // ✅ LEGAL COMPLIANCE: Informazioni legali per footer e GDPR
   legalInfo?: {
     // Informazioni aziendali
-    companyName?: string; // Nome dell'azienda (default: "GZnutrition")
+    companyName?: string; // Nome dell'azienda (default: "Demo")
     vatNumber?: string; // Partita IVA
     taxCode?: string; // Codice fiscale
     registeredAddress?: string; // Indirizzo legale

@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
   }, []);
 
   const legalInfo = siteContent?.legalInfo;
-  const companyName = legalInfo?.companyName || siteContent?.businessName || "GZnutrition";
+  const companyName = legalInfo?.companyName || siteContent?.businessName || "Demo";
   const vatNumber = legalInfo?.vatNumber;
   const email = legalInfo?.email || siteContent?.contactEmail;
   const address = legalInfo?.registeredAddress;
@@ -129,7 +129,7 @@ export default function PrivacyPolicyPage() {
               <li>Revocare il consenso in qualsiasi momento</li>
             </ul>
             <p className="text-gray-700 mb-4">
-              Per esercitare questi diritti, contattare il titolare all'indirizzo email: {email || "info@gznutrition.com"}
+              Per esercitare questi diritti, contattare il titolare all'indirizzo email: {email || "info@demo.com"}
             </p>
           </section>
 

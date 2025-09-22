@@ -591,7 +591,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       isEnabled: false,
       calendarId: "dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com",
       timezone: "Europe/Rome",
-      serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+      serviceAccountEmail: "service-account@demo.iam.gserviceaccount.com"
     }
   });
   try {
@@ -641,7 +641,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
       isEnabled: false,
       calendarId: "dc16aa394525fb01f5906273e6a3f1e47cf616ee466cedd511698e3f285288d6@group.calendar.google.com",
       timezone: "Europe/Rome",
-      serviceAccountEmail: "zambo-489@gznutrition-d5d13.iam.gserviceaccount.com"
+      serviceAccountEmail: "service-account@demo.iam.gserviceaccount.com"
     }
   };
 }

@@ -7,7 +7,7 @@ export interface DirectState {
 }
 
 // Chiave per localStorage
-const STORAGE_KEY = 'gznutrition_state';
+const STORAGE_KEY = 'demo_state';
 
 // Funzioni dirette per gestire lo stato
 export const getDirectState = (): DirectState => {

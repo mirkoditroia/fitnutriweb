@@ -12,7 +12,7 @@ export function Footer() {
   }, []);
 
   const legalInfo = siteContent?.legalInfo;
-  const companyName = legalInfo?.companyName || siteContent?.businessName || "GZnutrition";
+  const companyName = legalInfo?.companyName || siteContent?.businessName || "Demo";
   const footerText = legalInfo?.footerText;
   const showLegalLinks = legalInfo?.showLegalLinks !== false; // Default true
 

@@ -71,7 +71,7 @@ async function addCorsHeaders(response: NextResponse, request?: NextRequest) {
   const requestOrigin = request?.headers.get("origin") || "";
 
   // ✅ Usa dominio dinamico da admin settings o fallback
-  let primaryOrigin = "https://www.gznutrition.it";
+  let primaryOrigin = "https://www.demo.it";
   try {
     const siteContent = await getSiteContent();
     if (siteContent?.siteUrl) {
@@ -101,7 +101,7 @@ async function addCorsHeaders(response: NextResponse, request?: NextRequest) {
 
   addVariant(primaryOrigin);
   // ✅ Consenti anche dominio Firebase hosting (preview/hosting)
-  addVariant("https://gznutrition-d5d13.web.app");
+  addVariant("https://demo.web.app");
 
   // ✅ Se l'Origin della richiesta è nella whitelist, fai echo di quello specifico
   let allowOrigin = primaryOrigin;

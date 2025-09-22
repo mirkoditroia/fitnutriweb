@@ -37,7 +37,7 @@ export function BrandPreview() {
             <div key={key} className="card p-4">
               <div className="text-sm font-medium">{key}</div>
               <div className="text-foreground/70">{value}</div>
-              <p style={{ fontSize: value }} className="mt-2">Aa GZnutrition</p>
+              <p style={{ fontSize: value }} className="mt-2">Aa Demo</p>
             </div>
           ))}
         </div>
