@@ -111,6 +111,103 @@ export const PALETTES: Record<string, PaletteConfig> = {
     navbarText: "#F9FAFB",
     secondaryBg: "#F3F4F6", 
     secondaryText: "#374151"
+  },
+
+  // Nuove palette
+  'fresh-mint': {
+    name: "Fresh Mint",
+    description: "Mint fresco, pulito e rilassante",
+    primary: "#00A884",
+    accent: "#34D399",
+    background: "#FFFFFF",
+    foreground: "#0F172A",
+    border: "#D1FAE5",
+    card: "#FFFFFF",
+    muted: "#F0FDF4",
+    navbarBg: "rgba(4, 120, 87, 0.9)",
+    navbarText: "#FFFFFF",
+    secondaryBg: "#ECFDF5",
+    secondaryText: "#065F46"
+  },
+
+  'royal-purple': {
+    name: "Royal Purple",
+    description: "Viola regale, elegante e premium",
+    primary: "#7C3AED",
+    accent: "#A78BFA",
+    background: "#FFFFFF",
+    foreground: "#1F2937",
+    border: "#E5E7EB",
+    card: "#FFFFFF",
+    muted: "#F3F4F6",
+    navbarBg: "rgba(76, 29, 149, 0.92)",
+    navbarText: "#F9FAFB",
+    secondaryBg: "#F5F3FF",
+    secondaryText: "#4C1D95"
+  },
+
+  'sunset-coral': {
+    name: "Sunset Coral",
+    description: "Corallo caldo e accogliente",
+    primary: "#F43F5E",
+    accent: "#FB7185",
+    background: "#FFFFFF",
+    foreground: "#1F2937",
+    border: "#FECDD3",
+    card: "#FFFFFF",
+    muted: "#FEF2F2",
+    navbarBg: "rgba(159, 18, 57, 0.9)",
+    navbarText: "#FFFFFF",
+    secondaryBg: "#FFE4E6",
+    secondaryText: "#9F1239"
+  },
+
+  'ocean-teal': {
+    name: "Ocean Teal",
+    description: "Teal oceanico, calmo e professionale",
+    primary: "#0EA5A4",
+    accent: "#14B8A6",
+    background: "#FFFFFF",
+    foreground: "#0F172A",
+    border: "#99F6E4",
+    card: "#FFFFFF",
+    muted: "#ECFEFF",
+    navbarBg: "rgba(15, 118, 110, 0.92)",
+    navbarText: "#FFFFFF",
+    secondaryBg: "#CCFBF1",
+    secondaryText: "#115E59"
+  },
+
+  'rose-gold': {
+    name: "Rose Gold",
+    description: "Toni rosé eleganti e sofisticati",
+    primary: "#B76E79",
+    accent: "#E5B9B5",
+    background: "#FFFFFF",
+    foreground: "#1F2937",
+    border: "#FAD9D7",
+    card: "#FFFFFF",
+    muted: "#FEF2F2",
+    navbarBg: "rgba(88, 28, 36, 0.9)",
+    navbarText: "#FFFFFF",
+    secondaryBg: "#FFF1F2",
+    secondaryText: "#7F1D1D"
+  },
+
+  'slate-cyan': {
+    name: "Slate Cyan",
+    description: "Ciano moderno con slate scuro",
+    primary: "#06B6D4",
+    accent: "#22D3EE",
+    background: "#FFFFFF",
+    foreground: "#0F172A",
+    border: "#E2E8F0",
+    card: "#FFFFFF",
+    muted: "#F1F5F9",
+    navbarBg: "rgba(15, 23, 42, 0.92)",
+    navbarText: "#F8FAFC",
+    secondaryBg: "#ECFEFF",
+    secondaryText: "#155E75"
   }
 };
 

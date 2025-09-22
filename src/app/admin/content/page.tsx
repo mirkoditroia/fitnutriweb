@@ -232,8 +232,7 @@ export default function AdminContentPage() {
       });
       return; // Esce se c'è errore
     }
-     2
-     
+    
     // ✅ FORZARE REFRESH PAGINA per caricare la palette dal server
     // Eliminiamo localStorage che causava problemi di sincronizzazione
     if (content.colorPalette) {
@@ -283,6 +282,18 @@ export default function AdminContentPage() {
 
   return (
     <>
+      {/* Sticky action bar */}
+      <div className="sticky top-0 z-30 backdrop-blur bg-background/80 border-b border-border/50 px-4 py-3 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Editor contenuti</h1>
+          <p className="text-xs text-foreground/60">Gestisci testi, colori e impostazioni del sito</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Torna su</Button>
+          <Button className="bg-primary hover:bg-primary/90" onClick={save}>Salva</Button>
+        </div>
+      </div>
+
       <h1 className="text-2xl font-bold text-foreground pt-4 tracking-tight">Contenuti Landing Page</h1>
       <p className="text-sm text-foreground/70 mt-2">Gestisci tutti i contenuti e la personalizzazione della landing page</p>
       
@@ -294,7 +305,7 @@ export default function AdminContentPage() {
           </h3>
           
           {/* Palette Colori */}
-          <section className="space-y-4">
+          <section className="space-y-4 bg-white rounded-xl p-4 border border-foreground/10">
             <h2 className="font-semibold text-black">Palette Colori</h2>
           <p className="text-sm text-black/70">Scegli una palette predefinita moderna e professionale per tutto il sito</p>
           
@@ -675,21 +686,53 @@ export default function AdminContentPage() {
           </h3>
           
           {/* Hero Section */}
-          <section className="space-y-4">
+          <section className="space-y-4 bg-white rounded-xl p-4 border border-foreground/10">
             <h2 className="font-semibold text-black">Hero</h2>
-          <Input label="Nome del sito" value={content.siteName || "Demo"} onChange={(e) => setContent({ ...content, siteName: e.target.value })} placeholder="Demo" />
+          <Input label="Nome del sito" value={content.siteName || "Demo"} onChange={(e) => {
+            const next = { 
+              ...content, 
+              siteName: e.target.value,
+              metaTags: { ...(content.metaTags || {}), siteName: e.target.value }
+            };
+            setContent(next);
+          }} placeholder="Demo" />
           
           <div className="space-y-2">
             <label className="block text-sm font-medium text-black">URL del Sito</label>
             <Input 
               value={content.siteUrl || ""} 
-              onChange={(e) => setContent({ ...content, siteUrl: e.target.value })} 
+              onChange={(e) => {
+                const next = {
+                  ...content,
+                  siteUrl: e.target.value,
+                  metaTags: { ...(content.metaTags || {}), siteUrl: e.target.value }
+                };
+                setContent(next);
+              }} 
               placeholder="https://www.demo.it" 
               className={fieldCls}
             />
             <p className="text-xs text-gray-600">
               🛡️ Dominio principale per sicurezza CORS e compatibilità mobile (Safari iOS)
             </p>
+          </div>
+
+          {/* Dati legali rapidi */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div>
+              <label className="block text-sm font-medium text-black">Nome titolare/azienda (footer e privacy)</label>
+              <Input
+                value={content.legalInfo?.companyName || content.businessName || ""}
+                onChange={(e) => setContent({
+                  ...content,
+                  legalInfo: { ...(content.legalInfo || {}), companyName: e.target.value },
+                  businessName: e.target.value
+                })}
+                placeholder="Es. FitNutriWeb"
+                className={fieldCls}
+              />
+              <p className="text-xs text-gray-600">Aggiorna rapidamente il nome in footer e informative.</p>
+            </div>
           </div>
           
           {/* Favicon Upload */}
@@ -806,38 +849,6 @@ export default function AdminContentPage() {
           </div>
         </section>
         </div>
-
-        {/* ========== SEZIONI AGGIUNTIVE ========== */}
-        <div className="border-b border-foreground/10 pb-8">
-          <h3 className="text-lg font-bold text-black mb-6 flex items-center gap-2">
-            🖼️ Sezioni Aggiuntive
-          </h3>
-          
-          {/* Immagini sezione */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-semibold text-black">Immagini sezione</h2>
-            <div className="flex gap-2">
-              <UploadButton folder="content" onUploaded={addImgFromUpload} />
-              <Button type="button" onClick={addImg}>Aggiungi immagine</Button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {(content.images ?? []).map((im, i) => (
-              <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-                <Input label="Key" value={im.key} onChange={(e) => updateImg(i, "key", e.target.value)} />
-                <div>
-                  <label className="block text-sm font-medium mb-1">URL immagine</label>
-                  <input className="w-full rounded-md border border-foreground/20 bg-white px-3 py-2 text-sm text-black placeholder:text-black/70" value={im.url} onChange={(e) => updateImg(i, "url", e.target.value)} />
-                </div>
-                <div className="flex gap-2">
-                  <UploadButton folder="content" onUploaded={(url) => updateImg(i, "url", url)} />
-                  <button className="btn-outline" onClick={() => removeImg(i)}>Rimuovi</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* Sezione Contatti */}
         <section className="space-y-4 mt-8">
@@ -2270,26 +2281,23 @@ export default function AdminContentPage() {
               </p>
             </div>
 
-            {/* Nome del sito */}
+            {/* Nome del sito: sincronizzato con campo Hero */}
             <div>
-              <label className="block text-sm font-medium mb-2 text-black">
-                Nome del Sito
-              </label>
+              <label className="block text-sm font-medium mb-2 text-black">Nome del Sito</label>
               <Input
-                value={content.metaTags?.siteName || ""}
-                onChange={(e) => setContent({
-                  ...content,
-                  metaTags: {
-                    ...content.metaTags,
-                    siteName: e.target.value
-                  }
-                })}
+                value={content.siteName || ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setContent({
+                    ...content,
+                    siteName: v,
+                    metaTags: { ...(content.metaTags || {}), siteName: v }
+                  })
+                }}
                 placeholder="Demo"
                 className={fieldCls}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Nome che appare nei link condivisi
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Sincronizzato con l'header, footer e meta tag.</p>
             </div>
 
             {/* Immagine Open Graph */}
@@ -2431,7 +2439,7 @@ export default function AdminContentPage() {
             💾 Salva Contenuti
           </Button>
         </div>
-      </div>
+      
     </>
   );
 }
