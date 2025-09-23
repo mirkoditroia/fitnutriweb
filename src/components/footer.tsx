@@ -12,7 +12,8 @@ export function Footer() {
   }, []);
 
   const legalInfo = siteContent?.legalInfo;
-  const companyName = legalInfo?.companyName || siteContent?.businessName || "Demo";
+  // Footer mostra il nome del sito (siteName). I dati legali restano nelle pagine informative.
+  const siteName = siteContent?.siteName || siteContent?.metaTags?.siteName || "Demo";
   const footerText = legalInfo?.footerText;
   const showLegalLinks = legalInfo?.showLegalLinks !== false; // Default true
 
@@ -22,7 +23,7 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Copyright e informazioni aziendali */}
           <div className="text-center sm:text-left">
-            <p>© {new Date().getFullYear()} {companyName}</p>
+            <p>© {new Date().getFullYear()} {siteName}</p>
             {legalInfo?.vatNumber && (
               <p className="mt-1 text-sm font-medium text-foreground/80">
                 P.IVA: {legalInfo.vatNumber}

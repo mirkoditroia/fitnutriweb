@@ -98,6 +98,18 @@ export function PackagesCarousel({ items, sectionVisibility }: { items: Package[
       );
     }
     
+    // Prezzo 0 => Gratis
+    if (!pkg.price || Number(pkg.price) === 0) {
+      return (
+        <div>
+          <div className="text-2xl font-extrabold text-primary">GRATIS</div>
+          {pkg.paymentText && (
+            <div className="text-xs text-foreground/60">{pkg.paymentText}</div>
+          )}
+        </div>
+      );
+    }
+    
     return (
       <div>
         <div className="text-2xl font-extrabold">€ {pkg.price}</div>

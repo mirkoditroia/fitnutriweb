@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { writeJson, readJson } from "@/lib/localdb";
 import { getDataMode } from "@/lib/datamode";
 import { getClientApp } from "@/lib/firebase";
+import { getAdminServices } from "@/lib/firebaseAdmin";
 
 export const runtime = "nodejs";
 
@@ -17,19 +18,37 @@ export async function POST(req: Request) {
   if (mode === "firebase") {
     try {
       console.log('[Upload] Tentativo Firebase Storage...');
-      const app = getClientApp();
-      if (!app) {
-        console.log('[Upload] Firebase app non disponibile, fallback a local storage');
-        // Fallback automatico al sistema local
-        return handleLocalUpload(file, folder, buffer);
+      // Verifica token utente dal header Authorization: Bearer <idToken>
+      const authHeader = (req.headers.get("authorization") || "").trim();
+      const idToken = authHeader.toLowerCase().startsWith("bearer ")
+        ? authHeader.slice(7)
+        : "";
+
+      const { auth, storage } = getAdminServices();
+
+      if (!idToken) {
+        console.warn('[Upload] Nessun ID token fornito. Rifiuto upload.');
+        return NextResponse.json({ error: "missing_token" }, { status: 401 });
       }
-      const { getStorage, ref, uploadBytes, getDownloadURL } = await import("firebase/storage");
-      const storage = getStorage(app);
-      const key = `${folder}/${Date.now()}-${file.name}`;
-      const r = ref(storage, key);
-      await uploadBytes(r, buffer, { contentType: file.type });
-      const url = await getDownloadURL(r);
-      console.log('[Upload] Firebase upload successo:', url);
+
+      // Verifica token e controlla claim admin
+      const decoded = await auth.verifyIdToken(idToken);
+      if (!(decoded as any).isAdmin && !(decoded as any).admin) {
+        console.warn('[Upload] Utente non admin');
+        return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      }
+
+      // Upload via Admin SDK (bypassa rules, ma siamo autenticati come server)
+      const bucket = storage.bucket();
+      const key = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.-]/g, "_")}`;
+      const fileRef = bucket.file(key);
+      await fileRef.save(buffer, {
+        resumable: false,
+        contentType: file.type,
+        public: true,
+      });
+      const url = `https://storage.googleapis.com/${bucket.name}/${encodeURIComponent(key)}`;
+      console.log('[Upload] Firebase upload successo (admin):', url);
       return NextResponse.json({ url, path: key });
     } catch (e) {
       console.error('[Upload] Firebase fallito, fallback a local:', e);

@@ -79,7 +79,8 @@ export default function GoogleReviews({
     <section 
       id="recensioni" 
       className="py-16"
-      style={{ background: `linear-gradient(135deg, ${secondaryBg} 0%, ${paletteConfig?.background || '#FFFFFF'} 100%)` }}
+      // Mantieni sfondo bianco indipendente dalla palette
+      style={{ backgroundColor: '#FFFFFF' }}
     >
       <div className="container max-w-6xl mx-auto px-4">
         {/* Header */}

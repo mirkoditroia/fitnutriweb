@@ -2,6 +2,7 @@
 import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
+import { auth as clientAuth } from "@/lib/firebase";
 
 interface UploadButtonProps {
   folder: string;
@@ -42,7 +43,15 @@ export function UploadButton({
       form.append("folder", folder);
       
       console.log(`[UploadButton] Caricamento file: ${file.name} (${file.size} bytes)`);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
+      // Se l'utente è loggato, includi l'ID token per autorizzazione server-side
+      let headers: Record<string, string> | undefined = undefined;
+      const currentUser = clientAuth?.currentUser;
+      if (currentUser) {
+        const idToken = await currentUser.getIdToken();
+        headers = { Authorization: `Bearer ${idToken}` };
+      }
+
+      const res = await fetch("/api/upload", { method: "POST", body: form, headers });
       
       if (!res.ok) {
         const errorText = await res.text();

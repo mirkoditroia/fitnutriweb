@@ -32,14 +32,8 @@ export function AdminProtected({ children }: AdminProtectedProps) {
       <div>
         <AdminLogin onLoginSuccess={handleLoginSuccess} />
         <div className="text-center mt-8">
-          <p className="text-sm text-foreground/50">
-            Non hai ancora un account admin?{" "}
-            <a 
-              href="/admin/setup" 
-              className="text-primary hover:text-primary/80 underline"
-            >
-              Crea il primo account
-            </a>
+          <p className="text-sm text-foreground/60">
+            Hai problemi di accesso? Scrivi a <a href="mailto:fitnutriweb@gmail.com" className="underline text-primary">fitnutriweb@gmail.com</a>
           </p>
         </div>
       </div>

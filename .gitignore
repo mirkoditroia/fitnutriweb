@@ -7,9 +7,16 @@ out/
 .vercel/
 .data/
 
+# Firebase local artifacts
+.firebase/
+
 # Env
 .env*
 !.env.example
+
+# Build outputs
+dist/
+coverage/
 
 # Logs
 npm-debug.log*

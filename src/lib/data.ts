@@ -1403,7 +1403,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
           description: "",
           siteUrl: "",
           image: "",
-          siteName: "GZnutrition",
+          siteName: "Demo",
           twitterCard: "summary_large_image" as const,
           ogType: "website",
           locale: "it_IT"
@@ -1434,10 +1434,14 @@ export async function getSiteContent(): Promise<SiteContent | null> {
     
     // Forza sempre valori di default se i campi sono vuoti o undefined
     const siteContent = {
+      // Hero/base info
       heroTitle: data.heroTitle || "Trasforma il tuo fisico. Potenzia la tua performance.",
       heroSubtitle: data.heroSubtitle || "Coaching nutrizionale e training su misura per giovani adulti 20–35.",
       heroCta: data.heroCta || "Prenota ora",
       heroBackgroundImage: data.heroBackgroundImage || "",
+      // Sito (top-level) – assicurati che i valori da Firestore prevalgano sui default
+      siteName: data.siteName || "Demo",
+      siteUrl: data.siteUrl || "",
       heroBadgeText: data.heroBadgeText || "Performance • Estetica • Energia",
       heroBadgeColor: data.heroBadgeColor || "bg-primary text-primary-foreground",
 
@@ -1526,7 +1530,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         description: data.metaTags.description || "",
         siteUrl: data.metaTags.siteUrl || "",
         image: data.metaTags.image || "",
-        siteName: data.metaTags.siteName || "GZnutrition",
+        siteName: data.metaTags.siteName || "Demo",
         twitterCard: (data.metaTags.twitterCard as "summary" | "summary_large_image") || "summary_large_image",
         ogType: data.metaTags.ogType || "website",
         locale: data.metaTags.locale || "it_IT"
@@ -1535,7 +1539,7 @@ export async function getSiteContent(): Promise<SiteContent | null> {
         description: "",
         siteUrl: "",
         image: "",
-        siteName: "GZnutrition",
+        siteName: "Demo",
         twitterCard: "summary_large_image" as const,
         ogType: "website",
         locale: "it_IT"
@@ -1788,7 +1792,7 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
       description: "",
       siteUrl: "",
       image: "",
-      siteName: "GZnutrition",
+      siteName: "Demo",
       twitterCard: "summary_large_image",
       ogType: "website",
       locale: "it_IT"
@@ -1800,7 +1804,7 @@ export async function upsertSiteContent(content: SiteContent): Promise<void> {
       description: sanitized.metaTags.description || "",
       siteUrl: sanitized.metaTags.siteUrl || "",
       image: sanitized.metaTags.image || "",
-      siteName: sanitized.metaTags.siteName || "GZnutrition",
+      siteName: sanitized.metaTags.siteName || "Demo",
       twitterCard: sanitized.metaTags.twitterCard || "summary_large_image",
       ogType: sanitized.metaTags.ogType || "website",
       locale: sanitized.metaTags.locale || "it_IT"

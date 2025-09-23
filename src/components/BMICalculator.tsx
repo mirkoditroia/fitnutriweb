@@ -91,7 +91,8 @@ export default function BMICalculator({
     <section 
       id="bmi-calculator" 
       className="py-16 px-4"
-      style={{ background: `linear-gradient(135deg, ${secondaryBg} 0%, ${paletteConfig?.background || '#FFFFFF'} 100%)` }}
+      // Lo sfondo del contenitore resta sempre bianco, indipendente dalla palette
+      style={{ backgroundColor: '#FFFFFF' }}
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -115,12 +116,14 @@ export default function BMICalculator({
         {/* Calcolatore */}
         <div className="max-w-2xl mx-auto">
           <div 
-            className="rounded-2xl shadow-xl p-8 border-t-4"
+            className="rounded-2xl p-8 border-t-4"
             style={{ 
               backgroundColor: paletteConfig?.card || '#FFFFFF',
               borderTopColor: primary,
               border: `1px solid ${border}`,
-              borderTopWidth: '4px'
+              borderTopWidth: '4px',
+              // Ombra in tinta con la palette
+              boxShadow: `0 10px 25px ${primary}1A`
             }}
           >
             {/* Input Fields */}
