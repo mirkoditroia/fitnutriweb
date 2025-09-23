@@ -51,7 +51,13 @@ export default function AdminSettingsPage() {
   // Test email configuration
   const testEmailConfiguration = async () => {
     try {
-      const response = await fetch('https://testemailconfiguration-4ks3j6nupa-uc.a.run.app');
+      const functionsBase = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+        ? `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net`
+        : '';
+      const endpoint = functionsBase
+        ? `${functionsBase}/testEmailConfiguration`
+        : 'https://testemailconfiguration-4ks3j6nupa-uc.a.run.app';
+      const response = await fetch(endpoint);
       const result = await response.json();
       
       if (result.success) {
@@ -73,7 +79,13 @@ export default function AdminSettingsPage() {
     }
 
     try {
-      const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+      const functionsBase = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+        ? `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net`
+        : '';
+      const endpoint = functionsBase
+        ? `${functionsBase}/sendBookingNotification`
+        : 'https://sendbookingnotification-4ks3j6nupa-uc.a.run.app';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

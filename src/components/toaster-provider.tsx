@@ -109,6 +109,21 @@ export default function ToasterProvider() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Expose helpers to window for manual testing (console)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    (window as any).fzToast = (msg: string) => hotToast(msg);
+    (window as any).fzToastSuccess = (msg: string) => hotToast.success(msg);
+    (window as any).fzToastError = (msg: string) => hotToast.error(msg);
+    return () => {
+      try {
+        delete (window as any).fzToast;
+        delete (window as any).fzToastSuccess;
+        delete (window as any).fzToastError;
+      } catch {}
+    };
+  }, []);
+
   return (
     <Toaster 
       position={isMobile ? "top-center" : "top-right"}
@@ -149,12 +164,13 @@ export default function ToasterProvider() {
       }}
       // Configurazione responsive per container
       containerStyle={{
-        top: isMobile ? 80 : 20,
+        // Evita sovrapposizioni con la navbar fissa su desktop
+        top: isMobile ? 80 : 96,
         left: isMobile ? 0 : undefined,
-        right: isMobile ? 0 : 20,
+        right: isMobile ? 0 : 40,
         bottom: undefined,
         transform: isMobile ? 'none' : undefined,
-        zIndex: 9999,
+        zIndex: 10000,
       }}
       gutter={8}
     >

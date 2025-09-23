@@ -78,6 +78,61 @@ const PALETTES = {
     border: '#E5E7EB',
     card: '#FFFFFF',
     muted: '#F9FAFB'
+  },
+  // New palettes – aligned with src/lib/palettes.ts
+  'fresh-mint': {
+    primary: '#00A884',
+    accent: '#34D399',
+    background: '#FFFFFF',
+    foreground: '#0F172A',
+    border: '#D1FAE5',
+    card: '#FFFFFF',
+    muted: '#F0FDF4'
+  },
+  'royal-purple': {
+    primary: '#7C3AED',
+    accent: '#A78BFA',
+    background: '#FFFFFF',
+    foreground: '#1F2937',
+    border: '#E5E7EB',
+    card: '#FFFFFF',
+    muted: '#F3F4F6'
+  },
+  'sunset-coral': {
+    primary: '#F43F5E',
+    accent: '#FB7185',
+    background: '#FFFFFF',
+    foreground: '#1F2937',
+    border: '#FECDD3',
+    card: '#FFFFFF',
+    muted: '#FEF2F2'
+  },
+  'ocean-teal': {
+    primary: '#0EA5A4',
+    accent: '#14B8A6',
+    background: '#FFFFFF',
+    foreground: '#0F172A',
+    border: '#99F6E4',
+    card: '#FFFFFF',
+    muted: '#ECFEFF'
+  },
+  'rose-gold': {
+    primary: '#B76E79',
+    accent: '#E5B9B5',
+    background: '#FFFFFF',
+    foreground: '#1F2937',
+    border: '#FAD9D7',
+    card: '#FFFFFF',
+    muted: '#FEF2F2'
+  },
+  'slate-cyan': {
+    primary: '#06B6D4',
+    accent: '#22D3EE',
+    background: '#FFFFFF',
+    foreground: '#0F172A',
+    border: '#E2E8F0',
+    card: '#FFFFFF',
+    muted: '#F1F5F9'
   }
 };
 
@@ -377,20 +432,26 @@ function generateBookingNotificationHTML(booking, packageTitle, businessName, co
     <html>
     <head>
       <meta charset="utf-8">
+      <meta name="color-scheme" content="light"/>
+      <meta name="supported-color-schemes" content="light"/>
       <title>Nuova Prenotazione - ${businessName || 'GZ Nutrition'}</title>
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: ${colors.foreground}; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: ${colors.primary}; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: ${colors.muted}; padding: 20px; border: 1px solid ${colors.border}; }
-        .footer { background: ${colors.primary}; color: white; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; }
-        .info-row { margin: 10px 0; padding: 8px; background: ${colors.background}; border-radius: 4px; border: 1px solid ${colors.border}; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: ${colors.foreground}; background: ${colors.background}; }
+        .container { max-width: 640px; margin: 0 auto; padding: 0; background: ${colors.card}; border: 1px solid ${colors.border}; border-radius: 12px; overflow: hidden; }
+        .preheader { display:none !important; visibility:hidden; opacity:0; color:transparent; height:0; width:0; }
+        .system { background: ${colors.accent}; color: #0B0B0B; padding: 8px 16px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .header { background: ${colors.primary}; color: white; padding: 20px; text-align: center; }
+        .content { background: ${colors.muted}; padding: 20px; }
+        .footer { background: ${colors.primary}; color: white; padding: 15px; text-align: center; }
+        .info-row { margin: 10px 0; padding: 8px; background: ${colors.background}; border-radius: 6px; border: 1px solid ${colors.border}; }
         .label { font-weight: bold; color: ${colors.primary}; }
         .urgent { background: ${colors.card}; border-left: 4px solid ${colors.accent}; padding: 10px; margin: 15px 0; }
       </style>
     </head>
     <body>
       <div class="container">
+        <div class="preheader">Nuova prenotazione ricevuta - sistema FitNutriWeb</div>
+        <div class="system">✉️ Email automatica dal sistema FitNutriWeb</div>
         <div class="header">
           <h1>🔔 Nuova Prenotazione Ricevuta</h1>
           <p>${businessName || 'GZ Nutrition'} - Sistema di Gestione</p>
@@ -466,7 +527,7 @@ function generateBookingNotificationHTML(booking, packageTitle, businessName, co
         </div>
         
         <div class="footer">
-          <p>📧 Email automatica dal sistema ${businessName || 'GZ Nutrition'}</p>
+          <p>📧 Email automatica dal sistema FitNutriWeb</p>
           <p>🕐 Ricevuta il ${new Date().toLocaleString('it-IT')}</p>
         </div>
       </div>

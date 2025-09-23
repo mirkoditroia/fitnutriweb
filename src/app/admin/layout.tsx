@@ -3,7 +3,7 @@ import { AdminProtected } from "@/components/AdminProtected";
 import { AdminHeader } from "@/components/AdminHeader";
 
 export const metadata = {
-  title: "Admin | GZnutrition",
+  title: "Admin | FitNutriWeb",
 };
 
 export default function AdminLayout({

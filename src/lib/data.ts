@@ -29,7 +29,13 @@ export async function sendBookingNotification(booking: Booking, packageTitle?: s
     });
     
     // Usa Firebase Functions per l'invio email
-    const response = await fetch('https://sendbookingnotification-4ks3j6nupa-uc.a.run.app', {
+    const functionsBase = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      ? `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net`
+      : '';
+    const endpoint = functionsBase
+      ? `${functionsBase}/sendBookingNotification`
+      : 'https://sendbookingnotification-4ks3j6nupa-uc.a.run.app';
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

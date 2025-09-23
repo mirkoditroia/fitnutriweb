@@ -871,7 +871,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
             : "Prenotazione inviata con successo!",
           {
             duration: 4000,
-            position: 'top-center',
+            position: typeof window !== 'undefined' && window.innerWidth > 768 ? 'top-right' : 'top-center',
             style: {
               background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
               color: 'white',
@@ -985,7 +985,7 @@ export function BookingForm({ adminMode = false, requirePackage = false, hidePac
   // Mantieni struttura invariata anche senza pacchetto selezionato
 
   return (
-    <div className="section-surface p-6 sm:p-8 space-y-6">
+    <div className="section-surface p-6 sm:p-8 space-y-6 rounded-2xl">
       {/* ⚠️ AVVISO MODALITÀ INCOGNITO */}
       {isIncognito() && (
         <div className="rounded-xl p-4 bg-red-50 border border-red-200 shadow-md">

@@ -16,6 +16,14 @@ const getBMICategory = (bmi: number) => {
   return { category: "Obesità", color: "#EF4444", description: "Consultare un medico" };
 };
 
+// Colori fissi GZ default per la barra BMI (non influenzati dalla palette tema)
+const BMI_COLORS = {
+  underweight: "#3B82F6", // blue-500
+  normal: "#10B981",     // emerald-500
+  overweight: "#F59E0B", // amber-500
+  obesity: "#EF4444",    // red-500
+} as const;
+
 export default function BMICalculator({ 
   title = "📊 Calcola il tuo BMI", 
   subtitle = "Scopri il tuo Indice di Massa Corporea",
@@ -68,8 +76,8 @@ export default function BMICalculator({
           <span>40</span>
         </div>
         
-        {/* Barra colorata BMI */}
-        <div className="relative h-4 rounded-full overflow-hidden" style={{ background: `linear-gradient(to right, #3B82F6 0%, ${primary} 40%, #F59E0B 70%, #EF4444 100%)` }}>
+        {/* Barra colorata BMI - colori fissi GZ */}
+        <div className="relative h-4 rounded-full overflow-hidden" style={{ background: `linear-gradient(to right, ${BMI_COLORS.underweight} 0%, ${BMI_COLORS.normal} 40%, ${BMI_COLORS.overweight} 70%, ${BMI_COLORS.obesity} 100%)` }}>
           {/* Indicatore posizione */}
           <div 
             className="absolute top-0 bottom-0 w-1 bg-white border-2 border-gray-800 rounded-full transform -translate-x-1/2 transition-all duration-500"
@@ -269,7 +277,7 @@ export default function BMICalculator({
                 borderColor: border
               }}
             >
-              <div className="w-4 h-4 rounded mx-auto mb-2" style={{ backgroundColor: primary }}></div>
+              <div className="w-4 h-4 rounded mx-auto mb-2" style={{ backgroundColor: BMI_COLORS.normal }}></div>
               <div className="text-xs font-semibold" style={{ color: paletteConfig?.foreground || '#374151' }}>Normale</div>
               <div className="text-xs" style={{ color: paletteConfig?.secondaryText || '#6B7280' }}>18.5 - 24.9</div>
             </div>
